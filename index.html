@@ -100,6 +100,8 @@ textarea.in{min-height:84px;resize:vertical}
 .tag.pend{background:var(--sunk)}
 .tag.bad{background:var(--red-soft);border-color:transparent;color:var(--red)}
 [hidden]{display:none!important}
+body:not(.dospasos) .dp{display:none!important}
+body.dospasos .ndp{display:none!important}
 body:not(.online) .onl{display:none!important}
 body.online .offl{display:none!important}
 nav.tabs button[hidden]{display:none}
@@ -116,7 +118,7 @@ nav.tabs button .cnt{display:inline-block;min-width:20px;padding:1px 6px;margin-
 .appr div.bad{background:var(--red-soft);border-color:transparent;color:var(--red);font-weight:600}
 .sec{font:600 18px/1.1 "Barlow Condensed",sans-serif;margin:16px 0 8px}
 .dock .in2 .btn.alt{flex:0 0 auto}
-#seg-bfil button{font-size:15px;padding:0 4px}
+#seg-bfil button{font-size:14px;padding:0 3px;line-height:1.1}
 .install[hidden]{display:none}
 .cecobox{margin:-2px 0 12px;padding:10px 12px;border-radius:10px;background:var(--green-soft);color:var(--green);font-size:14px;font-weight:600}
 .cecobox.bad{background:var(--red-soft);color:var(--red)}
@@ -226,10 +228,10 @@ dialog::backdrop{background:rgba(10,14,13,.55)}
       <h2>Aprobación <span class="st" id="aprobStatus">Pendiente</span></h2>
       <div class="seg" id="seg-aprob"><button type="button" data-v="no" aria-pressed="true">Aprobar después</button><button type="button" data-v="si" aria-pressed="false">Aprobar ahora</button></div>
       <p class="hint offl" id="aprobHintOff" style="margin:10px 0 0">Verificado y autorizado quedan en blanco para firmar a mano, o para aprobar luego desde el Historial en este mismo teléfono.</p>
-      <p class="hint onl" id="aprobHintOff2" style="margin:10px 0 0">La requisición llega a la bandeja y los aprobadores la firman desde su propio teléfono con su PIN.</p>
+      <p class="hint onl" id="aprobHintOff2" style="margin:10px 0 0">La requisición llega a la bandeja y los aprobadores la firman desde su propio teléfono con su PIN.<span class="dp"> Primero la verifica una persona y después la autoriza otra.</span></p>
       <div id="aprobOn" hidden>
-        <p class="hint offl" style="margin:10px 0 12px">Pasa el teléfono a quien verifica y a quien autoriza. Cada uno escribe su nombre y firma. La fecha de aprobación es la de hoy.</p>
-        <p class="hint onl" style="margin:10px 0 12px">Pasa el teléfono a quien verifica y a quien autoriza. Cada uno escribe su PIN personal y firma. La fecha de aprobación es la de hoy.</p>
+        <p class="hint offl" style="margin:10px 0 12px">Pasa el teléfono a quien verifica y a quien autoriza. Cada uno escribe su nombre y firma. La fecha de aprobación es la de hoy.<span class="dp"> Deben ser dos personas distintas.</span></p>
+        <p class="hint onl" style="margin:10px 0 12px">Pasa el teléfono a quien verifica y a quien autoriza. Cada uno escribe su PIN personal y firma. La fecha de aprobación es la de hoy.<span class="dp"> Deben ser dos personas distintas.</span></p>
         <div class="signer">
           <label class="f offl"><span>Verificado por</span><input class="in" id="verificado" list="dl-personas" autocomplete="off"></label>
           <label class="f onl"><span>PIN de quien verifica</span><input class="in" id="pin-verificado" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></label>
@@ -260,7 +262,7 @@ dialog::backdrop{background:rgba(10,14,13,.55)}
   <section class="panel" id="p-bandeja">
     <div class="block">
       <h2>Bandeja de la obra <button class="btn ghost" id="bRefresh" style="min-height:36px;padding:0 8px;font-size:15px">Actualizar</button></h2>
-      <div class="seg" id="seg-bfil"><button type="button" data-v="pendiente" aria-pressed="true">Pendientes</button><button type="button" data-v="aprobada" aria-pressed="false">Aprobadas</button><button type="button" data-v="rechazada" aria-pressed="false">Rechazadas</button></div>
+      <div class="seg" id="seg-bfil"></div>
       <ul class="hist" id="bList" style="margin-top:10px"></ul>
       <div class="empty" id="bEmpty" hidden></div>
     </div>
@@ -288,6 +290,11 @@ dialog::backdrop{background:rgba(10,14,13,.55)}
       <p class="err" id="connErr" hidden></p>
       <div class="addrow"><button class="btn dark" id="connBtn" style="flex:1">Conectar</button><button class="btn ghost" id="connOff" hidden>Desconectar</button></div>
       <p class="hint" style="margin-top:10px">Conectado, las requisiciones se envían a una bandeja compartida y los aprobadores las firman desde su propio teléfono con su PIN. El número de control lo asigna el sistema para que nunca se repita.</p>
+    </div>
+    <div class="block">
+      <h2>Flujo de aprobación</h2>
+      <div class="seg" id="seg-dp"><button type="button" data-v="si" aria-pressed="false">Verifica uno, autoriza otro</button><button type="button" data-v="no" aria-pressed="false">Autorizar directo</button></div>
+      <p class="hint" id="dpHint" style="margin:10px 0 0"></p>
     </div>
     <div class="block"><h2>Instalar en el teléfono</h2><button class="btn block100" id="installOpen2">Ver instrucciones para Android y iPhone</button></div>
     <div class="block offl">
@@ -502,7 +509,8 @@ const LISTS_META = [
 ];
 const DEFAULT_UND = ['und','pza','m','m²','m³','kg','l','sco','gpo','jgo','par','gal','rollo'];
 let lists = Object.assign({areas:[],coord:[],personas:[],equipos:[],locaciones:[],cecos:[],und:DEFAULT_UND.slice()}, LS.get('lists', {}));
-let settings = Object.assign({prefix:'LF-', next:1, obra:'Rafmor, 13 B.P.F del Zulia', logo:null}, LS.get('settings', {}));
+let settings = Object.assign({prefix:'LF-', next:1, obra:'Rafmor, 13 B.P.F del Zulia', logo:null, dosPasos:true}, LS.get('settings', {}));
+if (settings.dosPasos === undefined) settings.dosPasos = true;
 if (settings.obra === 'Obra La Frontera') settings.obra = 'Rafmor, 13 B.P.F del Zulia';
 /* ---------- Supabase: pega aquí la Project URL y la anon key para que todo el equipo quede conectado ---------- */
 const SB_URL = 'https://rekpmxjpfcrikamujvao.supabase.co';
@@ -711,20 +719,25 @@ function validate(){
   if (!draft.firmas.solicitado.trim()) mark('solicitado');
   if (draft.aprobar) {
     const miss = [];
-    const on = online();
+    const on = online(), dp = settings.dosPasos;
     if (on) {
+      if (dp && !pins.verificado) { miss.push('PIN de quien verifica'); mark('pin-verificado'); }
+      if (dp && perms.verificado && perms.autorizado && perms.verificado.nombre === perms.autorizado.nombre) { miss.push('una persona distinta para autorizar'); mark('pin-autorizado'); }
       if (!pins.autorizado || !perms.autorizado || !perms.autorizado.autorizar) { miss.push('PIN válido de quien autoriza'); mark('pin-autorizado'); }
       if (!(draft.firmasImg||{}).autorizado) { miss.push('firma de quien autoriza'); first = first || $('#sig-autorizado'); }
       if (pins.verificado && (!perms.verificado || !perms.verificado.verificar)) { miss.push('PIN válido de quien verifica'); mark('pin-verificado'); }
       if (pins.verificado && !(draft.firmasImg||{}).verificado) { miss.push('firma de quien verifica'); first = first || $('#sig-verificado'); }
       if (!pins.verificado && (draft.firmasImg||{}).verificado) { miss.push('PIN de quien verifica'); mark('pin-verificado'); }
     } else {
+    if (dp && !draft.firmas.verificado.trim()) { miss.push('nombre de quien verifica'); mark('verificado'); }
+    if (dp && !(draft.firmasImg||{}).verificado) { miss.push('firma de quien verifica'); first = first || $('#sig-verificado'); }
+    if (dp && draft.firmas.verificado.trim() && draft.firmas.verificado.trim().toLowerCase() === draft.firmas.autorizado.trim().toLowerCase()) { miss.push('una persona distinta para autorizar'); mark('autorizado'); }
     if (!draft.firmas.autorizado.trim()) { miss.push('nombre de quien autoriza'); mark('autorizado'); }
     if (!(draft.firmasImg||{}).autorizado) { miss.push('firma de quien autoriza'); first = first || $('#sig-autorizado'); }
     if (draft.firmas.verificado.trim() && !(draft.firmasImg||{}).verificado) { miss.push('firma de quien verifica'); first = first || $('#sig-verificado'); }
     if (!draft.firmas.verificado.trim() && (draft.firmasImg||{}).verificado) { miss.push('nombre de quien verifica'); mark('verificado'); }
     }
-    if (miss.length) { $('#aprobErr').textContent = 'Para aprobar falta: ' + miss.join(', ') + '.'; $('#aprobErr').hidden = false; }
+    if (miss.length) { $('#aprobErr').textContent = 'Para aprobar falta: ' + [...new Set(miss)].join(', ') + '.'; $('#aprobErr').hidden = false; }
   }
   if (!draft.items.length) { $('#itemsErr').textContent = 'Agrega al menos un material.'; $('#itemsErr').hidden=false; first = first || $('#addItem'); }
   if (first) { first.scrollIntoView({behavior:'smooth', block:'center'}); toast('Completa los campos marcados en rojo'); return false; }
@@ -879,7 +892,7 @@ $('#logoDel').onclick = () => { settings.logo = null; LS.set('settings', setting
 const ERRS = { codigo_invalido:'El código de la obra no es correcto.', pin_invalido:'PIN incorrecto.', sin_permiso:'Ese PIN no tiene permiso para esta acción.',
   ya_verificada:'Esta requisición ya fue verificada.', ya_autorizada:'Esta requisición ya fue autorizada.', rechazada:'Esta requisición fue rechazada.',
   no_pendiente:'Solo se pueden rechazar requisiciones pendientes.', no_existe:'No se encontró la requisición.', firma_invalida:'Falta la firma.',
-  sin_motivo:'Escribe el motivo del rechazo.', sin_materiales:'La requisición no tiene materiales.', demasiado_grande:'La requisición es muy pesada. Borra las firmas y vuelve a firmar.' };
+  sin_motivo:'Escribe el motivo del rechazo.', falta_verificar:'Primero la debe verificar otra persona.', misma_persona:'Quien autoriza debe ser una persona distinta a quien verificó.', sin_materiales:'La requisición no tiene materiales.', demasiado_grande:'La requisición es muy pesada. Borra las firmas y vuelve a firmar.' };
 async function api(fn, args){
   if (!sbUrl() || !sbKey()) throw new Error('Falta configurar la conexión en Ajustes.');
   let res;
@@ -917,8 +930,10 @@ const pins = { verificado:'', autorizado:'' }, perms = { verificado:null, autori
       if (pins[k] !== pin) return;
       const can = k === 'verificado' ? q.verificar : q.autorizar;
       perms[k] = q; draft.firmas[k] = can ? q.nombre : ''; saveDraft(); updateAprobStatus();
-      who.textContent = can ? '✓ ' + q.nombre : q.nombre + ' no tiene permiso para ' + (k === 'verificado' ? 'verificar' : 'autorizar') + '.';
-      who.className = 'who onl ' + (can ? 'ok' : 'bad');
+      const other = perms[k === 'verificado' ? 'autorizado' : 'verificado'];
+      const same = settings.dosPasos && other && other.nombre === q.nombre;
+      who.textContent = !can ? q.nombre + ' no tiene permiso para ' + (k === 'verificado' ? 'verificar' : 'autorizar') + '.' : same ? q.nombre + ' ya firma en el otro puesto. Debe ser otra persona.' : '✓ ' + q.nombre;
+      who.className = 'who onl ' + (can && !same ? 'ok' : 'bad');
     } catch (e) { if (pins[k] !== pin) return; who.textContent = e.message; who.className = 'who onl bad'; }
   });
 });
@@ -965,7 +980,12 @@ $('#doneDl').onclick = () => { if (lastSent) downloadRemote(lastSent, $('#doneDl
 $('#doneKeep').addEventListener('click', () => { $('#doneKeep').textContent = 'Seguir editando'; });
 
 /* Bandeja */
-let bFilter = 'pendiente', bTimer = null;
+let bFilter = '', bTimer = null;
+function renderBFil(){
+  const opts = settings.dosPasos ? [['por_verificar','Verificar'],['por_autorizar','Autorizar'],['aprobada','Aprobadas'],['rechazada','Rechazadas']] : [['pendiente','Pendientes'],['aprobada','Aprobadas'],['rechazada','Rechazadas']];
+  if (!opts.some(o => o[0] === bFilter)) bFilter = opts[0][0];
+  $('#seg-bfil').innerHTML = opts.map(([v,l]) => `<button type="button" data-v="${v}" aria-pressed="${v === bFilter}">${l}</button>`).join('');
+}
 $('#seg-bfil').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; bFilter = b.dataset.v; segSet('seg-bfil', bFilter); loadBandeja(); });
 $('#bRefresh').onclick = () => loadBandeja();
 async function refreshCount(){
@@ -974,6 +994,7 @@ async function refreshCount(){
 }
 async function loadBandeja(){
   if (!online()) return;
+  renderBFil();
   const ul = $('#bList'), em = $('#bEmpty');
   if (!ul.children.length) { em.hidden = false; em.textContent = 'Cargando…'; }
   try {
@@ -982,16 +1003,16 @@ async function loadBandeja(){
     (rows || []).forEach(r => {
       const li = document.createElement('li');
       const when = new Date(r.creado).toLocaleDateString('es-VE', { day:'2-digit', month:'short' });
-      const tag = r.estado === 'aprobada' ? `<span class="tag ok">Aprobada por ${esc(r.autorizado)}</span>` : r.estado === 'rechazada' ? `<span class="tag bad">Rechazada${r.rechazo && r.rechazo.motivo ? ': ' + esc(r.rechazo.motivo) : ''}</span>` : (r.verificado ? `<span class="tag">Verificada por ${esc(r.verificado)}</span><span class="tag pend">Falta autorizar</span>` : '<span class="tag pend">Por verificar y autorizar</span>');
+      const tag = r.estado === 'aprobada' ? `<span class="tag ok">Aprobada por ${esc(r.autorizado)}</span>` : r.estado === 'rechazada' ? `<span class="tag bad">Rechazada${r.rechazo && r.rechazo.motivo ? ': ' + esc(r.rechazo.motivo) : ''}</span>` : (r.verificado ? `<span class="tag ok">Verificada por ${esc(r.verificado)}</span><span class="tag pend">Falta autorizar</span>` : `<span class="tag pend">${settings.dosPasos ? 'Falta verificar' : 'Por verificar y autorizar'}</span>`);
       li.innerHTML = `<div class="h1"><b>${esc(r.control)}</b><span style="color:var(--muted);font-weight:500">${when}</span></div>
         <div class="tags" style="margin:4px 0 2px">${tag}</div>
         <div class="h2">${esc(r.area || '')}${r.coordinacion ? ', ' + esc(r.coordinacion) : ''}. ${r.n} material${r.n === 1 ? '' : 'es'}. Pidió ${esc(r.solicitante || '')}${r.fechaRequerida ? '. Para el ' + fmt(r.fechaRequerida) : ''}</div>
-        <div class="hb"><button class="btn ${r.estado === 'pendiente' ? 'primary' : ''}" data-open="${esc(r.control)}">${r.estado === 'pendiente' ? 'Revisar y firmar' : 'Ver'}</button><button class="btn" data-rdl="${esc(r.control)}">Descargar</button></div>`;
+        <div class="hb"><button class="btn ${r.estado === 'pendiente' ? 'primary' : ''}" data-open="${esc(r.control)}">${r.estado !== 'pendiente' ? 'Ver' : settings.dosPasos ? (r.verificado ? 'Revisar y autorizar' : 'Revisar y verificar') : 'Revisar y firmar'}</button><button class="btn" data-rdl="${esc(r.control)}">Descargar</button></div>`;
       ul.appendChild(li);
     });
     em.hidden = ul.children.length > 0;
-    em.textContent = { pendiente:'No hay requisiciones esperando aprobación.', aprobada:'Todavía no hay requisiciones aprobadas.', rechazada:'No hay requisiciones rechazadas.' }[bFilter];
-    if (bFilter === 'pendiente') { $('#bCount').textContent = ul.children.length; $('#bCount').hidden = !ul.children.length; }
+    em.textContent = { pendiente:'No hay requisiciones esperando aprobación.', por_verificar:'No hay requisiciones por verificar.', por_autorizar:'No hay requisiciones verificadas esperando autorización.', aprobada:'Todavía no hay requisiciones aprobadas.', rechazada:'No hay requisiciones rechazadas.' }[bFilter];
+    if (bFilter === 'pendiente') { $('#bCount').textContent = ul.children.length; $('#bCount').hidden = !ul.children.length; } else refreshCount();
   } catch (e) { em.hidden = false; em.textContent = e.message; }
   clearTimeout(bTimer); bTimer = setTimeout(() => { if ($('#p-bandeja').classList.contains('on') && !document.hidden && !$('#detDlg').open) loadBandeja(); }, 30000);
 }
@@ -1014,7 +1035,7 @@ function renderDetail(){
     <div class="appr">
       ${x ? `<div class="bad">Rechazada por ${esc(x.nombre)} el ${fdate(x.fecha)}: ${esc(x.motivo)}</div>` : ''}
       <div class="${v ? 'ok' : ''}">${v ? `Verificada por ${esc(v.nombre)} el ${fdate(v.fecha)}` : 'Falta verificar'}</div>
-      <div class="${a ? 'ok' : ''}">${a ? `Autorizada por ${esc(a.nombre)} el ${fdate(a.fecha)}` : 'Falta autorizar'}</div>
+      <div class="${a ? 'ok' : ''}">${a ? `Autorizada por ${esc(a.nombre)} el ${fdate(a.fecha)}` : (settings.dosPasos && !v ? 'Falta autorizar (después de la verificación, por otra persona)' : settings.dosPasos ? 'Falta autorizar (por una persona distinta a quien verificó)' : 'Falta autorizar')}</div>
     </div>
     <dl class="dl">
       <dt>Área</dt><dd>${esc(d.area || '')}</dd>
@@ -1025,7 +1046,7 @@ function renderDetail(){
     </dl>
     <div class="sec">Materiales</div><ul class="items">${items}</ul>
     ${d.notas ? `<div class="sec">Notas</div><p style="margin:0 0 8px;white-space:pre-wrap">${esc(d.notas)}</p>` : ''}`;
-  const canV = !v && r.estado !== 'rechazada', canA = !a && r.estado !== 'rechazada', canR = r.estado === 'pendiente';
+  const canV = !v && !a && r.estado !== 'rechazada', canA = !a && r.estado !== 'rechazada' && (!settings.dosPasos || !!v), canR = r.estado === 'pendiente';
   document.querySelector('#seg-dact [data-v="verificar"]').hidden = !canV;
   document.querySelector('#seg-dact [data-v="autorizar"]').hidden = !canA;
   document.querySelector('#seg-dact [data-v="rechazar"]').hidden = !canR;
@@ -1048,7 +1069,9 @@ async function checkDetWho(){
   try {
     const q = await api('req_quien', { p_codigo: settings.codigo, p_pin: pin }); if ($('#dPin').value !== pin) return;
     detWho = q; const can = detAcc === 'verificar' ? q.verificar : detAcc === 'autorizar' ? q.autorizar : (q.verificar || q.autorizar);
-    w.textContent = can ? '✓ ' + q.nombre : q.nombre + ' no tiene permiso para esta acción.'; w.className = 'who ' + (can ? 'ok' : 'bad');
+    const same = settings.dosPasos && detAcc === 'autorizar' && detRow && detRow.verificado && detRow.verificado.nombre === q.nombre;
+    w.textContent = !can ? q.nombre + ' no tiene permiso para esta acción.' : same ? q.nombre + ' verificó esta requisición. La debe autorizar otra persona.' : '✓ ' + q.nombre;
+    w.className = 'who ' + (can && !same ? 'ok' : 'bad');
   } catch (e) { if ($('#dPin').value !== pin) return; w.textContent = e.message; w.className = 'who bad'; }
 }
 $('#dPin').addEventListener('input', () => { $('#dPin').value = $('#dPin').value.replace(/\D/g,'').slice(0,6); $('#dErr').hidden = true; checkDetWho(); });
@@ -1083,13 +1106,27 @@ function renderConn(){
   $('#connSt').textContent = on ? 'Conectada' : 'Sin conectar'; $('#connSt').classList.toggle('ok', on);
   $('#connBtn').hidden = on; $('#connOff').hidden = !on; $('#connErr').hidden = true;
 }
+function applyDp(){
+  document.body.classList.toggle('dospasos', !!settings.dosPasos);
+  segSet('seg-dp', settings.dosPasos ? 'si' : 'no');
+  document.querySelectorAll('#seg-dp button').forEach(b => b.disabled = online());
+  $('#dpHint').textContent = (settings.dosPasos ? 'Primero verifica una persona y después autoriza otra distinta. No se puede autorizar sin verificación.' : 'Se puede autorizar sin verificación previa, y una misma persona puede hacer las dos cosas.')
+    + (online() ? ' Esta regla la define la obra y se cambia desde Supabase.' : '');
+}
+$('#seg-dp').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || online()) return; settings.dosPasos = b.dataset.v === 'si'; LS.set('settings', settings); applyDp(); });
+async function syncDp(){
+  if (!online()) return;
+  try { const r = await api('req_ingresar', { p_codigo: settings.codigo }); if (r && typeof r.dos_pasos === 'boolean' && r.dos_pasos !== settings.dosPasos) { settings.dosPasos = r.dos_pasos; LS.set('settings', settings); applyDp(); } }
+  catch (e) { if (e.code === 'codigo_invalido') { settings.codigo = ''; LS.set('settings', settings); applyOnline(); toast('El código de la obra cambió. Escríbelo de nuevo en Ajustes.'); } }
+}
 function applyOnline(){
   const on = online();
+  applyDp();
   document.body.classList.toggle('online', on); $('#tabBandeja').hidden = !on;
   if (on && !draft.items.length && /^\w*-?\d+$/.test(draft.control || '') ) { draft.control = ''; saveDraft(); }
   if (!on && !draft.control) { draft.control = ctlFor(settings.next); saveDraft(); }
   $('#ctlBadge').textContent = draft.control || (on ? 'Nueva' : '—');
-  updateDock(); renderConn(); if (on) refreshCount();
+  updateDock(); renderConn(); if (on) { refreshCount(); syncDp(); }
 }
 $('#connBtn').onclick = async () => {
   const embedded = !!(SB_URL && SB_KEY);
@@ -1098,7 +1135,7 @@ $('#connBtn').onclick = async () => {
   if (!sbUrl() || !sbKey()) { e.textContent = 'Falta la dirección o la clave de Supabase.'; e.hidden = false; return; }
   if (!code) { e.textContent = 'Escribe el código de la obra.'; e.hidden = false; return; }
   const b = $('#connBtn'); b.disabled = true; b.textContent = 'Conectando…';
-  try { const r = await api('req_ingresar', { p_codigo: code }); settings.codigo = code; if (r && r.prefijo) settings.prefix = r.prefijo; LS.set('settings', settings); $('#connCode').value = ''; applyOnline(); toast('Conectado a la obra'); }
+  try { const r = await api('req_ingresar', { p_codigo: code }); settings.codigo = code; if (r && r.prefijo) settings.prefix = r.prefijo; if (r && typeof r.dos_pasos === 'boolean') settings.dosPasos = r.dos_pasos; LS.set('settings', settings); $('#connCode').value = ''; applyOnline(); toast('Conectado a la obra'); }
   catch (err) { e.textContent = err.message; e.hidden = false; LS.set('settings', settings); }
   finally { b.disabled = false; b.textContent = 'Conectar'; }
 };
