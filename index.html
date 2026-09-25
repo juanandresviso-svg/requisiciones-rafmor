@@ -321,6 +321,7 @@ dialog.lb{background:#000}
       </div>
       <div class="block">
         <h2>2. Tus datos</h2>
+        <label class="f" id="rg-baseWrap" hidden><span>Base que comanda</span><select class="in" id="rg-base"><option value="">Elige la base…</option></select></label>
         <label class="f"><span>Nombre y apellido</span><input class="in" id="rg-nombre" autocomplete="name"></label>
         <label class="f"><span id="rg-empresa-lbl">Empresa</span><input class="in" id="rg-empresa" autocomplete="organization"></label>
         <div class="row2">
@@ -900,7 +901,7 @@ const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession
 const ERRS = {
   sin_sesion:'Tu sesión terminó. Entra de nuevo.', sin_perfil:'No encontramos tu perfil. Contacta al administrador.',
   cuenta_pendiente:'Tu cuenta todavía no ha sido aprobada.', cuenta_inactiva:'Tu cuenta está desactivada.',
-  sin_permiso:'Tu rol no permite esta acción.', solo_maestro:'Solo el usuario maestro puede hacer esto.',
+  sin_permiso:'Tu rol no permite esta acción.', falta_base:'Elige la base del comandante.', solo_maestro:'Solo el usuario maestro puede hacer esto.',
   solo_operaciones:'Esta requisición está en verificación: solo el Gerente de Operaciones puede actuar.',
   solo_gerente_general:'Esta requisición ya está verificada: solo el Gerente General puede actuar.',
   solo_compras:'Solo Compras firma el recibido.', no_aprobada:'Todavía no está aprobada.', ya_recibida:'Compras ya firmó el recibido.',
@@ -928,11 +929,15 @@ const ROLES = {
   gerente_operaciones:{ label:'Gerente de Operaciones', desc:'Revisa, ajusta y verifica las requisiciones.' },
   compras:{ label:'Compras', desc:'Ve todo el proceso y firma el recibido cuando se aprueba.' },
   costos:{ label:'Costos', desc:'Ve todo el proceso y también hace requisiciones.' },
-  gerente_general:{ label:'Gerente General', desc:'Acceso a toda la plataforma. Aprueba las requisiciones.' }
+  gerente_general:{ label:'Gerente General', desc:'Acceso a toda la plataforma. Aprueba las requisiciones.' },
+  comandante_base:{ label:'Comandante de la Base', desc:'Consulta el reporte semanal de su base.' },
+  reporte_general:{ label:'Reporte General', desc:'Consulta el reporte semanal de todo el proyecto.' }
 };
 let me = null; // perfil activo
 const canCreate = () => me && (me.es_master || ['contratista','costos','gerente_general'].includes(me.rol));
-const seesAll = () => me && (me.rol !== 'contratista' || me.es_master);
+const soloSemanal = () => me && !me.es_master && ['comandante_base','reporte_general'].includes(me.rol);
+const seesAll = () => me && (me.es_master || ['gerente_operaciones','compras','costos','gerente_general'].includes(me.rol));
+const roleText = u => ((ROLES[u.rol] || {}).label || u.rol) + (u.rol === 'comandante_base' && u.base ? ' · ' + baseName(u.base).replace('B.P.F ', '') : '');
 const seesUsers = () => me && (me.es_master || me.rol === 'gerente_general');
 
 /* ---------- listas locales (autocompletar) ---------- */
@@ -1365,7 +1370,7 @@ $('#bellBtn').onclick = async () => {
   try {
     const r = await rpc('rq_avisos', { p_limite: 50 });
     const L = (r && r.avisos) || [];
-    $('#avList').innerHTML = L.map(a => `<li class="${a.leida ? '' : 'new'}" ${a.control || a.tipo === 'recordatorio' ? `data-av="${esc(a.control || '')}" data-tipo="${esc(a.tipo)}" role="button" tabindex="0"` : ''}><b>${esc(a.titulo)}</b><span>${esc(a.mensaje || '')}</span><small>${new Date(a.creado).toLocaleString('es-VE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</small></li>`).join('');
+    $('#avList').innerHTML = L.map(a => `<li class="${a.leida ? '' : 'new'}" ${a.control || a.tipo === 'recordatorio' || a.tipo === 'semanal' ? `data-av="${esc(a.control || '')}" data-tipo="${esc(a.tipo)}" role="button" tabindex="0"` : ''}><b>${esc(a.titulo)}</b><span>${esc(a.mensaje || '')}</span><small>${new Date(a.creado).toLocaleString('es-VE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</small></li>`).join('');
     $('#avEmpty').hidden = L.length > 0;
     if (r && r.sin_leer) { await rpc('rq_avisos_leidos'); setCount('bellCnt', 0); }
   } catch (e) { $('#avList').innerHTML = `<li class="err">${esc(e.message)}</li>`; }
@@ -1375,6 +1380,7 @@ $('#avList').addEventListener('click', e => {
   const li = e.target.closest('[data-av]'); if (!li) return; $('#avDlg').close();
   const c = li.dataset.av;
   if (li.dataset.tipo === 'recordatorio') { if (canReport()) setMod('rep', 'rnuevo'); return; }
+  if (li.dataset.tipo === 'semanal') { if (canWeekly()) { wStart = addDays(weekStart(today()), -7); setMod('rep', 'rsem'); } return; }
   if (c.startsWith('rep:')) { openReport(c.slice(4)); return; }
   openDetail(c);
 });
@@ -1389,6 +1395,7 @@ async function loadUsers(){
   catch (e) { $('#eUsers').hidden = false; $('#eUsers').textContent = e.message; }
 }
 const roleOpts = sel => Object.entries(ROLES).map(([k, r]) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${r.label}</option>`).join('');
+const baseOpts = (id, sel, show) => `<select class="in sel" data-ubase="${id}" aria-label="Base" ${show ? '' : 'hidden'}><option value="">Base…</option>${CECOS.bases.map(b => `<option value="${b.n}" ${+sel === b.n ? 'selected' : ''}>${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</option>`).join('')}</select>`;
 function renderUsers(){
   segSet('seg-ufil', uFilter);
   const L = usersCache.filter(u => uFilter === 'pendiente' ? u.estado === 'pendiente' : uFilter === 'activo' ? u.estado === 'activo' : ['rechazado','inactivo'].includes(u.estado));
@@ -1396,26 +1403,28 @@ function renderUsers(){
     const tag = { pendiente:'<span class="tag pend">Por aprobar</span>', activo:'<span class="tag ok">Activo</span>', rechazado:'<span class="tag bad">Rechazado</span>', inactivo:'<span class="tag bad">Desactivado</span>' }[u.estado];
     let acts = '';
     if (me.es_master) {
-      if (u.estado === 'pendiente') acts = `<select class="in sel" data-urol="${u.id}" aria-label="Rol">${roleOpts(u.rol)}</select><button class="btn primary" data-uact="aprobar" data-uid="${u.id}">Aprobar</button><button class="btn ghost danger" data-uact="rechazar" data-uid="${u.id}">Rechazar</button>`;
-      else if (u.estado === 'activo' && u.id !== me.id) acts = `<select class="in sel" data-urol="${u.id}" aria-label="Rol">${roleOpts(u.rol)}</select><button class="btn" data-uact="rol" data-uid="${u.id}">Cambiar rol</button><button class="btn ghost danger" data-uact="desactivar" data-uid="${u.id}">Desactivar</button>`;
+      if (u.estado === 'pendiente') acts = `<select class="in sel" data-urol="${u.id}" aria-label="Rol">${roleOpts(u.rol)}</select>${baseOpts(u.id, u.base, u.rol === 'comandante_base')}<button class="btn primary" data-uact="aprobar" data-uid="${u.id}">Aprobar</button><button class="btn ghost danger" data-uact="rechazar" data-uid="${u.id}">Rechazar</button>`;
+      else if (u.estado === 'activo' && u.id !== me.id) acts = `<select class="in sel" data-urol="${u.id}" aria-label="Rol">${roleOpts(u.rol)}</select>${baseOpts(u.id, u.base, u.rol === 'comandante_base')}<button class="btn" data-uact="rol" data-uid="${u.id}">Cambiar rol</button><button class="btn ghost danger" data-uact="desactivar" data-uid="${u.id}">Desactivar</button>`;
       else if (u.estado !== 'activo') acts = `<button class="btn" data-uact="reactivar" data-uid="${u.id}">Reactivar</button>`;
     }
     return `<li><div class="h1"><b>${esc(u.nombre)}</b>${u.es_master ? '<span class="tag com">Maestro</span>' : ''}</div>
-      <div class="tags" style="margin:4px 0 2px"><span class="tag">${esc((ROLES[u.rol] || {}).label || u.rol)}</span>${tag}</div>
+      <div class="tags" style="margin:4px 0 2px"><span class="tag">${esc(roleText(u))}</span>${tag}</div>
       <div class="h2">${esc(u.email)}${u.empresa ? '. ' + esc(u.empresa) : ''}${u.cargo ? ', ' + esc(u.cargo) : ''}${u.telefono ? '. Tel. ' + esc(u.telefono) : ''}</div>
       ${acts ? `<div class="hb">${acts}</div>` : ''}</li>`;
   }).join('');
   $('#eUsers').hidden = L.length > 0;
   $('#eUsers').textContent = { pendiente:'No hay registros por aprobar.', activo:'No hay usuarios activos.', otros:'No hay usuarios desactivados.' }[uFilter];
 }
+$('#lUsers').addEventListener('change', e => { const s = e.target.closest('[data-urol]'); if (!s) return; const bs = document.querySelector(`[data-ubase="${s.dataset.urol}"]`); if (bs) bs.hidden = s.value !== 'comandante_base'; });
 $('#lUsers').addEventListener('click', async e => {
   const b = e.target.closest('[data-uact]'); if (!b) return;
-  const id = b.dataset.uid, act = b.dataset.uact, sel = document.querySelector(`[data-urol="${id}"]`);
+  const id = b.dataset.uid, act = b.dataset.uact, sel = document.querySelector(`[data-urol="${id}"]`), bsel = document.querySelector(`[data-ubase="${id}"]`);
+  if ((act === 'aprobar' || act === 'rol') && sel && sel.value === 'comandante_base' && !(bsel && bsel.value)) { toast('Elige la base del comandante'); if (bsel) { bsel.hidden = false; bsel.focus(); } return; }
   const u = usersCache.find(x => x.id === id);
   if (act === 'rechazar' && !confirm(`¿Rechazar el registro de ${u.nombre}?`)) return;
   if (act === 'desactivar' && !confirm(`¿Desactivar a ${u.nombre}? Ya no podrá entrar.`)) return;
   b.disabled = true;
-  try { await rpc('rq_usuario_decidir', { p_id: id, p_accion: act, p_rol: sel ? sel.value : null });
+  try { await rpc('rq_usuario_decidir', { p_id: id, p_accion: act, p_rol: sel ? sel.value : null, p_base: bsel && bsel.value ? +bsel.value : null });
     toast({ aprobar:'Usuario aprobado. Se le avisó', rechazar:'Registro rechazado', desactivar:'Usuario desactivado', reactivar:'Usuario reactivado', rol:'Rol actualizado' }[act]); loadUsers(); }
   catch (er) { toast(er.message); b.disabled = false; }
 });
@@ -1423,7 +1432,7 @@ $('#lUsers').addEventListener('click', async e => {
 /* ---------- Mi cuenta y ajustes ---------- */
 function renderSettings(){
   $('#usersBlock').hidden = !seesUsers(); if (seesUsers()) loadUsers();
-  $('#myRole').textContent = (ROLES[me.rol] || {}).label + (me.es_master ? ' · Maestro' : '');
+  $('#myRole').textContent = roleText(me) + (me.es_master ? ' · Maestro' : '');
   $('#myEmail').textContent = me.email;
   [['my-nombre','nombre'],['my-empresa','empresa'],['my-cargo','cargo'],['my-tel','telefono'],['my-area','area'],['my-coord','coordinacion']].forEach(([id,k]) => $('#'+id).value = me[k] || '');
   const lp = $('#logoPrev'); lp.innerHTML = `<img alt="Logo actual" src="${logoNow().data}"><span class="hint" style="margin:0">${settings.logo ? 'Logo personalizado en este teléfono.' : 'Logo de Constructora Rafmor.'}</span>`;
@@ -1735,6 +1744,9 @@ $('#w-next').onclick = () => { if (addDays(wStart, 7) <= today()) { wStart = add
 $('#w-base').onchange = () => loadWeek();
 async function loadWeek(){
   if (!wStart) wStart = weekStart(today());
+  const lock = me.rol === 'comandante_base' && !me.es_master;
+  if (lock) { $('#w-base').value = String(me.base || ''); }
+  $('#w-base').disabled = lock;
   const wEnd = addDays(wStart, 6);
   $('#w-label').textContent = weekLabel(wStart);
   $('#w-next').disabled = addDays(wStart, 7) > today();
@@ -1921,10 +1933,12 @@ $('#lbClose').onclick = () => $('#lbDlg').close();
 /* ---------- Módulos ---------- */
 let curMod = LS.get('mod', 'req');
 function setMod(m, tab){
+  if (soloSemanal()) { m = 'rep'; tab = 'rsem'; }
+  $('#mods').hidden = soloSemanal();
   curMod = m; LS.set('mod', m);
   $$('#mods button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mod === m));
   applyTabVisibility();
-  const first = tab || (m === 'rep' ? (canReport() ? 'rnuevo' : 'rarch') : defaultReqTab());
+  const first = tab || (m === 'rep' ? (soloSemanal() ? 'rsem' : canReport() ? 'rnuevo' : 'rarch') : defaultReqTab());
   showTab(first);
 }
 $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mod]'); if (b) setMod(b.dataset.mod); });
@@ -1950,21 +1964,25 @@ function tabAllowed(t){
   if (t === 'verif' || t === 'aprob') return seesAll();
   if (t === 'rnuevo') return canReport();
   if (t === 'rsem') return canWeekly();
+  if (t === 'rarch') return !soloSemanal();
   return true;
 }
 function applyTabVisibility(){ $$('#mainTabs button').forEach(b => { b.hidden = !((b.dataset.mod === curMod || b.dataset.mod === 'both') && tabAllowed(b.dataset.tab)); }); }
 function defaultReqTab(){ return canCreate() && me.rol !== 'gerente_general' ? 'nueva' : me.rol === 'gerente_operaciones' ? 'verif' : seesAll() ? 'aprob' : 'nueva'; }
-function setHeader(){ $('#hUser').textContent = `${me.nombre}, ${(ROLES[me.rol] || {}).label}${me.es_master ? ' · Maestro' : ''}`; }
+function setHeader(){ $('#hUser').textContent = `${me.nombre}, ${roleText(me)}${me.es_master ? ' · Maestro' : ''}`; }
 
 /* ---------- Entrar / registro ---------- */
 function showAuthTab(t){ $$('#authTabs button').forEach(x => x.setAttribute('aria-selected', x.dataset.atab === t)); $$('#authView section.panel').forEach(p => p.classList.toggle('on', p.id === 'a-'+t)); $('#authTabs').hidden = t === 'reset'; window.scrollTo(0,0); }
 $$('#authTabs button').forEach(b => b.addEventListener('click', () => showAuthTab(b.dataset.atab)));
 let regRol = '';
+CECOS.bases.forEach(b => { const o = document.createElement('option'); o.value = b.n; o.textContent = b.n + '. ' + b.nombre.replace('B.P.F ', ''); $('#rg-base').appendChild(o); });
 function renderRoles(){
   $('#roleCards').innerHTML = Object.entries(ROLES).map(([k, r], i) => `<button type="button" role="radio" aria-checked="${regRol === k}" data-rol="${k}"><b>${i+1}. ${r.label}</b><span>${r.desc}</span></button>`).join('');
   const isC = regRol === 'contratista', makes = ['contratista','costos','gerente_general'].includes(regRol);
   $('#rg-empresa-lbl').textContent = isC ? 'Empresa contratista' : 'Empresa';
   $('#rg-reqblock').hidden = !makes; $('#rg-step4').textContent = makes ? '4.' : '3.';
+  $('#rg-baseWrap').hidden = regRol !== 'comandante_base';
+  $('#rg-empresa-lbl').textContent = isC ? 'Empresa contratista' : ['comandante_base','reporte_general'].includes(regRol) ? 'Unidad o institución' : 'Empresa';
 }
 $('#roleCards').addEventListener('click', e => { const b = e.target.closest('[data-rol]'); if (!b) return; regRol = b.dataset.rol; renderRoles(); $('#rg-err').hidden = true; });
 $('#rg-btn').onclick = async () => {
@@ -1973,6 +1991,7 @@ $('#rg-btn').onclick = async () => {
   if (!regRol) return err('Elige tu rol.');
   if (!v('rg-nombre')) return err('Escribe tu nombre y apellido.');
   if (regRol === 'contratista' && !v('rg-empresa')) return err('Escribe el nombre de la empresa contratista.');
+  if (regRol === 'comandante_base' && !v('rg-base')) return err('Elige la base que comandas.');
   if (['contratista','costos'].includes(regRol) && !v('rg-area')) return err('Escribe el área solicitante de tus requisiciones.');
   if (!/^\S+@\S+\.\S+$/.test(v('rg-email'))) return err('Escribe un correo válido.');
   if ($('#rg-pass').value.length < 8) return err('La contraseña debe tener al menos 8 caracteres.');
@@ -1980,7 +1999,7 @@ $('#rg-btn').onclick = async () => {
   const b = $('#rg-btn'); b.disabled = true; b.textContent = 'Registrando…';
   try {
     const { data, error } = await sb.auth.signUp({ email: v('rg-email').toLowerCase(), password: $('#rg-pass').value,
-      options: { emailRedirectTo: location.origin + location.pathname, data: { nombre: v('rg-nombre'), rol: regRol, empresa: v('rg-empresa'), cargo: v('rg-cargo'), telefono: v('rg-tel'), area: v('rg-area'), coordinacion: v('rg-coord') } } });
+      options: { emailRedirectTo: location.origin + location.pathname, data: { nombre: v('rg-nombre'), rol: regRol, base: regRol === 'comandante_base' ? v('rg-base') : null, empresa: v('rg-empresa'), cargo: v('rg-cargo'), telefono: v('rg-tel'), area: v('rg-area'), coordinacion: v('rg-coord') } } });
     if (error) throw error;
     learn('areas', v('rg-area')); learn('coord', v('rg-coord')); LS.set('lists', lists);
     if (!data.session) { showAuthTab('entrar'); $('#li-email').value = v('rg-email'); $('#li-err').textContent = 'Te enviamos un correo para confirmar tu dirección. Confírmala y luego entra aquí.'; $('#li-err').hidden = false; return; }
@@ -2040,7 +2059,7 @@ async function route(){
 }
 function showPend(ico, title, msg, perfil){
   showView('pend'); $('#pd-ico').textContent = ico; $('#pd-title').textContent = title; $('#pd-msg').textContent = msg;
-  $('#pd-data').innerHTML = perfil ? `<dt>Nombre</dt><dd>${esc(perfil.nombre)}</dd><dt>Rol</dt><dd>${esc((ROLES[perfil.rol] || {}).label || perfil.rol)}</dd><dt>Correo</dt><dd>${esc(perfil.email)}</dd>` : '';
+  $('#pd-data').innerHTML = perfil ? `<dt>Nombre</dt><dd>${esc(perfil.nombre)}</dd><dt>Rol</dt><dd>${esc(roleText(perfil))}</dd><dt>Correo</dt><dd>${esc(perfil.email)}</dd>` : '';
 }
 $('#pd-refresh').onclick = () => route();
 $('#pd-out').onclick = async () => { await sb.auth.signOut(); route(); };
