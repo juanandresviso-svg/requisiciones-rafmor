@@ -318,6 +318,14 @@ dialog.lb{background:#000}
 .antes .t{cursor:zoom-in}
 .folders button .antn{color:#5B3F86;font-weight:600}
 .lbcap{color:#ddd;text-align:center;margin:6px 0 0;font-size:13px;min-height:1em}
+.antsec{margin-top:10px}
+.antsec:first-of-type{margin-top:0}
+.antsh{display:flex;justify-content:space-between;align-items:center;margin:0 0 6px;padding-left:8px;border-left:4px solid var(--muted)}
+.antsh.aerea{border-left-color:#3B6EA8}.antsh.terrestre{border-left-color:#8A6A2E}
+.antsh b{font-weight:600;font-size:15px}.antsh span{font-size:13px;color:var(--muted)}
+.catline{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.cat{font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid var(--rule);background:var(--sunk)}
+.cat.aerea{background:#E3EDF8;border-color:transparent;color:#2D5687}.cat.terrestre{background:#F3EAD9;border-color:transparent;color:#6E5220}.cat.sin{background:var(--red-soft);border-color:transparent;color:var(--red)}
 </style>
 </head>
 <body>
@@ -586,7 +594,7 @@ dialog.lb{background:#000}
       <h2>Fotos del antes</h2>
       <p class="hint" style="margin-top:-6px">Fotos de cada puesto fronterizo antes de la intervención. Quedan al inicio de la carpeta de cada puesto en el Archivo de obra y en el PDF semanal de esa base.</p>
       <div class="sec" style="margin-top:4px">Desde la computadora</div>
-      <p class="hint" style="margin:0 0 8px">Elige la carpeta que contiene las carpetas de los puestos (por ejemplo "Antes", con "Socuavo", "Caño en Medio"…) o la carpeta de un solo puesto. La app reconoce el puesto por el nombre de la carpeta.</p>
+      <p class="hint" style="margin:0 0 8px">Elige la carpeta que contiene las carpetas de los puestos (por ejemplo "Antes", con "Socuavo", "Caño en Medio"…) o la carpeta de un solo puesto. La app reconoce el puesto por el nombre de la carpeta, y si dentro hay carpetas "Aéreas" (o "Dron") y "Terrestres", separa las fotos solas. Las fotos de dron DJI se reconocen como aéreas.</p>
       <div class="pick" style="grid-template-columns:1fr 1fr">
         <label class="btn dark">Elegir carpeta<input type="file" id="antDir" webkitdirectory directory multiple hidden></label>
         <label class="btn">Elegir .zip<input type="file" id="antZip" accept=".zip,application/zip" hidden></label>
@@ -596,6 +604,7 @@ dialog.lb{background:#000}
         <label class="f" style="margin:0;flex:1"><span>Puesto</span><select class="in" id="antBase"><option value="">Elige el puesto…</option></select></label>
         <label class="btn dark" style="min-height:48px">Elegir fotos<input type="file" id="antFotos" accept="image/*,video/*" multiple hidden></label>
       </div>
+      <div class="seg" id="antCatSeg" style="margin-bottom:6px"><button type="button" data-v="aerea" aria-pressed="false">Aéreas</button><button type="button" data-v="terrestre" aria-pressed="false">Terrestres</button></div>
       <div id="antPrev"></div>
       <p class="err" id="antErr" hidden></p>
       <button class="btn primary block100" id="antBtn" hidden>Subir fotos del antes</button>
@@ -779,7 +788,7 @@ dialog.lb{background:#000}
   <div class="lbwrap">
     <img id="lbImg" alt="">
     <p class="lbcap" id="lbCap"></p>
-    <div class="lbbar"><button class="btn" id="lbPrev" aria-label="Anterior">‹</button><a class="btn" id="lbDl" download>Descargar</a><button class="btn danger" id="lbDel" hidden>Quitar</button><button class="btn" id="lbNext" aria-label="Siguiente">›</button><button class="btn primary" id="lbClose">Cerrar</button></div>
+    <div class="lbbar"><button class="btn" id="lbPrev" aria-label="Anterior">‹</button><a class="btn" id="lbDl" download>Descargar</a><button class="btn" id="lbCat" hidden>Mover</button><button class="btn danger" id="lbDel" hidden>Quitar</button><button class="btn" id="lbNext" aria-label="Siguiente">›</button><button class="btn primary" id="lbClose">Cerrar</button></div>
   </div>
 </dialog>
 
@@ -1736,6 +1745,16 @@ $('#drvBtn').onclick = async () => {
 const canAntes = () => me && (me.es_master || ['gerente_general','gerente_operaciones'].includes(me.rol));
 CECOS.bases.forEach(b => { const o = document.createElement('option'); o.value = b.n; o.textContent = b.n + '. ' + b.nombre.replace('B.P.F ', ''); $('#antBase').appendChild(o); });
 let ant = null; // { grupos: Map base -> [items], sinBase: [[dir, items]] }
+const CAT_L = { aerea:'Aéreas', terrestre:'Terrestres', null:'Sin clasificar' };
+function catFrom(dirs, name){
+  const d = dirs.map(normTxt).join(' / ');
+  if (/AERE|DRON|AIRE|VUELO|CENITAL/.test(d)) return 'aerea';
+  if (/TERRESTR|TIERRA|SUELO|PISO|CAMPO/.test(d)) return 'terrestre';
+  if (/^DJI[_-]/i.test(name)) return 'aerea';
+  return null;
+}
+let antCatPhone = '';
+$('#antCatSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; antCatPhone = b.dataset.v; segSet('antCatSeg', antCatPhone); });
 const slugName = n => normTxt(n.replace(/\s*\(\d+\)(?=\.[^.]+$)/, '').replace(/\.[^.]+$/, '')).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'foto';
 function buildAntes(entries, forcedBase){
   const grupos = new Map(), sinBase = new Map(); let otros = 0, dup = 0; const seen = new Set();
@@ -1746,7 +1765,7 @@ function buildAntes(entries, forcedBase){
     if (!mime) { otros++; return; }
     let base = forcedBase || null; const dirs = parts.slice(0, -1);
     if (!base) for (const d of dirs) { const b = matchBase(d); if (b) { base = b; break; } }
-    const item = { path: e.path, name, size: e.size, mime, kind: mime.startsWith('video/') ? 'video' : 'foto', get: e.get };
+    const item = { path: e.path, name, size: e.size, mime, kind: mime.startsWith('video/') ? 'video' : 'foto', get: e.get, cat: e.cat || catFrom(dirs, name) };
     const k = `${base}|${slugName(name)}|${e.size}`; if (seen.has(k)) { dup++; return; } seen.add(k);
     if (!base) { const dir = dirs.filter(d => normTxt(d) !== 'ANTES').pop() || dirs[0] || '(sin carpeta)'; if (!sinBase.has(dir)) sinBase.set(dir, []); sinBase.get(dir).push(item); return; }
     if (!grupos.has(base)) grupos.set(base, []); grupos.get(base).push(item);
@@ -1760,7 +1779,10 @@ async function renderAntesPrev(){
       ${a.dup ? `<span>${a.dup} repetida${a.dup === 1 ? '' : 's'} se omite${a.dup === 1 ? '' : 'n'}.</span>` : ''}${a.otros ? `<span>${a.otros} archivo${a.otros === 1 ? '' : 's'} que no son fotos ni videos se ignora${a.otros === 1 ? '' : 'n'}.</span>` : ''}
       <span>Si una foto ya estaba cargada, no se duplica.</span></div>
     ${a.sinBase.map(([dir, fs]) => `<div class="drvwarn">La carpeta <b>${esc(dir)}</b> (${fs.length} archivo${fs.length === 1 ? '' : 's'}) no coincide con ningún puesto. <select class="in sel" data-antsin="${esc(dir)}"><option value="">Asignar puesto…</option>${CECOS.bases.map(b => `<option value="${b.n}">${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</option>`).join('')}</select></div>`).join('')}
-    ${G.length ? `<ul class="hist histlist">${G.map(([b, fs]) => `<li class="drvday" style="border-top:0"><span style="text-transform:none"><b>${esc(baseName(b))}</b></span><span>${fs.length} nueva${fs.length === 1 ? '' : 's'}${res[b] ? ` · ${res[b]} ya cargada${res[b] === 1 ? '' : 's'}` : ''}</span></li>`).join('')}</ul>` : ''}`;
+    ${G.length ? `<ul class="hist histlist">${G.map(([b, fs]) => { const na = fs.filter(f => f.cat === 'aerea').length, nt = fs.filter(f => f.cat === 'terrestre').length, ns = fs.length - na - nt;
+      return `<li style="padding:10px 0"><div class="drvday" style="border-top:0"><span style="text-transform:none"><b>${esc(baseName(b))}</b></span><span>${fs.length} foto${fs.length === 1 ? '' : 's'}${res[b] ? ` · ${res[b]} ya cargada${res[b] === 1 ? '' : 's'}` : ''}</span></div>
+        <div class="catline"><span class="cat aerea">Aéreas ${na}</span><span class="cat terrestre">Terrestres ${nt}</span>${ns ? `<span class="cat sin">Sin clasificar ${ns}</span>` : ''}</div>
+        ${ns ? `<select class="in sel" data-antcat="${b}" style="width:100%;margin-top:6px"><option value="">Las ${ns} sin clasificar quedan así…</option><option value="aerea">Marcar las ${ns} como aéreas</option><option value="terrestre">Marcar las ${ns} como terrestres</option></select>` : ''}</li>`; }).join('')}</ul>` : ''}`;
   $('#antBtn').hidden = !n; $('#antBtn').textContent = `Subir ${n} foto${n === 1 ? '' : 's'} del antes`;
 }
 async function loadAntes(entries, forcedBase){
@@ -1770,6 +1792,8 @@ async function loadAntes(entries, forcedBase){
   await renderAntesPrev();
 }
 $('#antPrev').addEventListener('change', e => {
+  const c = e.target.closest('[data-antcat]');
+  if (c) { if (!c.value || !ant) return; (ant.grupos.get(+c.dataset.antcat) || []).forEach(f => { if (!f.cat) f.cat = c.value; }); renderAntesPrev(); return; }
   const s = e.target.closest('[data-antsin]'); if (!s || !s.value || !ant) return;
   const i = ant.sinBase.findIndex(([d]) => d === s.dataset.antsin); if (i < 0) return;
   const [, fs] = ant.sinBase.splice(i, 1)[0], b = +s.value;
@@ -1785,7 +1809,8 @@ $('#antZip').addEventListener('change', async e => {
 $('#antFotos').addEventListener('change', async e => {
   const fs = [...e.target.files]; e.target.value = ''; if (!fs.length) return;
   if (!$('#antBase').value) { $('#antErr').textContent = 'Primero elige el puesto.'; $('#antErr').hidden = false; return; }
-  await loadAntes(fs.map(f => ({ path: f.name, size: f.size, type: f.type, get: async () => f })), +$('#antBase').value);
+  if (!antCatPhone) { $('#antErr').textContent = 'Primero elige si son fotos aéreas o terrestres.'; $('#antErr').hidden = false; return; }
+  await loadAntes(fs.map(f => ({ path: f.name, size: f.size, type: f.type, cat: antCatPhone, get: async () => f })), +$('#antBase').value);
 });
 $('#antBtn').onclick = async () => {
   if (!ant) return; const b = $('#antBtn'); b.disabled = true;
@@ -1804,7 +1829,7 @@ $('#antBtn').onclick = async () => {
           if (error && !/exists|Duplicate/i.test(error.message || '')) throw mapErr(error);
           f.up = { path, tipo: f.kind, mime, size: blob.size, nombre: f.name };
         }
-        arch.push(f.up);
+        arch.push(Object.assign({}, f.up, { categoria: f.cat || null }));
       } catch (e) { fallos.push(f.name + ': ' + e.message); }
     }
     if (arch.length) { try { const r = await rpc('rq_antes_registrar', { p_puesto: base, p_archivos: arch }); nuevas += r.nuevas; rep += r.repetidas; } catch (e) { fallos.push(baseName(base) + ': ' + e.message); } }
@@ -1821,17 +1846,25 @@ async function renderArchAntes(puesto){
   try { antesRows = await rpc('rq_antes_listar', { p_puesto: puesto }) || []; } catch (e) { antesRows = []; }
   if (!antesRows.length) { box.innerHTML = canAntes() ? '<p class="hint" style="margin:0 0 10px">Todavía no hay fotos del antes de este puesto. Se cargan en Ajustes → Fotos del antes.</p>' : ''; return; }
   const url = await signed(antesRows.filter(a => a.tipo === 'foto').map(a => a.path));
+  const sec = (cat, titulo) => { const L = antesRows.map((a, i) => [a, i]).filter(([a]) => (a.categoria || null) === cat); if (!L.length) return '';
+    return `<div class="antsec"><div class="antsh ${cat || 'sin'}"><b>${titulo}</b><span>${L.length} foto${L.length === 1 ? '' : 's'}</span></div>
+      <div class="thumbs">${L.map(([a, i]) => a.tipo === 'foto' ? `<div class="t" data-antes="${i}"><img loading="lazy" alt="${titulo} ${i+1}" src="${url(a.path)}"></div>` : `<div class="t" data-antesv="${i}">▶</div>`).join('')}</div></div>`; };
   box.innerHTML = `<div class="antes"><div class="antesh"><b>Antes de la intervención</b><span>${antesRows.length} foto${antesRows.length === 1 ? '' : 's'}</span></div>
-    <div class="thumbs">${antesRows.map((a, i) => a.tipo === 'foto' ? `<div class="t" data-antes="${i}"><img loading="lazy" alt="Antes ${i+1}" src="${url(a.path)}"></div>` : `<div class="t" data-antesv="${i}">▶</div>`).join('')}</div></div>`;
+    ${sec('aerea', 'Fotos aéreas')}${sec('terrestre', 'Fotos terrestres')}${sec(null, 'Sin clasificar')}</div>`;
 }
 $('#archAntes').addEventListener('click', async e => {
   const t = e.target.closest('[data-antes]'); const v = e.target.closest('[data-antesv]');
   if (v) { const a = antesRows[+v.dataset.antesv]; const u = await signed([a.path]); window.open(u(a.path), '_blank'); return; }
   if (!t) return;
-  const fotos = antesRows.filter(a => a.tipo === 'foto'); const url = await signed(fotos.map(a => a.path));
-  lbItems = fotos.map(a => ({ src: url(a.path), path: a.path, name: a.nombre, antesId: a.id, cap: 'Antes · ' + (a.nombre || '') }));
-  lbIdx = fotos.indexOf(antesRows[+t.dataset.antes]); showLb(); $('#lbDlg').showModal();
+  const sel = antesRows[+t.dataset.antes], fotos = antesRows.filter(a => a.tipo === 'foto' && (a.categoria || null) === (sel.categoria || null)); const url = await signed(fotos.map(a => a.path));
+  lbItems = fotos.map(a => ({ src: url(a.path), path: a.path, name: a.nombre, antesId: a.id, cat: a.categoria || null, cap: 'Antes · ' + CAT_L[a.categoria || null] + ' · ' + (a.nombre || '') }));
+  lbIdx = fotos.indexOf(sel); showLb(); $('#lbDlg').showModal();
 });
+$('#lbCat').onclick = async () => {
+  const it = lbItems[lbIdx]; if (!it || !it.antesId) return; const nueva = it.cat === 'aerea' ? 'terrestre' : 'aerea';
+  try { await rpc('rq_antes_categoria', { p_id: it.antesId, p_categoria: nueva }); it.cat = nueva; it.cap = 'Antes · ' + CAT_L[nueva] + ' · ' + (it.name || ''); showLb(); toast('Movida a ' + CAT_L[nueva].toLowerCase()); if (archPuesto) renderArchAntes(archPuesto); }
+  catch (e) { toast(e.message); }
+};
 $('#lbDel').onclick = async () => {
   const it = lbItems[lbIdx]; if (!it || !it.antesId) return;
   if (!confirm('¿Quitar esta foto del antes?')) return;
@@ -2249,17 +2282,21 @@ async function buildWeeklyPdf(rows, ws, puesto, prog){
 
   // ----- Antes de la intervención (solo cuando el PDF es de una base) -----
   if (puesto) {
-    let antes = []; try { antes = (await rpc('rq_antes_listar', { p_puesto: puesto }) || []).filter(a => a.tipo === 'foto').slice(0, 9); } catch (e) {}
-    if (antes.length) {
-      prog('Cargando fotos del antes…'); const au = await signed(antes.map(a => a.path)); const ims = [];
-      for (const a of antes) { try { ims.push(await loadPdfImage(au(a.path), 1000)); } catch (e) {} }
-      if (ims.length) {
-        newPage(); fill(C.dark); doc.rect(0, 0, W, 20, 'F'); fill(C.orange); doc.rect(0, 20, W, 1.2, 'F');
-        font(15, 'bold'); color(C.cream); doc.text(pdfTxt('ANTES DE LA INTERVENCIÓN'), M, 13); font(9); doc.text(pdfTxt(baseName(puesto)), W - M, 13, { align:'right' });
-        y = 28; const gw = (CW - 6) / 3;
-        for (let i = 0; i < ims.length; i += 3) { const row = ims.slice(i, i + 3), rh = Math.min(gw * 0.8, Math.max(...row.map(im => gw * im.h / im.w))); need(rh + 3);
+    let antes = []; try { antes = (await rpc('rq_antes_listar', { p_puesto: puesto }) || []).filter(a => a.tipo === 'foto'); } catch (e) {}
+    const grupos = [['aerea', 'Fotos aéreas'], ['terrestre', 'Fotos terrestres'], [null, 'Sin clasificar']].map(([c, t]) => [t, antes.filter(a => (a.categoria || null) === c).slice(0, 6)]).filter(([, L]) => L.length);
+    if (grupos.length) {
+      prog('Cargando fotos del antes…'); const au = await signed(grupos.flatMap(([, L]) => L.map(a => a.path)));
+      newPage(); fill(C.dark); doc.rect(0, 0, W, 20, 'F'); fill(C.orange); doc.rect(0, 20, W, 1.2, 'F');
+      font(15, 'bold'); color(C.cream); doc.text(pdfTxt('ANTES DE LA INTERVENCIÓN'), M, 13); font(9); doc.text(pdfTxt(baseName(puesto)), W - M, 13, { align:'right' });
+      y = 28; const gw = (CW - 6) / 3;
+      for (const [titulo, L] of grupos) {
+        const ims = []; for (const a of L) { try { ims.push(await loadPdfImage(au(a.path), 1000)); } catch (e) {} }
+        if (!ims.length) continue;
+        need(14); fill(C.olive); doc.rect(M, y, CW, 8, 'F'); font(10.5, 'bold'); color(C.cream); doc.text(pdfTxt(titulo.toUpperCase()), M + 3, y + 5.5); y += 11;
+        for (let i = 0; i < ims.length; i += 3) { const row = ims.slice(i, i + 3), rh = Math.min(gw * 0.75, Math.max(...row.map(im => gw * im.h / im.w))); need(rh + 3);
           row.forEach((im, k) => { const x = M + k * (gw + 3), s = Math.min(gw / im.w, rh / im.h), iw = im.w * s, ih = im.h * s; fill([238,238,232]); doc.rect(x, y, gw, rh, 'F'); doc.addImage(im.data, 'JPEG', x + (gw - iw) / 2, y + (rh - ih) / 2, iw, ih, undefined, 'FAST'); });
           y += rh + 3; }
+        y += 4;
       }
     }
   }
@@ -2354,7 +2391,7 @@ $('#rpBody').addEventListener('click', e => {
 });
 $('#rpClose').onclick = () => $('#repDlg').close();
 $('#repDlg').addEventListener('close', () => $$('#rpBody video').forEach(v => v.pause()));
-function showLb(){ const it = lbItems[lbIdx]; if (!it) return; $('#lbImg').src = it.src; $('#lbCap').textContent = it.cap || ''; $('#lbDel').hidden = !(it.antesId && canAntes()); $('#lbPrev').disabled = lbIdx === 0; $('#lbNext').disabled = lbIdx >= lbItems.length - 1; }
+function showLb(){ const it = lbItems[lbIdx]; if (!it) return; $('#lbImg').src = it.src; $('#lbCap').textContent = it.cap || ''; $('#lbDel').hidden = !(it.antesId && canAntes()); $('#lbCat').hidden = !(it.antesId && canAntes()); $('#lbCat').textContent = it.cat === 'aerea' ? 'Pasar a terrestres' : 'Pasar a aéreas'; $('#lbPrev').disabled = lbIdx === 0; $('#lbNext').disabled = lbIdx >= lbItems.length - 1; }
 $('#lbPrev').onclick = () => { if (lbIdx > 0) { lbIdx--; showLb(); } };
 $('#lbNext').onclick = () => { if (lbIdx < lbItems.length - 1) { lbIdx++; showLb(); } };
 $('#lbDl').onclick = e => { e.preventDefault(); const it = lbItems[lbIdx]; if (it) downloadFile(it.path, it.name); };
