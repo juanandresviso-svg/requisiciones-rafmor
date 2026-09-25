@@ -337,6 +337,14 @@ dialog.lb{background:#000}
 .folders button.gen{grid-column:1/-1;background:#EEF0E6}
 .folders button.gen.has{background:var(--surface)}
 .tag.gen{background:#E3EDF8;border-color:transparent;color:#2D5687}
+.updbar{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:40;max-width:616px;margin:0 auto;box-shadow:0 6px 20px rgba(0,0,0,.25);display:flex;align-items:center;gap:10px;padding:10px 10px 10px 14px;border-radius:var(--radius);background:var(--ink);color:var(--surface)}
+.updbar span{flex:1;font-size:14px}.updbar b{display:block;font:700 17px/1.1 "Barlow Condensed",sans-serif}
+.updbar .btn{min-height:42px}
+.novhead{text-align:center;margin-bottom:10px}
+.novbadge{display:inline-block;font:700 12px/1 Barlow,sans-serif;letter-spacing:.5px;text-transform:uppercase;background:var(--amber);color:var(--amber-ink);padding:5px 10px;border-radius:20px}
+.novlist{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.novlist li{position:relative;padding:10px 12px 10px 34px;border-radius:10px;background:var(--sunk);border:1px solid var(--rule);font-size:15px;line-height:1.4}
+.novlist li::before{content:"";position:absolute;left:13px;top:15px;width:10px;height:10px;border-radius:5px;background:var(--green)}
 </style>
 </head>
 <body>
@@ -444,6 +452,7 @@ dialog.lb{background:#000}
     </nav>
   </header>
 
+  <div class="updbar" id="updBar" hidden role="status"><span><b>Hay una versión nueva</b>de Puestos Fronterizos.</span><button class="btn primary" id="updBtn">Actualizar</button></div>
   <div class="install" id="installBar" hidden style="margin-top:16px">
     <p><b>Instálala en tu teléfono</b>Tenla como un ícono en la pantalla de inicio.</p>
     <button class="btn" data-install>Ver cómo</button>
@@ -684,6 +693,7 @@ dialog.lb{background:#000}
       </details>
       <button class="btn ghost block100 danger" id="logout" style="border:0;margin-top:8px">Cerrar sesión</button>
     </div>
+    <div class="block"><h2>Novedades <span class="st" id="appVer"></span></h2><button class="btn block100" id="verNovedades">Ver las novedades de la app</button></div>
     <div class="block"><h2>Instalar en el teléfono</h2><button class="btn block100" data-install>Ver instrucciones para Android y iPhone</button></div>
     <div class="block">
       <h2>Logo de la empresa</h2>
@@ -833,6 +843,15 @@ dialog.lb{background:#000}
     <ul class="uplist" id="upList"></ul>
     <p class="err" id="upErr" hidden></p>
     <div class="acts" style="position:static" id="upActs" hidden><button class="btn" id="upClose">Cerrar</button><button class="btn primary" id="upRetry">Reintentar</button></div>
+  </div>
+</dialog>
+
+<!-- Novedades -->
+<dialog id="novDlg">
+  <div class="sheet"><div class="grab"></div>
+    <div class="novhead"><span class="novbadge">Novedades</span><h3 id="novTitle" style="margin:6px 0 2px">Puestos Fronterizos se actualizó</h3><p class="hint" id="novSub" style="margin:0"></p></div>
+    <div id="novBody"></div>
+    <button class="btn primary block100" id="novOk" style="margin-top:14px">Entendido</button>
   </div>
 </dialog>
 
@@ -2637,6 +2656,62 @@ function setMod(m, tab){
 }
 $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mod]'); if (b) setMod(b.dataset.mod); });
 
+/* ---------- Novedades por rol y aviso de versión nueva ---------- */
+// Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
+const APP_VERSION = '4.3.0';
+const NOVEDADES = [
+  { v: '4.3.0', fecha: '2026-09-25', titulo: 'Novedades de esta versión', items: [
+    { r: ['*'], t: 'Desde ahora, cada vez que la app se actualice te mostraremos aquí lo nuevo que te interesa según tu rol.' },
+    { r: ['contratista','costos','gerente_general','gerente_operaciones','master'], t: '¿Tienes la requisición en papel o en PDF? En Nueva toca "Cargar PDF o foto de la requisición" y la app llena el formulario por ti. El documento queda adjunto.' },
+    { r: ['gerente_operaciones'], t: 'Ahora también puedes crear requisiciones (pestañas Nueva y Mías), incluso generales del proyecto sin asignar a un puesto. Las que haces tú las verifica otro Gerente de Operaciones.' },
+    { r: ['gerente_general','master'], t: 'Puedes crear requisiciones generales del proyecto, sin asignar a un puesto fronterizo. Su CeCo sale "POR ASIGNAR" hasta que administración defina un código general.' },
+    { r: ['gerente_operaciones','gerente_general','master'], t: 'En Reportes diarios puedes hacer reportes de temas generales del proyecto y elegir si los ven el Comandante de la base y Reporte General. Por defecto quedan ocultos para ellos.' },
+    { r: ['gerente_operaciones','gerente_general','compras','costos','master'], t: 'Las requisiciones con documento original muestran la etiqueta 📎; ábrelo desde el detalle con "Ver documento original".' },
+    { r: ['compras','costos'], t: 'Las requisiciones generales traen el CeCo "POR ASIGNAR" en sus materiales para que se asigne o reparta entre las bases.' },
+    { r: ['comandante_base'], t: 'El PDF semanal de tu base ahora incluye las fotos del antes de la intervención, separadas en aéreas y terrestres.' },
+    { r: ['comandante_base','reporte_general'], t: 'El PDF semanal incluye los reportes de temas generales del proyecto que los gerentes compartan contigo.' },
+    { r: ['gerente_operaciones','gerente_general','master'], t: 'Las fotos del antes de cada puesto se dividen en aéreas y terrestres. Puedes cambiar la clasificación de una foto desde el visor.' },
+    { r: ['master'], t: 'En Ajustes tienes los importadores de requisiciones históricas, de fotos del Drive y de fotos del antes, y la lista de usuarios con su última conexión.' }
+  ] }
+];
+const verCmp = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); } return 0; };
+function novedadesPara(desde){
+  const roles = new Set(['*', me.rol]); if (me.es_master) roles.add('master');
+  return NOVEDADES.filter(n => !desde || verCmp(n.v, desde) > 0)
+    .map(n => Object.assign({}, n, { items: n.items.filter(i => i.r.some(r => roles.has(r))) })).filter(n => n.items.length);
+}
+function mostrarNovedades(lista, marcar){
+  if (!lista.length) return false;
+  $('#novTitle').textContent = lista.length === 1 ? 'Puestos Fronterizos se actualizó' : `Puestos Fronterizos tiene ${lista.length} actualizaciones`;
+  $('#novSub').textContent = `Versión ${lista[0].v} · Lo nuevo para ${roleText(me)}`;
+  $('#novBody').innerHTML = lista.map(n => `${lista.length > 1 ? `<div class="sec">Versión ${esc(n.v)} · ${fmt(n.fecha)}</div>` : ''}<ul class="novlist">${n.items.map(i => `<li>${esc(i.t)}</li>`).join('')}</ul>`).join('');
+  $('#novOk').onclick = () => $('#novDlg').close();
+  $('#novDlg').onclose = () => { if (marcar) { me.version_vista = APP_VERSION; rpc('rq_version_vista', { p_version: APP_VERSION }).catch(() => {}); } };
+  if (!$('#novDlg').open) $('#novDlg').showModal();
+  return true;
+}
+function revisarNovedades(){
+  if (!me || verCmp(me.version_vista, APP_VERSION) >= 0) return;
+  const lista = novedadesPara(me.version_vista).sort((a, b) => verCmp(b.v, a.v));
+  if (!mostrarNovedades(lista, true)) rpc('rq_version_vista', { p_version: APP_VERSION }).then(() => { me.version_vista = APP_VERSION; }).catch(() => {});
+}
+$('#verNovedades').onclick = () => { const L = novedadesPara(null).sort((a, b) => verCmp(b.v, a.v)); if (!mostrarNovedades(L, false)) toast('No hay novedades para tu rol.'); };
+$('#appVer').textContent = 'v' + APP_VERSION;
+// Detecta si se publicó una versión nueva mientras la app está abierta.
+let updAvisada = false;
+async function buscarActualizacion(){
+  if (updAvisada || !navigator.onLine) return;
+  try {
+    const url = location.href.split('#')[0].split('?')[0] + '?v=' + Date.now();
+    const txt = await (await fetch(url, { cache: 'no-store' })).text();
+    const m = txt.match(/const APP_VERSION = '([\d.]+)'/);
+    if (m && verCmp(m[1], APP_VERSION) > 0) { updAvisada = true; $('#updBar').hidden = false; }
+  } catch (e) {}
+}
+$('#updBtn').onclick = () => { const u = location.href.split('#')[0].split('?')[0]; location.replace(u + '?v=' + Date.now()); };
+setInterval(buscarActualizacion, 5 * 60 * 1000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) buscarActualizacion(); });
+
 /* ---------- Pestañas ---------- */
 function showTab(t){
   $$('#mainTabs button').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === t));
@@ -2749,6 +2824,8 @@ async function route(){
     if (!rep || rep.owner !== me.id) { rep = repBlank(); saveRep(); }
     if (first) setMod(curMod); else applyTabVisibility();
     refreshCounts();
+    if (first) setTimeout(revisarNovedades, 600);
+    setTimeout(buscarActualizacion, 3000);
   } finally { routing = false; }
 }
 function showPend(ico, title, msg, perfil){
