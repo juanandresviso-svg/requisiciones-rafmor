@@ -326,6 +326,10 @@ dialog.lb{background:#000}
 .catline{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
 .cat{font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid var(--rule);background:var(--sunk)}
 .cat.aerea{background:#E3EDF8;border-color:transparent;color:#2D5687}.cat.terrestre{background:#F3EAD9;border-color:transparent;color:#6E5220}.cat.sin{background:var(--red-soft);border-color:transparent;color:var(--red)}
+.pdfcard{border-style:dashed;border-width:1.5px}
+.adjchip{display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px 8px 8px 12px;border-radius:10px;background:var(--sunk);border:1px solid var(--rule);font-size:14px}
+.adjchip span{flex:1;word-break:break-word}
+.adjchip .btn{min-height:36px}
 </style>
 </head>
 <body>
@@ -441,6 +445,12 @@ dialog.lb{background:#000}
 
   <!-- NUEVA -->
   <section class="panel" id="p-nueva">
+    <div class="block pdfcard" id="pdfCard">
+      <h2>¿La tienes en papel o en PDF?</h2>
+      <p class="hint" style="margin-top:-6px">Sube el PDF o una foto de la requisición y la app llena el formulario por ti. Revisas, firmas y envías; el documento original queda adjunto.</p>
+      <label class="btn dark block100">Cargar PDF o foto de la requisición<input type="file" id="pdfFile" accept="application/pdf,image/*" hidden></label>
+      <div id="pdfState"></div>
+    </div>
     <div class="block">
       <h2>Datos de la solicitud</h2>
       <div class="row2">
@@ -1058,7 +1068,7 @@ const bindings = [['fechaSolicitud','fechaSolicitud'],['fechaRequerida','fechaRe
 function fillForm(){
   bindings.forEach(([id,k]) => $('#'+id).value = draft[k] || '');
   $('#meName').innerHTML = me ? `<b>${esc(me.nombre)}</b>${me.cargo ? ', ' + esc(me.cargo) : ''}${me.empresa ? '<br><span class="hint">' + esc(me.empresa) + '</span>' : ''}` : '';
-  renderItems(); requestAnimationFrame(() => padSol.load());
+  renderItems(); renderAdjunto(); requestAnimationFrame(() => padSol.load());
 }
 bindings.forEach(([id,k]) => $('#'+id).addEventListener('input', e => { draft[k] = e.target.value; e.target.classList.remove('bad'); saveDraft(); }));
 
@@ -1073,6 +1083,7 @@ function renderItems(){
     if (it.stock==='si') tags.push('<span class="tag ok">En almacén</span>');
     if (it.stock==='no') tags.push('<span class="tag">Sin stock</span>');
     if (it.espec==='si') tags.push('<span class="tag">Con especificación</span>');
+    if (!it.ceco) tags.push('<span class="tag bad">Falta puesto o tipo de gasto</span>');
     li.innerHTML = `<div class="num">${i+1}</div>
       <div role="button" tabindex="0" data-edit="${i}" style="cursor:pointer"><div class="qty">${esc(it.cant)} ${esc(it.und)}</div><div class="d">${esc(it.desc)}</div>${meta?`<div class="m">${esc(meta)}</div>`:''}${it.ceco?`<div class="m" style="font-weight:600;color:var(--green)">${esc(it.ceco)}</div>`:''}${tags.length?`<div class="tags">${tags.join('')}</div>`:''}</div>
       <div class="ia"><button data-edit="${i}" aria-label="Editar material ${i+1}">Editar</button><button data-dup="${i}" aria-label="Copiar material ${i+1}">Copiar</button></div>`;
@@ -1215,6 +1226,7 @@ function validate(){
   if (!draft.area.trim()) mark('area');
   if (!draft.fechaSolicitud) mark('fechaSolicitud');
   if (!draft.items.length) { $('#itemsErr').textContent = 'Agrega al menos un material.'; $('#itemsErr').hidden=false; first = first || $('#addItem'); }
+  else if (draft.items.some(i => !i.ceco)) { $('#itemsErr').textContent = 'Completa el puesto y el tipo de gasto de los materiales marcados en rojo.'; $('#itemsErr').hidden=false; first = first || $('#items'); }
   if (!draft.firma) { $('#sigErr').textContent = 'Falta tu firma.'; $('#sigErr').hidden = false; first = first || $('#sig-solicitado'); }
   if (first) { first.scrollIntoView({behavior:'smooth', block:'center'}); toast('Completa lo marcado en rojo'); return false; }
   return true;
@@ -1224,6 +1236,12 @@ $('#gen').onclick = async () => {
   const btn = $('#gen'); btn.disabled = true; btn.textContent = 'Enviando…';
   const datos = { area: draft.area, coordinacion: draft.coordinacion, fechaSolicitud: draft.fechaSolicitud, fechaRequerida: draft.fechaRequerida, items: draft.items, notas: draft.notas, firma: draft.firma };
   try {
+    if (draft.adjunto && draft.adjunto.pendiente) {
+      if (!adjPendiente) { draft.adjunto = null; saveDraft(); }
+      else { const { error } = await sb.storage.from('adjuntos').upload(adjPendiente.meta.path, await adjPendiente.file.arrayBuffer(), { contentType: adjPendiente.meta.mime, upsert: false });
+        if (error && !/exists|Duplicate/i.test(error.message || '')) throw mapErr(error); draft.adjunto = adjPendiente.meta; adjPendiente = null; saveDraft(); }
+    }
+    if (draft.adjunto) datos.adjunto = { path: draft.adjunto.path, nombre: draft.adjunto.nombre, size: draft.adjunto.size, mime: draft.adjunto.mime, lectura: draft.adjunto.lectura };
     const sent = await rpc('rq_enviar', { p_datos: datos });
     learn('areas', draft.area); learn('coord', draft.coordinacion); LS.set('lists', lists); renderDatalists();
     lastSent = sent.control;
@@ -1243,6 +1261,139 @@ $('#doneDl').onclick = () => { if (lastSent) downloadRemote(lastSent, $('#doneDl
 $('#doneOk').onclick = () => $('#doneDlg').close();
 $('#resetDraft').onclick = () => { if (!confirm('¿Descartar esta requisición y empezar una nueva?')) return; draft = blank(); saveDraft(); fillForm(); window.scrollTo(0,0); toast('Formulario en blanco'); };
 
+/* ---------- Requisición desde PDF o foto ("vieja escuela") ---------- */
+const PDFJS_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.min.mjs';
+const PDFJS_WORKER = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.worker.min.mjs';
+Object.assign(ERRS, { adjunto_invalido:'El documento adjunto no se subió bien. Vuelve a cargarlo.' });
+let pdfjsLib = null, adjPendiente = null;
+async function getPdfjs(){ if (!pdfjsLib) { pdfjsLib = await import(PDFJS_URL); pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; } return pdfjsLib; }
+async function pdfTextItems(buf){
+  const lib = await getPdfjs();
+  const pdf = await lib.getDocument({ data: new Uint8Array(buf), isEvalSupported: false }).promise;
+  const page = await pdf.getPage(1); const tc = await page.getTextContent();
+  return tc.items.filter(i => i.str && i.str.trim()).map(i => ({ s: i.str.trim(), x: i.transform[4], y: i.transform[5], w: i.width || 0 }));
+}
+function parseReqText(T){
+  const N = t => normTxt(t.s), cx = t => t.x + t.w / 2;
+  const find = re => T.find(t => re.test(N(t)));
+  const right = (lab) => { if (!lab) return ''; const L = T.filter(t => t !== lab && Math.abs(t.y - lab.y) < 4 && t.x > lab.x + lab.w - 2).sort((a, b) => a.x - b.x); return L.length ? L[0].s : ''; };
+  const after = (lab, re) => { if (!lab) return ''; const v = lab.s.replace(re, '').replace(/^[\s:]+/, '').trim(); return v || right(lab); };
+  const dateBelow = lab => { if (!lab) return ''; const c = cx(lab); const L = T.filter(t => t.y < lab.y - 1 && t.y > lab.y - 45 && Math.abs(cx(t) - c) < 90 && toIso(t.s)).sort((a, b) => b.y - a.y); return L.length ? toIso(L[0].s) : toIso(lab.s.replace(/^[^0-9]*/, '')); };
+  const out = { area:'', coordinacion:'', fechaSolicitud:'', fechaRequerida:'', notas:'', control:'', items:[], solicitado:'', verificado:'', autorizado:'', recibido:'' };
+  const ctl = find(/N[°º]?\s*CONTROL/); if (ctl) { const v = (ctl.s.match(/(\d+)/) || [])[1]; out.control = v || (T.filter(t => Math.abs(cx(t) - cx(ctl)) < 60 && t.y < ctl.y && t.y > ctl.y - 30 && /\d/.test(t.s)).map(t => t.s)[0] || ''); }
+  out.area = after(find(/^AREA SOLICITANTE/), /^AREA SOLICITANTE\s*:?/i);
+  out.coordinacion = after(find(/^COORDINACION/), /^COORDINACI[OÓ]N\s*:?/i);
+  out.fechaSolicitud = dateBelow(find(/FECHA DE SOLICITUD/)); out.fechaRequerida = dateBelow(find(/FECHA REQUERIDA/));
+  const hdr = T.find(t => N(t) === 'RENG'); if (!hdr) return out;
+  const H = {}; T.filter(t => Math.abs(t.y - hdr.y) < 4).forEach(t => { const n = N(t);
+    const k = n === 'RENG' ? 'reng' : n === 'EQUIPO' ? 'equipo' : n.startsWith('LOCACION') ? 'loc' : n === 'CECO' ? 'ceco' : n.startsWith('CANT') ? 'cant' : n.startsWith('UND') ? 'und' : n.startsWith('DESCRIPCION') ? 'desc' : '';
+    if (k && !H[k]) H[k] = cx(t); });
+  const sub = T.filter(t => t.y < hdr.y - 2 && t.y > hdr.y - 20 && /^(SI|NO|COM)$/.test(N(t))).sort((a, b) => a.x - b.x);
+  const chk = sub.length >= 5 ? { espSi: cx(sub[0]), espNo: cx(sub[1]), stSi: cx(sub[2]), stNo: cx(sub[3]), stCom: cx(sub[4]) } : {};
+  const subY = sub.length ? Math.min(...sub.map(t => t.y)) : hdr.y - 8;
+  const nota = find(/^NOTA/); const yNota = nota ? nota.y : -1e9;
+  const rows = T.filter(t => /^\d{1,2}$/.test(t.s) && H.reng && Math.abs(cx(t) - H.reng) < 14 && t.y < subY - 2 && t.y > yNota).sort((a, b) => b.y - a.y);
+  const cols = Object.entries(H).filter(([k]) => k !== 'reng').concat(Object.entries(chk));
+  const cells = rows.map(() => ({}));
+  T.filter(t => t.y < subY - 2 && t.y > yNota + 2 && !rows.includes(t)).forEach(t => {
+    if (!rows.length) return;
+    let ri = 0, best = 1e9; rows.forEach((r, i) => { const d = Math.abs(r.y - t.y); if (d < best) { best = d; ri = i; } }); if (best > 22) return;
+    let col = null, bd = 1e9; cols.forEach(([k, c]) => { const d = Math.abs(cx(t) - c); if (d < bd) { bd = d; col = k; } });
+    if (col === 'und' && H.desc && t.x > H.und + 15 && !/^[A-Z0-9²³.]{1,6}$/i.test(t.s)) col = 'desc';
+    if (!col) return; (cells[ri][col] = cells[ri][col] || []).push(t);
+  });
+  cells.forEach(c => {
+    const txt = (k, sep = ' ') => (c[k] || []).sort((a, b) => b.y - a.y || a.x - b.x).map(t => t.s).join(sep).trim();
+    const x = k => (c[k] || []).some(t => /^X$/i.test(t.s));
+    const it = { equipo: txt('equipo'), locacion: txt('loc'), ceco: txt('ceco', '').replace(/\s+/g, '').toUpperCase(), cant: txt('cant'), und: txt('und'), desc: txt('desc'),
+      espec: x('espSi') ? 'si' : x('espNo') ? 'no' : '', stock: x('stSi') ? 'si' : x('stNo') ? 'no' : x('stCom') ? 'com' : '' };
+    if (it.desc || it.cant) out.items.push(it);
+  });
+  const sol = find(/^SOLICITADO/), ley = find(/^LEYENDA/);
+  if (nota) out.notas = T.filter(t => t.y < nota.y - 2 && (!sol || t.y > sol.y + 4) && (!ley || t.x < ley.x - 10) && !/^(COM=|COMPRAS|LEYENDA)$/.test(N(t))).sort((a, b) => b.y - a.y || a.x - b.x).map(t => t.s).join(' ').trim();
+  const labs = [['solicitado', find(/^SOLICITADO/)], ['verificado', find(/^VERIFICADO/)], ['autorizado', find(/^AUTORIZADO/)], ['recibido', find(/^RECIBIDO/)]].filter(([, l]) => l);
+  T.filter(t => /^NOMBRE\s*:/.test(N(t))).forEach(t => { const v = t.s.replace(/^nombre\s*:\s*/i, '').trim(); if (!v || !labs.length) return;
+    const [k] = labs.reduce((a, b) => Math.abs(b[1].x - t.x) < Math.abs(a[1].x - t.x) ? b : a); if (!out[k]) out[k] = v; });
+  return out;
+}
+const TIPOS3 = ['MAT','EQU','LAB','ADM','COM','SER','OTR'];
+function resolverCeco(it){
+  let base = +it.base || null, tipo = TIPOS3.includes(String(it.tipo || '').toUpperCase()) ? String(it.tipo).toUpperCase() : '';
+  const code = String(it.ceco || '').toUpperCase().replace(/\s+/g, '');
+  const f = findCeco(code); if (f) return { base: f.base, tipo: f.tipo };
+  const m = normTxt(code).replace(/\s/g, '').match(/RAFMOR-?BPF-?([A-Z0-9]+)-?([A-Z]{3})?/);
+  if (m) { const ab = m[1]; const b = CECOS.bases.find(b => { const a2 = normTxt(b.codes.MAT.split('-')[2]); return ab === a2 || (ab.length >= 3 && (a2.startsWith(ab) || ab.startsWith(a2))); }); if (b && !base) base = b.n; if (m[2] && TIPOS3.includes(m[2]) && !tipo) tipo = m[2]; }
+  if (!base && it.locacion) base = matchBase(it.locacion);
+  return { base, tipo };
+}
+function aplicarLectura(r, modo){
+  const items = (r.items || []).slice(0, MAX).map(it => { const { base, tipo } = resolverCeco(it);
+    return { desc: String(it.desc || '').trim(), cant: String(it.cant || '').trim(), und: String(it.und || '').trim().toLowerCase(), equipo: String(it.equipo || '').trim(),
+      locacion: String(it.locacion || '').trim() || (base ? baseName(base) : ''), base: base || '', tipo: tipo || '', ceco: base && tipo ? cecoFor(base, tipo) : '',
+      espec: ['si','no'].includes(it.espec) ? it.espec : '', stock: ['si','no','com'].includes(it.stock) ? it.stock : '' }; });
+  if (items.length) draft.items = items;
+  if (r.area) draft.area = r.area; if (r.coordinacion) draft.coordinacion = r.coordinacion;
+  if (r.fechaSolicitud && r.fechaSolicitud <= today()) draft.fechaSolicitud = r.fechaSolicitud;
+  if (r.fechaRequerida) draft.fechaRequerida = r.fechaRequerida;
+  if (r.notas) draft.notas = r.notas;
+  saveDraft(); fillForm();
+  const sinCeco = items.filter(i => !i.ceco).length;
+  return { n: items.length, sinCeco };
+}
+function renderAdjunto(){
+  const a = draft.adjunto;
+  if (!a) { $('#pdfState').innerHTML = ''; return; }
+  $('#pdfState').innerHTML = `<div class="adjchip"><span>📎 <b>${esc(a.nombre)}</b> · ${fileSize(a.size || 0)}${a.lectura === 'texto' ? ' · leído automáticamente' : a.lectura === 'ia' ? ' · leído con IA' : ' · adjunto sin lectura'}${a.pendiente ? ' · se sube al enviar' : ''}</span><button class="btn ghost" id="adjQuitar">Quitar</button></div>`;
+  $('#adjQuitar').onclick = () => { draft.adjunto = null; adjPendiente = null; saveDraft(); renderAdjunto(); };
+}
+async function subirAdjunto(file, lectura){
+  const ext = file.type === 'application/pdf' ? 'pdf' : (EXT[file.type] || 'jpg');
+  const path = `${me.id}/${uuid()}.${ext}`;
+  const meta = { path, nombre: file.name, size: file.size, mime: file.type || 'application/pdf', lectura };
+  try { const { error } = await sb.storage.from('adjuntos').upload(path, await file.arrayBuffer(), { contentType: meta.mime, upsert: false }); if (error) throw error; draft.adjunto = meta; adjPendiente = null; }
+  catch (e) { draft.adjunto = Object.assign({}, meta, { pendiente: true }); adjPendiente = { file, meta }; }
+  saveDraft(); renderAdjunto();
+}
+const b64 = async blob => { const buf = new Uint8Array(await blob.arrayBuffer()); let s = ''; for (let i = 0; i < buf.length; i += 0x8000) s += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000)); return btoa(s); };
+async function leerConIA(file){
+  let blob = file, mime = file.type || 'application/pdf';
+  if (mime.startsWith('image/')) { const r = await prepImage({ file, mime }); blob = r.blob; mime = r.mime; if (!['image/jpeg','image/png','image/webp'].includes(mime)) { const x = await prepImage({ file: new File([blob], 'x.jpg'), mime: 'image/jpeg' }); blob = x.blob; mime = 'image/jpeg'; } }
+  if (blob.size > 10 * 1024 * 1024) throw new Error('El archivo pesa más de 10 MB; la IA no lo puede leer.');
+  const { data, error } = await sb.functions.invoke('leer-requisicion', { body: { data: await b64(blob), media_type: mime } });
+  if (error) { let code = ''; try { const j = await error.context.json(); code = j.error || ''; } catch (e) {}
+    if (code === 'ia_no_configurada' || /404|not found|Failed to send/i.test(error.message || '')) throw Object.assign(new Error('La lectura con IA no está activada todavía.'), { noIA: true });
+    throw new Error('La IA no pudo leer el documento' + (code ? ' (' + code + ')' : '') + '.'); }
+  return data;
+}
+$('#pdfFile').addEventListener('change', async e => {
+  const file = e.target.files[0]; e.target.value = ''; if (!file) return;
+  if (draft.items.length && !confirm('Ya tienes materiales en el formulario. ¿Reemplazarlos con lo que se lea del documento?')) return;
+  const st = $('#pdfState'); st.innerHTML = '<p class="hint">Leyendo el documento…</p>';
+  let r = null, modo = 'manual', nota = '';
+  try {
+    if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) {
+      try { const T = await pdfTextItems(await file.arrayBuffer());
+        if (T.length >= 15) { r = parseReqText(T); if (r.items.length) modo = 'texto'; else r = null; } } catch (e) { r = null; }
+    }
+    if (!r) { st.innerHTML = '<p class="hint">El documento es escaneado o es una foto. Leyéndolo con IA…</p>'; r = await leerConIA(file); modo = 'ia'; nota = r && r.observaciones ? r.observaciones : ''; }
+  } catch (er) { r = null; nota = er.message; }
+  await subirAdjunto(file, r ? modo : 'manual');
+  if (r) {
+    const x = aplicarLectura(r, modo);
+    $('#pdfState').insertAdjacentHTML('beforeend', `<div class="histsum ${x.sinCeco ? '' : 'ok'}" style="margin-bottom:0"><b>Leí ${x.n} material${x.n === 1 ? '' : 'es'}${r.area ? ', el área' : ''}${r.fechaSolicitud ? ' y las fechas' : ''}.</b>
+      <span>Revisa todo antes de enviar${x.sinCeco ? `. ${x.sinCeco} material${x.sinCeco === 1 ? '' : 'es'} no trae${x.sinCeco === 1 ? '' : 'n'} puesto o tipo de gasto: tócalo${x.sinCeco === 1 ? '' : 's'} para completarlo${x.sinCeco === 1 ? '' : 's'}` : ''}.</span>
+      ${modo === 'ia' && r.confianza ? `<span>Lectura con IA, confianza ${esc(r.confianza)}.${nota ? ' ' + esc(nota) : ''}</span>` : ''}</div>`);
+    toast('Formulario llenado desde el documento');
+  } else {
+    $('#pdfState').insertAdjacentHTML('beforeend', `<div class="drvwarn" style="margin:10px 0 0">No pude leer los datos automáticamente${nota ? ': ' + esc(nota) : '.'} El documento quedó adjunto; llena el formulario a mano.</div>`);
+  }
+});
+async function verAdjunto(a){
+  const { data, error } = await sb.storage.from('adjuntos').createSignedUrl(a.path, 600);
+  if (error || !data) return toast('No se pudo abrir el documento');
+  window.open(data.signedUrl, '_blank');
+}
+
 /* ---------- Listas del servidor ---------- */
 let aFilter = 'por_aprobar', lTimer = null;
 function setCount(id, n){ const el = $('#'+id); el.textContent = n; el.hidden = !n; }
@@ -1256,7 +1407,7 @@ function rowLi(r, primaryLabel, extra){
   const when = new Date(r.creado).toLocaleDateString('es-VE', { day:'2-digit', month:'short' });
   const li = document.createElement('li');
   li.innerHTML = `<div class="h1"><b>${esc(r.control)}</b><span style="color:var(--muted);font-weight:500">${when}</span></div>
-    <div class="tags" style="margin:4px 0 2px">${estadoTag(r)}${r.editada ? '<span class="tag">Editada</span>' : ''}${r.historica ? '<span class="tag hist">Histórica</span>' : ''}</div>
+    <div class="tags" style="margin:4px 0 2px">${estadoTag(r)}${r.editada ? '<span class="tag">Editada</span>' : ''}${r.historica ? '<span class="tag hist">Histórica</span>' : ''}${r.adjunto ? '<span class="tag">📎 Con documento</span>' : ''}</div>
     <div class="h2">${esc(r.area || '')}${r.coordinacion ? ', ' + esc(r.coordinacion) : ''}. ${r.n} material${r.n === 1 ? '' : 'es'}. Pidió ${esc(r.solicitante || '')}${r.fechaRequerida ? '. Para el ' + fmt(r.fechaRequerida) : ''}</div>
     <div class="hb"><button class="btn ${primaryLabel ? 'primary' : ''}" data-open="${esc(r.control)}">${primaryLabel || 'Ver'}</button><button class="btn" data-rdl="${esc(r.control)}">Descargar</button>${extra || ''}</div>`;
   return li;
@@ -1371,7 +1522,9 @@ function renderDetail(){
       <dt>Pidió</dt><dd>${esc(f.solicitado || '')}${d.solicitante && d.solicitante.empresa ? ', ' + esc(d.solicitante.empresa) : ''}${d.firma ? `<img class="sigimg" alt="Firma de ${esc(f.solicitado || '')}" src="${d.firma}">` : ''}</dd>
     </dl>
     <div class="sec">Materiales</div><ul class="items">${items}</ul>
-    ${d.notas ? `<div class="sec">Notas</div><p style="margin:0 0 8px;white-space:pre-wrap">${esc(d.notas)}</p>` : ''}`;
+    ${d.notas ? `<div class="sec">Notas</div><p style="margin:0 0 8px;white-space:pre-wrap">${esc(d.notas)}</p>` : ''}
+    ${d.adjunto ? `<button class="btn block100" id="dAdj" style="margin:6px 0 4px">📎 Ver documento original (${esc(d.adjunto.mime === 'application/pdf' ? 'PDF' : 'foto')})</button>` : ''}`;
+  if (d.adjunto) $('#dAdj').onclick = () => verAdjunto(d.adjunto);
   const p = permsFor(r), btns = [];
   if (p.edit) btns.push('<button class="btn" data-act="editar">Ajustar requisición</button>');
   if (p.verificar) btns.push('<button class="btn primary" data-act="verificar">Verificar y firmar</button>');
