@@ -458,6 +458,11 @@ dialog.lb{background:#000}
       <label class="btn dark block100">Cargar PDF o foto de la requisición<input type="file" id="pdfFile" accept="application/pdf,image/*" hidden></label>
       <div id="pdfState"></div>
     </div>
+    <div class="block" id="reqTipoBlock" hidden>
+      <h2>Tipo de requisición</h2>
+      <div class="seg" id="reqTipoSeg"><button type="button" data-v="puesto" aria-pressed="true">Para un puesto fronterizo</button><button type="button" data-v="general" aria-pressed="false">General del proyecto</button></div>
+      <p class="hint" id="reqTipoHint" style="margin:10px 0 0" hidden></p>
+    </div>
     <div class="block">
       <h2>Datos de la solicitud</h2>
       <div class="row2">
@@ -712,7 +717,7 @@ dialog.lb{background:#000}
     </div>
     <div class="chips" id="undChips" style="margin:-4px 0 14px"></div>
     <label class="f"><span>Equipo</span><input class="in" id="i-equipo" list="dl-equipos" autocomplete="off"></label>
-    <label class="f"><span>Puesto fronterizo (B.P.F)</span><select class="in" id="i-base"><option value="">Elige el puesto…</option></select></label>
+    <label class="f" id="i-baseWrap"><span>Puesto fronterizo (B.P.F)</span><select class="in" id="i-base"><option value="">Elige el puesto…</option></select></label>
     <div class="f" style="margin-bottom:12px"><span style="display:block;font-size:14px;font-weight:600;color:var(--muted);margin-bottom:5px">Tipo de gasto</span>
       <div class="chips" id="tipoChips"></div></div>
     <div class="cecobox" id="cecoBox">CeCo: <b id="cecoCode">elige puesto y tipo de gasto</b></div>
@@ -1018,7 +1023,7 @@ const ERRS = {
   solo_operaciones:'Esta requisición está en verificación: solo el Gerente de Operaciones puede actuar.',
   solo_gerente_general:'Esta requisición ya está verificada: solo el Gerente General puede actuar.',
   solo_compras:'Solo Compras firma el recibido.', no_aprobada:'Todavía no está aprobada.', ya_recibida:'Compras ya firmó el recibido.',
-  ya_verificada:'Ya fue verificada.', falta_verificar:'Primero la verifica el Gerente de Operaciones.', misma_persona:'Quien verificó no puede aprobar.',
+  ya_verificada:'Ya fue verificada.', propia:'No puedes verificar una requisición que hiciste tú. La verifica otro Gerente de Operaciones.', falta_verificar:'Primero la verifica el Gerente de Operaciones.', misma_persona:'Quien verificó no puede aprobar.',
   no_pendiente:'Esta requisición ya está cerrada.', no_existe:'No se encontró la requisición.', firma_invalida:'Falta la firma.',
   sin_motivo:'Escribe el motivo del rechazo.', sin_materiales:'Agrega al menos un material.', max_materiales:'El formato admite máximo 13 materiales.',
   demasiado_grande:'La requisición es muy pesada. Borra la firma y vuelve a firmar.', datos_invalidos:'Los datos no son válidos.',
@@ -1047,7 +1052,8 @@ const ROLES = {
   reporte_general:{ label:'Reporte General', desc:'Consulta el reporte semanal de todo el proyecto.' }
 };
 let me = null; // perfil activo
-const canCreate = () => me && (me.es_master || ['contratista','costos','gerente_general'].includes(me.rol));
+const canCreate = () => me && (me.es_master || ['contratista','costos','gerente_general','gerente_operaciones'].includes(me.rol));
+const canGeneralReq = () => me && (me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol));
 const soloSemanal = () => me && !me.es_master && ['comandante_base','reporte_general'].includes(me.rol);
 const seesAll = () => me && (me.es_master || ['gerente_operaciones','compras','costos','gerente_general'].includes(me.rol));
 const roleText = u => ((ROLES[u.rol] || {}).label || u.rol) + (u.rol === 'comandante_base' && u.base ? ' · ' + baseName(u.base).replace('B.P.F ', '') : '');
@@ -1070,6 +1076,8 @@ function learn(k, v){ v = (v||'').trim(); if(!v) return; const L = (lists[k]||[]
 const CECOS = {"bases": [{"n": 1, "nombre": "B.P.F CASTILLETES", "codes": {"MAT": "RAFMOR-BPF-CAST-MAT", "EQU": "RAFMOR-BPF-CAST-EQU", "LAB": "RAFMOR-BPF-CAST-LAB", "ADM": "RAFMOR-BPF-CAST-ADM", "COM": "RAFMOR-BPF-CAST-COM", "SER": "RAFMOR-BPF-CAST-SER", "OTR": "RAFMOR-BPF-CAST-OTR"}}, {"n": 2, "nombre": "B.P.F CERRO EL INDIO", "codes": {"MAT": "RAFMOR-BPF-INDIO-MAT", "EQU": "RAFMOR-BPF-INDIO-EQU", "LAB": "RAFMOR-BPF-INDIO-LAB", "ADM": "RAFMOR-BPF-INDIO-ADM", "COM": "RAFMOR-BPF-INDIO-COM", "SER": "RAFMOR-BPF-INDIO-SER", "OTR": "RAFMOR-BPF-INDIO-OTR"}}, {"n": 3, "nombre": "B.P.F LA ZIPA", "codes": {"MAT": "RAFMOR-BPF-ZIPA-MAT", "EQU": "RAFMOR-BPF-ZIPA-EQU", "LAB": "RAFMOR-BPF-ZIPA-LAB", "ADM": "RAFMOR-BPF-ZIPA-ADM", "COM": "RAFMOR-BPF-ZIPA-COM", "SER": "RAFMOR-BPF-ZIPA-SER", "OTR": "RAFMOR-BPF-ZIPA-OTR"}}, {"n": 4, "nombre": "B.P.F LA YOLANDA", "codes": {"MAT": "RAFMOR-BPF-YOL-MAT", "EQU": "RAFMOR-BPF-YOL-EQU", "LAB": "RAFMOR-BPF-YOL-LAB", "ADM": "RAFMOR-BPF-YOL-ADM", "COM": "RAFMOR-BPF-YOL-COM", "SER": "RAFMOR-BPF-YOL-SER", "OTR": "RAFMOR-BPF-YOL-OTR"}}, {"n": 5, "nombre": "B.P.F EL DILUVIO", "codes": {"MAT": "RAFMOR-BPF-DIL-MAT", "EQU": "RAFMOR-BPF-DIL-EQU", "LAB": "RAFMOR-BPF-DIL-LAB", "ADM": "RAFMOR-BPF-DIL-ADM", "COM": "RAFMOR-BPF-DIL-COM", "SER": "RAFMOR-BPF-DIL-SER", "OTR": "RAFMOR-BPF-DIL-OTR"}}, {"n": 6, "nombre": "B.P.F LA PRIMAVERA", "codes": {"MAT": "RAFMOR-BPF-PRIM-MAT", "EQU": "RAFMOR-BPF-PRIM-EQU", "LAB": "RAFMOR-BPF-PRIM-LAB", "ADM": "RAFMOR-BPF-PRIM-ADM", "COM": "RAFMOR-BPF-PRIM-COM", "SER": "RAFMOR-BPF-PRIM-SER", "OTR": "RAFMOR-BPF-PRIM-OTR"}}, {"n": 7, "nombre": "B.P.F CATATUMBO", "codes": {"MAT": "RAFMOR-BPF-CATA-MAT", "EQU": "RAFMOR-BPF-CATA-EQU", "LAB": "RAFMOR-BPF-CATA-LAB", "ADM": "RAFMOR-BPF-CATA-ADM", "COM": "RAFMOR-BPF-CATA-COM", "SER": "RAFMOR-BPF-CATA-SER", "OTR": "RAFMOR-BPF-CATA-OTR"}}, {"n": 8, "nombre": "B.P.F ENCONTRADOS", "codes": {"MAT": "RAFMOR-BPF-ENCO-MAT", "EQU": "RAFMOR-BPF-ENCO-EQU", "LAB": "RAFMOR-BPF-ENCO-LAB", "ADM": "RAFMOR-BPF-ENCO-ADM", "COM": "RAFMOR-BPF-ENCO-COM", "SER": "RAFMOR-BPF-ENCO-SER", "OTR": "RAFMOR-BPF-ENCO-OTR"}}, {"n": 9, "nombre": "B.P.F SOCUAVO", "codes": {"MAT": "RAFMOR-BPF-SOCU-MAT", "EQU": "RAFMOR-BPF-SOCU-EQU", "LAB": "RAFMOR-BPF-SOCU-LAB", "ADM": "RAFMOR-BPF-SOCU-ADM", "COM": "RAFMOR-BPF-SOCU-COM", "SER": "RAFMOR-BPF-SOCU-SER", "OTR": "RAFMOR-BPF-SOCU-OTR"}}, {"n": 10, "nombre": "B.P.F PALMERAS DIANAS", "codes": {"MAT": "RAFMOR-BPF-PALM-MAT", "EQU": "RAFMOR-BPF-PALM-EQU", "LAB": "RAFMOR-BPF-PALM-LAB", "ADM": "RAFMOR-BPF-PALM-ADM", "COM": "RAFMOR-BPF-PALM-COM", "SER": "RAFMOR-BPF-PALM-SER", "OTR": "RAFMOR-BPF-PALM-OTR"}}, {"n": 11, "nombre": "B.P.F TRES BOCAS", "codes": {"MAT": "RAFMOR-BPF-3BOC-MAT", "EQU": "RAFMOR-BPF-3BOC-EQU", "LAB": "RAFMOR-BPF-3BOC-LAB", "ADM": "RAFMOR-BPF-3BOC-ADM", "COM": "RAFMOR-BPF-3BOC-COM", "SER": "RAFMOR-BPF-3BOC-SER", "OTR": "RAFMOR-BPF-3BOC-OTR"}}, {"n": 12, "nombre": "B.P.F MATA DE COCO", "codes": {"MAT": "RAFMOR-BPF-COCO-MAT", "EQU": "RAFMOR-BPF-COCO-EQU", "LAB": "RAFMOR-BPF-COCO-LAB", "ADM": "RAFMOR-BPF-COCO-ADM", "COM": "RAFMOR-BPF-COCO-COM", "SER": "RAFMOR-BPF-COCO-SER", "OTR": "RAFMOR-BPF-COCO-OTR"}}, {"n": 13, "nombre": "B.P.F CAÑO DEL MEDIO", "codes": {"MAT": "RAFMOR-BPF-CAÑO-MAT", "EQU": "RAFMOR-BPF-CAÑO-EQU", "LAB": "RAFMOR-BPF-CAÑO-LAB", "ADM": "RAFMOR-BPF-CAÑO-ADM", "COM": "RAFMOR-BPF-CAÑO-COM", "SER": "RAFMOR-BPF-CAÑO-SER", "OTR": "RAFMOR-BPF-CAÑO-OTR"}}], "tipos": [["MAT", "MATERIALES"], ["EQU", "EQUIPOS"], ["LAB", "LABOR DIRECTA (MANO DE OBRA SUBCONTRATADA)"], ["ADM", "GASTOS ADMINISTRATIVOS"], ["COM", "COMBUSTIBLE"], ["SER", "SERVICIOS SUBCONTRATADOS"], ["OTR", "GASTOS VARIOS (OTROS)"]]};
 const baseName = n => { const b = CECOS.bases.find(x => x.n === +n); return b ? b.nombre : ''; };
 const cecoFor = (n, t) => { const b = CECOS.bases.find(x => x.n === +n); return b && t ? b.codes[t] : ''; };
+const GENERAL_LOC = 'PROYECTO GENERAL (13 B.P.F)';
+const cecoGeneral = t => t ? (me && me.ceco_general ? me.ceco_general + '-' + t : 'POR ASIGNAR') : '';
 const findCeco = code => { for (const b of CECOS.bases) for (const [t] of CECOS.tipos) if (b.codes[t] === code) return {base:b.n, tipo:t}; return null; };
 const TIPO_LABEL = {MAT:'Materiales',EQU:'Equipos',LAB:'Mano de obra subcontratada',ADM:'Gastos administrativos',COM:'Combustible',SER:'Servicios subcontratados',OTR:'Gastos varios'};
 let tipoSel = '';
@@ -1077,17 +1085,36 @@ function renderTipos(){
   const box = $('#tipoChips'); box.innerHTML = '';
   CECOS.tipos.forEach(([k]) => { const b = document.createElement('button'); b.type='button'; b.textContent = TIPO_LABEL[k] || k; b.setAttribute('aria-pressed', tipoSel === k); b.onclick = () => { tipoSel = k; renderTipos(); updateCeco(); }; box.appendChild(b); });
 }
-function updateCeco(){ const code = cecoFor($('#i-base').value, tipoSel); $('#cecoCode').textContent = code || 'elige puesto y tipo de gasto'; if (code) $('#cecoBox').classList.remove('bad'); }
+function updateCeco(){
+  const g = genCtx(), code = g ? cecoGeneral(tipoSel) : cecoFor($('#i-base').value, tipoSel);
+  $('#cecoCode').textContent = code || (g ? 'elige el tipo de gasto' : 'elige puesto y tipo de gasto');
+  if (code) $('#cecoBox').classList.remove('bad');
+}
 
 /* ---------- Borrador de requisición ---------- */
 const blank = () => ({ owner: me ? me.id : null, fechaSolicitud: today(), fechaRequerida:'', area: (me && me.area) || '', coordinacion: (me && me.coordinacion) || '', items:[], notas:'', firma:null });
 let draft = LS.get('draft2', null);
 function saveDraft(){ LS.set('draft2', draft); }
 const bindings = [['fechaSolicitud','fechaSolicitud'],['fechaRequerida','fechaRequerida'],['area','area'],['coordinacion','coordinacion'],['notas','notas']];
+function syncReqTipo(){
+  const show = canGeneralReq(); $('#reqTipoBlock').hidden = !show;
+  if (!show && draft.general) { draft.general = false; saveDraft(); }
+  segSet('reqTipoSeg', draft.general ? 'general' : 'puesto');
+  $('#reqTipoHint').hidden = !draft.general;
+  $('#reqTipoHint').textContent = me && me.ceco_general ? `Los materiales no se asignan a un puesto. El CeCo se arma con el código general ${me.ceco_general}-<tipo de gasto>.` : 'Los materiales no se asignan a un puesto. El CeCo sale como "POR ASIGNAR" para que administración lo asigne o lo reparta entre las bases.';
+}
+$('#reqTipoSeg').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return; const g = b.dataset.v === 'general'; if (g === !!draft.general) return;
+  if (draft.items.length && !confirm(g ? 'Los materiales ya cargados dejarán de estar asignados a un puesto. ¿Continuar?' : 'Tendrás que elegir el puesto de cada material. ¿Continuar?')) return;
+  draft.general = g;
+  draft.items = draft.items.map(it => g ? Object.assign({}, it, { base: '', general: true, ceco: cecoGeneral(it.tipo), locacion: GENERAL_LOC })
+                                        : Object.assign({}, it, { general: false, ceco: '', locacion: it.locacion === GENERAL_LOC ? '' : it.locacion }));
+  saveDraft(); syncReqTipo(); renderItems();
+});
 function fillForm(){
   bindings.forEach(([id,k]) => $('#'+id).value = draft[k] || '');
   $('#meName').innerHTML = me ? `<b>${esc(me.nombre)}</b>${me.cargo ? ', ' + esc(me.cargo) : ''}${me.empresa ? '<br><span class="hint">' + esc(me.empresa) + '</span>' : ''}` : '';
-  renderItems(); renderAdjunto(); requestAnimationFrame(() => padSol.load());
+  syncReqTipo(); renderItems(); renderAdjunto(); requestAnimationFrame(() => padSol.load());
 }
 bindings.forEach(([id,k]) => $('#'+id).addEventListener('input', e => { draft[k] = e.target.value; e.target.classList.remove('bad'); saveDraft(); }));
 
@@ -1102,7 +1129,7 @@ function renderItems(){
     if (it.stock==='si') tags.push('<span class="tag ok">En almacén</span>');
     if (it.stock==='no') tags.push('<span class="tag">Sin stock</span>');
     if (it.espec==='si') tags.push('<span class="tag">Con especificación</span>');
-    if (!it.ceco) tags.push('<span class="tag bad">Falta puesto o tipo de gasto</span>');
+    if (draft.general ? !it.tipo : !it.ceco) tags.push(`<span class="tag bad">${draft.general ? 'Falta tipo de gasto' : 'Falta puesto o tipo de gasto'}</span>`);
     li.innerHTML = `<div class="num">${i+1}</div>
       <div role="button" tabindex="0" data-edit="${i}" style="cursor:pointer"><div class="qty">${esc(it.cant)} ${esc(it.und)}</div><div class="d">${esc(it.desc)}</div>${meta?`<div class="m">${esc(meta)}</div>`:''}${it.ceco?`<div class="m" style="font-weight:600;color:var(--green)">${esc(it.ceco)}</div>`:''}${tags.length?`<div class="tags">${tags.join('')}</div>`:''}</div>
       <div class="ia"><button data-edit="${i}" aria-label="Editar material ${i+1}">Editar</button><button data-dup="${i}" aria-label="Copiar material ${i+1}">Copiar</button></div>`;
@@ -1123,6 +1150,7 @@ $('#items').addEventListener('click', e => {
 $('#items').addEventListener('keydown', e => { if ((e.key==='Enter'||e.key===' ') && e.target.dataset.edit !== undefined) { e.preventDefault(); itemCtx = null; openItem(+e.target.dataset.edit); } });
 
 let editIdx = -1, cur = null, itemCtx = null;
+const genCtx = () => itemCtx ? !!itemCtx.general : !!(draft && draft.general);
 const ictx = () => itemCtx || { items: draft.items, changed(){ saveDraft(); renderItems(); $('#itemsErr').hidden = true; } };
 const dlg = $('#itemDlg');
 function renderUndChips(){
@@ -1143,7 +1171,8 @@ function openItem(i){
   if (i >= 0 && !cur.base && cur.ceco) { const f = findCeco(cur.ceco); if (f) { cur.base = f.base; cur.tipo = f.tipo; } }
   $('#itemTitle').textContent = 'Material ' + ((i>=0?i:L.length)+1);
   ['desc','cant','und','equipo','locacion'].forEach(k => { const el=$('#i-'+k); el.value=cur[k]||''; el.classList.remove('bad'); });
-  $('#i-base').value = cur.base ? String(cur.base) : ''; $('#i-base').classList.remove('bad'); tipoSel = cur.tipo || ''; renderTipos(); updateCeco();
+  $('#i-base').value = cur.base ? String(cur.base) : ''; $('#i-base').classList.remove('bad'); tipoSel = cur.tipo || ''; renderTipos();
+  $('#i-baseWrap').hidden = genCtx(); if (genCtx() && !$('#i-locacion').value) $('#i-locacion').value = GENERAL_LOC; updateCeco();
   segSet('seg-espec', cur.espec); segSet('seg-stock', cur.stock);
   renderUndChips(); syncChips();
   $('#itemErr').hidden = true; $('#itemDel').hidden = i < 0;
@@ -1152,13 +1181,15 @@ function openItem(i){
 }
 function readItem(){
   const it = {}; ['desc','cant','und','equipo','locacion'].forEach(k => it[k] = $('#i-'+k).value.trim());
-  it.base = $('#i-base').value ? +$('#i-base').value : ''; it.tipo = tipoSel; it.ceco = cecoFor(it.base, it.tipo);
+  const g = genCtx();
+  it.base = g ? '' : ($('#i-base').value ? +$('#i-base').value : ''); it.tipo = tipoSel; it.ceco = g ? cecoGeneral(it.tipo) : cecoFor(it.base, it.tipo);
+  if (g) { it.general = true; if (!it.locacion) it.locacion = GENERAL_LOC; }
   it.espec = segGet('seg-espec'); it.stock = segGet('seg-stock');
   const miss = [];
   if (!it.desc) { miss.push('descripción'); $('#i-desc').classList.add('bad'); }
   if (!it.cant) { miss.push('cantidad'); $('#i-cant').classList.add('bad'); }
   if (!it.und) { miss.push('unidad'); $('#i-und').classList.add('bad'); }
-  if (!it.base) { miss.push('puesto fronterizo'); $('#i-base').classList.add('bad'); }
+  if (!g && !it.base) { miss.push('puesto fronterizo'); $('#i-base').classList.add('bad'); }
   if (!it.tipo) { miss.push('tipo de gasto'); $('#cecoBox').classList.add('bad'); }
   if (miss.length) { $('#itemErr').textContent = 'Falta: ' + miss.join(', ') + '.'; $('#itemErr').hidden = false; return null; }
   return it;
@@ -1245,7 +1276,7 @@ function validate(){
   if (!draft.area.trim()) mark('area');
   if (!draft.fechaSolicitud) mark('fechaSolicitud');
   if (!draft.items.length) { $('#itemsErr').textContent = 'Agrega al menos un material.'; $('#itemsErr').hidden=false; first = first || $('#addItem'); }
-  else if (draft.items.some(i => !i.ceco)) { $('#itemsErr').textContent = 'Completa el puesto y el tipo de gasto de los materiales marcados en rojo.'; $('#itemsErr').hidden=false; first = first || $('#items'); }
+  else if (draft.items.some(i => draft.general ? !i.tipo : !i.ceco)) { $('#itemsErr').textContent = 'Completa el puesto y el tipo de gasto de los materiales marcados en rojo.'; $('#itemsErr').hidden=false; first = first || $('#items'); }
   if (!draft.firma) { $('#sigErr').textContent = 'Falta tu firma.'; $('#sigErr').hidden = false; first = first || $('#sig-solicitado'); }
   if (first) { first.scrollIntoView({behavior:'smooth', block:'center'}); toast('Completa lo marcado en rojo'); return false; }
   return true;
@@ -1253,7 +1284,7 @@ function validate(){
 $('#gen').onclick = async () => {
   if (!validate()) return;
   const btn = $('#gen'); btn.disabled = true; btn.textContent = 'Enviando…';
-  const datos = { area: draft.area, coordinacion: draft.coordinacion, fechaSolicitud: draft.fechaSolicitud, fechaRequerida: draft.fechaRequerida, items: draft.items, notas: draft.notas, firma: draft.firma };
+  const datos = { area: draft.area, coordinacion: draft.coordinacion, fechaSolicitud: draft.fechaSolicitud, fechaRequerida: draft.fechaRequerida, items: draft.items, notas: draft.notas, firma: draft.firma, general: !!draft.general };
   try {
     if (draft.adjunto && draft.adjunto.pendiente) {
       if (!adjPendiente) { draft.adjunto = null; saveDraft(); }
@@ -1264,7 +1295,7 @@ $('#gen').onclick = async () => {
     const sent = await rpc('rq_enviar', { p_datos: datos });
     learn('areas', draft.area); learn('coord', draft.coordinacion); LS.set('lists', lists); renderDatalists();
     lastSent = sent.control;
-    draft = blank(); saveDraft(); fillForm();
+    const eraGeneral = !!draft.general; draft = blank(); draft.general = eraGeneral && canGeneralReq(); saveDraft(); fillForm();
     $('#doneTop').textContent = 'Requisición enviada'; $('#doneCtl').textContent = sent.control;
     $('#doneMsg').textContent = 'Le llegó un aviso al Gerente de Operaciones para verificarla. Te avisaremos en cada paso.';
     $('#doneDl').hidden = false; $('#doneDlg').showModal();
@@ -1426,7 +1457,7 @@ function rowLi(r, primaryLabel, extra){
   const when = new Date(r.creado).toLocaleDateString('es-VE', { day:'2-digit', month:'short' });
   const li = document.createElement('li');
   li.innerHTML = `<div class="h1"><b>${esc(r.control)}</b><span style="color:var(--muted);font-weight:500">${when}</span></div>
-    <div class="tags" style="margin:4px 0 2px">${estadoTag(r)}${r.editada ? '<span class="tag">Editada</span>' : ''}${r.historica ? '<span class="tag hist">Histórica</span>' : ''}${r.adjunto ? '<span class="tag">📎 Con documento</span>' : ''}</div>
+    <div class="tags" style="margin:4px 0 2px">${estadoTag(r)}${r.editada ? '<span class="tag">Editada</span>' : ''}${r.historica ? '<span class="tag hist">Histórica</span>' : ''}${r.adjunto ? '<span class="tag">📎 Con documento</span>' : ''}${r.general ? '<span class="tag gen">General</span>' : ''}</div>
     <div class="h2">${esc(r.area || '')}${r.coordinacion ? ', ' + esc(r.coordinacion) : ''}. ${r.n} material${r.n === 1 ? '' : 'es'}. Pidió ${esc(r.solicitante || '')}${r.fechaRequerida ? '. Para el ' + fmt(r.fechaRequerida) : ''}</div>
     <div class="hb"><button class="btn ${primaryLabel ? 'primary' : ''}" data-open="${esc(r.control)}">${primaryLabel || 'Ver'}</button><button class="btn" data-rdl="${esc(r.control)}">Descargar</button>${extra || ''}</div>`;
   return li;
@@ -1486,7 +1517,7 @@ $$('[data-refresh]').forEach(b => b.addEventListener('click', () => ({ verif: lo
   if (b.dataset.copy) {
     try { const row = await rpc('rq_obtener', { p_control: b.dataset.copy }); const d = row.datos || {};
       if (draft.items.length && !confirm('Tienes una requisición sin enviar. ¿Reemplazarla?')) return;
-      draft = Object.assign(blank(), { area: d.area || '', coordinacion: d.coordinacion || '', items: JSON.parse(JSON.stringify(d.items || [])), notas: d.notas || '' }); saveDraft(); fillForm();
+      draft = Object.assign(blank(), { area: d.area || '', coordinacion: d.coordinacion || '', items: JSON.parse(JSON.stringify(d.items || [])), notas: d.notas || '', general: !!d.general && canGeneralReq() }); saveDraft(); fillForm();
       showTab('nueva'); toast('Copiada. Revisa, firma y envía.'); } catch (er) { toast(er.message); }
   }
 }));
@@ -1510,6 +1541,7 @@ function permsFor(r){
     out.why = r.recibido ? 'Aprobada y recibida por compras. Proceso completo.' : 'Aprobada y cerrada. Falta que Compras firme el recibido.'; return out;
   }
   if (!r.verificado) {
+    if (me.rol === 'gerente_operaciones' && r.solicitante_id === me.id) { out.why = 'La hiciste tú: la debe verificar otro Gerente de Operaciones.'; return out; }
     if (me.rol === 'gerente_operaciones') { out.edit = out.verificar = out.rechazar = true; return out; }
     out.why = 'En verificación. Solo el Gerente de Operaciones puede ajustarla, verificarla o rechazarla.'; return out;
   }
@@ -1535,6 +1567,7 @@ function renderDetail(){
     </div>
     ${cambios ? `<p class="chg">Ajustada por: ${cambios}</p>` : ''}
     <dl class="dl">
+      ${d.general ? '<dt>Tipo</dt><dd><b>Requisición general del proyecto</b></dd>' : ''}
       <dt>Área</dt><dd>${esc(d.area || '')}</dd>
       ${d.coordinacion ? `<dt>Coordinación</dt><dd>${esc(d.coordinacion)}</dd>` : ''}
       ${d.fechaRequerida ? `<dt>Para el</dt><dd>${fmt(d.fechaRequerida)}</dd>` : ''}
@@ -1600,7 +1633,7 @@ function renderEditItems(){
   $('#eCount').textContent = `${editData.items.length} de ${MAX}`;
   $('#eAdd').disabled = editData.items.length >= MAX;
 }
-const editCtx = () => ({ items: editData.items, changed(){ renderEditItems(); $('#eErr').hidden = true; } });
+const editCtx = () => ({ items: editData.items, general: !!(detRow && detRow.datos && detRow.datos.general), changed(){ renderEditItems(); $('#eErr').hidden = true; } });
 $('#eItems').addEventListener('click', e => { const t = e.target.closest('[data-eedit]'); if (!t) return; itemCtx = editCtx(); openItem(+t.dataset.eedit); });
 $('#eAdd').onclick = () => { itemCtx = editCtx(); openItem(-1); };
 $('#eCancel').onclick = () => { editData = null; $('#dEdit').hidden = true; $('#dBody').hidden = false; $('#dDl').hidden = false; renderDetail(); };
@@ -2629,7 +2662,7 @@ function tabAllowed(t){
   return true;
 }
 function applyTabVisibility(){ $$('#mainTabs button').forEach(b => { b.hidden = !((b.dataset.mod === curMod || b.dataset.mod === 'both') && tabAllowed(b.dataset.tab)); }); }
-function defaultReqTab(){ return canCreate() && me.rol !== 'gerente_general' ? 'nueva' : me.rol === 'gerente_operaciones' ? 'verif' : seesAll() ? 'aprob' : 'nueva'; }
+function defaultReqTab(){ return canCreate() && !['gerente_general','gerente_operaciones'].includes(me.rol) ? 'nueva' : me.rol === 'gerente_operaciones' ? 'verif' : seesAll() ? 'aprob' : 'nueva'; }
 function setHeader(){ $('#hUser').textContent = `${me.nombre}, ${roleText(me)}${me.es_master ? ' · Maestro' : ''}`; }
 
 /* ---------- Entrar / registro ---------- */
