@@ -1,0 +1,18 @@
+{
+  "name": "Requisiciones Rafmor",
+  "short_name": "Requisiciones",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#E9ECE7",
+  "theme_color": "#F2A900",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icono.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
