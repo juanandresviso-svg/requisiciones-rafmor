@@ -311,6 +311,13 @@ dialog.lb{background:#000}
 .drvday.done{color:var(--muted)}
 .drvday.done span:first-child{text-decoration:line-through}
 #driveBlock .pick label:last-child{grid-column:auto}
+.antes{margin:0 0 12px;padding:12px;border-radius:10px;background:var(--sunk);border:1px solid var(--rule)}
+.antesh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.antesh b{font:700 17px/1 "Barlow Condensed",sans-serif}
+.antesh span{font-size:13px;color:var(--muted)}
+.antes .t{cursor:zoom-in}
+.folders button .antn{color:#5B3F86;font-weight:600}
+.lbcap{color:#ddd;text-align:center;margin:6px 0 0;font-size:13px;min-height:1em}
 </style>
 </head>
 <body>
@@ -543,6 +550,7 @@ dialog.lb{background:#000}
       <div id="archPuesto" hidden>
         <button class="btn ghost" id="archBack" style="padding-left:0">← Todos los puestos</button>
         <div class="sec" id="archPuestoTitle" style="margin-top:4px"></div>
+        <div id="archAntes"></div>
       </div>
       <div id="archList"></div>
       <div class="empty" id="archEmpty" hidden></div>
@@ -573,6 +581,25 @@ dialog.lb{background:#000}
       <input class="in" id="uSearch" type="search" placeholder="Buscar por nombre, correo, empresa o rol" style="margin-top:10px" autocomplete="off">
       <ul class="hist" id="lUsers" style="margin-top:8px"></ul>
       <div class="empty" id="eUsers" hidden></div>
+    </div>
+    <div class="block" id="antesBlock" hidden>
+      <h2>Fotos del antes</h2>
+      <p class="hint" style="margin-top:-6px">Fotos de cada puesto fronterizo antes de la intervención. Quedan al inicio de la carpeta de cada puesto en el Archivo de obra y en el PDF semanal de esa base.</p>
+      <div class="sec" style="margin-top:4px">Desde la computadora</div>
+      <p class="hint" style="margin:0 0 8px">Elige la carpeta que contiene las carpetas de los puestos (por ejemplo "Antes", con "Socuavo", "Caño en Medio"…) o la carpeta de un solo puesto. La app reconoce el puesto por el nombre de la carpeta.</p>
+      <div class="pick" style="grid-template-columns:1fr 1fr">
+        <label class="btn dark">Elegir carpeta<input type="file" id="antDir" webkitdirectory directory multiple hidden></label>
+        <label class="btn">Elegir .zip<input type="file" id="antZip" accept=".zip,application/zip" hidden></label>
+      </div>
+      <div class="sec">Desde el teléfono</div>
+      <div class="xlsrow" style="border:0;padding:0;margin:0 0 6px">
+        <label class="f" style="margin:0;flex:1"><span>Puesto</span><select class="in" id="antBase"><option value="">Elige el puesto…</option></select></label>
+        <label class="btn dark" style="min-height:48px">Elegir fotos<input type="file" id="antFotos" accept="image/*,video/*" multiple hidden></label>
+      </div>
+      <div id="antPrev"></div>
+      <p class="err" id="antErr" hidden></p>
+      <button class="btn primary block100" id="antBtn" hidden>Subir fotos del antes</button>
+      <p class="hint" id="antProg" style="text-align:center;margin-top:8px"></p>
     </div>
     <div class="block" id="driveBlock" hidden>
       <h2>Fotos históricas desde Google Drive</h2>
@@ -751,7 +778,8 @@ dialog.lb{background:#000}
 <dialog id="lbDlg" class="lb">
   <div class="lbwrap">
     <img id="lbImg" alt="">
-    <div class="lbbar"><button class="btn" id="lbPrev" aria-label="Anterior">‹</button><a class="btn" id="lbDl" download>Descargar</a><button class="btn" id="lbNext" aria-label="Siguiente">›</button><button class="btn primary" id="lbClose">Cerrar</button></div>
+    <p class="lbcap" id="lbCap"></p>
+    <div class="lbbar"><button class="btn" id="lbPrev" aria-label="Anterior">‹</button><a class="btn" id="lbDl" download>Descargar</a><button class="btn danger" id="lbDel" hidden>Quitar</button><button class="btn" id="lbNext" aria-label="Siguiente">›</button><button class="btn primary" id="lbClose">Cerrar</button></div>
   </div>
 </dialog>
 
@@ -1704,10 +1732,119 @@ $('#drvBtn').onclick = async () => {
   toast(fallos.length ? 'Importación con problemas' : 'Fotos importadas al Archivo de obra');
 };
 
+/* ---------- Fotos del antes ---------- */
+const canAntes = () => me && (me.es_master || ['gerente_general','gerente_operaciones'].includes(me.rol));
+CECOS.bases.forEach(b => { const o = document.createElement('option'); o.value = b.n; o.textContent = b.n + '. ' + b.nombre.replace('B.P.F ', ''); $('#antBase').appendChild(o); });
+let ant = null; // { grupos: Map base -> [items], sinBase: [[dir, items]] }
+const slugName = n => normTxt(n.replace(/\s*\(\d+\)(?=\.[^.]+$)/, '').replace(/\.[^.]+$/, '')).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'foto';
+function buildAntes(entries, forcedBase){
+  const grupos = new Map(), sinBase = new Map(); let otros = 0, dup = 0; const seen = new Set();
+  entries.forEach(e => {
+    const parts = e.path.split('/').filter(Boolean), name = parts[parts.length - 1];
+    if (name.startsWith('.') || parts.includes('__MACOSX')) return;
+    const mime = MEDIA_EXT[(name.split('.').pop() || '').toLowerCase()] || (e.type && /^(image|video)\//.test(e.type) ? e.type : '');
+    if (!mime) { otros++; return; }
+    let base = forcedBase || null; const dirs = parts.slice(0, -1);
+    if (!base) for (const d of dirs) { const b = matchBase(d); if (b) { base = b; break; } }
+    const item = { path: e.path, name, size: e.size, mime, kind: mime.startsWith('video/') ? 'video' : 'foto', get: e.get };
+    const k = `${base}|${slugName(name)}|${e.size}`; if (seen.has(k)) { dup++; return; } seen.add(k);
+    if (!base) { const dir = dirs.filter(d => normTxt(d) !== 'ANTES').pop() || dirs[0] || '(sin carpeta)'; if (!sinBase.has(dir)) sinBase.set(dir, []); sinBase.get(dir).push(item); return; }
+    if (!grupos.has(base)) grupos.set(base, []); grupos.get(base).push(item);
+  });
+  return { grupos, sinBase: [...sinBase.entries()], otros, dup };
+}
+async function renderAntesPrev(){
+  const a = ant; let res = {}; try { res = await rpc('rq_antes_resumen') || {}; } catch (e) {}
+  const G = [...a.grupos.entries()].sort((x, y) => x[0] - y[0]); const n = G.reduce((s, [, f]) => s + f.length, 0);
+  $('#antPrev').innerHTML = `<div class="histsum"><b>${n} foto${n === 1 ? '' : 's'} del antes en ${G.length} puesto${G.length === 1 ? '' : 's'}</b>
+      ${a.dup ? `<span>${a.dup} repetida${a.dup === 1 ? '' : 's'} se omite${a.dup === 1 ? '' : 'n'}.</span>` : ''}${a.otros ? `<span>${a.otros} archivo${a.otros === 1 ? '' : 's'} que no son fotos ni videos se ignora${a.otros === 1 ? '' : 'n'}.</span>` : ''}
+      <span>Si una foto ya estaba cargada, no se duplica.</span></div>
+    ${a.sinBase.map(([dir, fs]) => `<div class="drvwarn">La carpeta <b>${esc(dir)}</b> (${fs.length} archivo${fs.length === 1 ? '' : 's'}) no coincide con ningún puesto. <select class="in sel" data-antsin="${esc(dir)}"><option value="">Asignar puesto…</option>${CECOS.bases.map(b => `<option value="${b.n}">${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</option>`).join('')}</select></div>`).join('')}
+    ${G.length ? `<ul class="hist histlist">${G.map(([b, fs]) => `<li class="drvday" style="border-top:0"><span style="text-transform:none"><b>${esc(baseName(b))}</b></span><span>${fs.length} nueva${fs.length === 1 ? '' : 's'}${res[b] ? ` · ${res[b]} ya cargada${res[b] === 1 ? '' : 's'}` : ''}</span></li>`).join('')}</ul>` : ''}`;
+  $('#antBtn').hidden = !n; $('#antBtn').textContent = `Subir ${n} foto${n === 1 ? '' : 's'} del antes`;
+}
+async function loadAntes(entries, forcedBase){
+  $('#antErr').hidden = true; $('#antProg').textContent = '';
+  ant = buildAntes(entries, forcedBase);
+  if (!ant.grupos.size && !ant.sinBase.length) { $('#antPrev').innerHTML = ''; $('#antErr').textContent = 'No encontré fotos en lo que elegiste.'; $('#antErr').hidden = false; $('#antBtn').hidden = true; return; }
+  await renderAntesPrev();
+}
+$('#antPrev').addEventListener('change', e => {
+  const s = e.target.closest('[data-antsin]'); if (!s || !s.value || !ant) return;
+  const i = ant.sinBase.findIndex(([d]) => d === s.dataset.antsin); if (i < 0) return;
+  const [, fs] = ant.sinBase.splice(i, 1)[0], b = +s.value;
+  if (!ant.grupos.has(b)) ant.grupos.set(b, []); ant.grupos.get(b).push(...fs); renderAntesPrev();
+});
+$('#antDir').addEventListener('change', async e => { const fs = [...e.target.files]; e.target.value = ''; if (fs.length) await loadAntes(fs.map(f => ({ path: f.webkitRelativePath || f.name, size: f.size, type: f.type, get: async () => f }))); });
+$('#antZip').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try { if (!window.JSZip) throw new Error('No se pudo cargar el lector de .zip.'); const zip = await JSZip.loadAsync(f); const L = [];
+    zip.forEach((p, z) => { if (!z.dir) L.push({ path: p, size: (z._data && z._data.uncompressedSize) || 0, get: () => z.async('blob') }); }); await loadAntes(L);
+  } catch (er) { $('#antErr').textContent = er.message; $('#antErr').hidden = false; }
+});
+$('#antFotos').addEventListener('change', async e => {
+  const fs = [...e.target.files]; e.target.value = ''; if (!fs.length) return;
+  if (!$('#antBase').value) { $('#antErr').textContent = 'Primero elige el puesto.'; $('#antErr').hidden = false; return; }
+  await loadAntes(fs.map(f => ({ path: f.name, size: f.size, type: f.type, get: async () => f })), +$('#antBase').value);
+});
+$('#antBtn').onclick = async () => {
+  if (!ant) return; const b = $('#antBtn'); b.disabled = true;
+  const G = [...ant.grupos.entries()]; const total = G.reduce((s, [, f]) => s + f.length, 0); let done = 0, nuevas = 0, rep = 0; const fallos = [];
+  for (const [base, fs] of G) {
+    const arch = [];
+    for (const f of fs) {
+      done++; $('#antProg').textContent = `${baseName(base).replace('B.P.F ', '')}: ${done} de ${total}`;
+      try {
+        if (!f.up) {
+          let blob = await f.get(), mime = f.mime;
+          if (f.kind === 'foto') { const r = await prepImage({ file: new File([blob], f.name, { type: mime }), mime }); blob = r.blob; mime = r.mime; }
+          if (f.kind === 'video' && blob.size > MAX_VIDEO) throw new Error(`${f.name} pesa más de 50 MB`);
+          const path = `antes/${base}/${slugName(f.name)}-${f.size}.${EXT[mime] || 'bin'}`;
+          const { error } = await sb.storage.from(BUCKET).upload(path, await blob.arrayBuffer(), { contentType: mime, upsert: false, cacheControl: '31536000' });
+          if (error && !/exists|Duplicate/i.test(error.message || '')) throw mapErr(error);
+          f.up = { path, tipo: f.kind, mime, size: blob.size, nombre: f.name };
+        }
+        arch.push(f.up);
+      } catch (e) { fallos.push(f.name + ': ' + e.message); }
+    }
+    if (arch.length) { try { const r = await rpc('rq_antes_registrar', { p_puesto: base, p_archivos: arch }); nuevas += r.nuevas; rep += r.repetidas; } catch (e) { fallos.push(baseName(base) + ': ' + e.message); } }
+  }
+  b.disabled = false; b.hidden = true;
+  $('#antProg').textContent = `Listo: ${nuevas} foto${nuevas === 1 ? '' : 's'} nueva${nuevas === 1 ? '' : 's'}${rep ? `, ${rep} ya estaba${rep === 1 ? '' : 'n'} cargada${rep === 1 ? '' : 's'}` : ''}.` + (fallos.length ? ' Problemas: ' + fallos.join('; ') : '');
+  toast(fallos.length ? 'Carga con problemas' : 'Fotos del antes cargadas'); ant = null; $('#antPrev').innerHTML = '';
+};
+
+/* Galería del antes en la carpeta del puesto */
+let antesRows = [];
+async function renderArchAntes(puesto){
+  const box = $('#archAntes'); box.innerHTML = '';
+  try { antesRows = await rpc('rq_antes_listar', { p_puesto: puesto }) || []; } catch (e) { antesRows = []; }
+  if (!antesRows.length) { box.innerHTML = canAntes() ? '<p class="hint" style="margin:0 0 10px">Todavía no hay fotos del antes de este puesto. Se cargan en Ajustes → Fotos del antes.</p>' : ''; return; }
+  const url = await signed(antesRows.filter(a => a.tipo === 'foto').map(a => a.path));
+  box.innerHTML = `<div class="antes"><div class="antesh"><b>Antes de la intervención</b><span>${antesRows.length} foto${antesRows.length === 1 ? '' : 's'}</span></div>
+    <div class="thumbs">${antesRows.map((a, i) => a.tipo === 'foto' ? `<div class="t" data-antes="${i}"><img loading="lazy" alt="Antes ${i+1}" src="${url(a.path)}"></div>` : `<div class="t" data-antesv="${i}">▶</div>`).join('')}</div></div>`;
+}
+$('#archAntes').addEventListener('click', async e => {
+  const t = e.target.closest('[data-antes]'); const v = e.target.closest('[data-antesv]');
+  if (v) { const a = antesRows[+v.dataset.antesv]; const u = await signed([a.path]); window.open(u(a.path), '_blank'); return; }
+  if (!t) return;
+  const fotos = antesRows.filter(a => a.tipo === 'foto'); const url = await signed(fotos.map(a => a.path));
+  lbItems = fotos.map(a => ({ src: url(a.path), path: a.path, name: a.nombre, antesId: a.id, cap: 'Antes · ' + (a.nombre || '') }));
+  lbIdx = fotos.indexOf(antesRows[+t.dataset.antes]); showLb(); $('#lbDlg').showModal();
+});
+$('#lbDel').onclick = async () => {
+  const it = lbItems[lbIdx]; if (!it || !it.antesId) return;
+  if (!confirm('¿Quitar esta foto del antes?')) return;
+  try { const path = await rpc('rq_antes_borrar', { p_id: it.antesId }); await sb.storage.from(BUCKET).remove([path]);
+    lbItems.splice(lbIdx, 1); if (!lbItems.length) $('#lbDlg').close(); else { lbIdx = Math.min(lbIdx, lbItems.length - 1); showLb(); }
+    toast('Foto quitada'); if (archPuesto) renderArchAntes(archPuesto);
+  } catch (e) { toast(e.message); }
+};
+
 /* ---------- Mi cuenta y ajustes ---------- */
 function renderSettings(){
   $('#usersBlock').hidden = !seesUsers(); if (seesUsers()) loadUsers();
-  $('#histBlock').hidden = !me.es_master; $('#driveBlock').hidden = !me.es_master;
+  $('#histBlock').hidden = !me.es_master; $('#driveBlock').hidden = !me.es_master; $('#antesBlock').hidden = !canAntes();
   $('#myRole').textContent = roleText(me) + (me.es_master ? ' · Maestro' : '');
   $('#myEmail').textContent = me.email;
   [['my-nombre','nombre'],['my-empresa','empresa'],['my-cargo','cargo'],['my-tel','telefono'],['my-area','area'],['my-coord','coordinacion']].forEach(([id,k]) => $('#'+id).value = me[k] || '');
@@ -1946,12 +2083,12 @@ async function loadArchive(){
   $('#archEmpty').hidden = false; $('#archEmpty').textContent = 'Cargando…'; $('#archList').innerHTML = '';
   try {
     if (archPuesto === null) {
-      const [res, rows] = await Promise.all([rpc('rq_reportes_resumen', { p_desde: desde, p_hasta: hasta }), rpc('rq_reportes_listar', { p_desde: desde, p_hasta: hasta, p_limite: 300 })]);
+      const [res, rows, antesN] = await Promise.all([rpc('rq_reportes_resumen', { p_desde: desde, p_hasta: hasta }), rpc('rq_reportes_listar', { p_desde: desde, p_hasta: hasta, p_limite: 300 }), rpc('rq_antes_resumen').catch(() => ({}))]);
       const by = Object.fromEntries((res || []).map(x => [x.puesto, x]));
-      $('#archFolders').innerHTML = CECOS.bases.map(b => { const x = by[b.n]; return `<button type="button" data-pu="${b.n}" class="${x ? 'has' : ''}"><b>${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</b><span>${x ? `${x.reportes} reporte${x.reportes === 1 ? '' : 's'} · ${x.fotos} foto${x.fotos === 1 ? '' : 's'} · ${x.videos} video${x.videos === 1 ? '' : 's'}` : 'Sin reportes este mes'}</span>${x ? `<span>Último: ${fmt(x.ultima)}${x.avance != null ? ' · Avance ' + x.avance + '%' : ''}</span>${x.avance != null ? `<div class="avbar"><i style="width:${Math.min(100, x.avance)}%"></i></div>` : ''}` : ''}</button>`; }).join('');
+      $('#archFolders').innerHTML = CECOS.bases.map(b => { const x = by[b.n]; return `<button type="button" data-pu="${b.n}" class="${x ? 'has' : ''}"><b>${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</b><span>${x ? `${x.reportes} reporte${x.reportes === 1 ? '' : 's'} · ${x.fotos} foto${x.fotos === 1 ? '' : 's'} · ${x.videos} video${x.videos === 1 ? '' : 's'}` : 'Sin reportes este mes'}</span>${antesN && antesN[b.n] ? `<span class="antn">Antes: ${antesN[b.n]} foto${antesN[b.n] === 1 ? '' : 's'}</span>` : ''}${x ? `<span>Último: ${fmt(x.ultima)}${x.avance != null ? ' · Avance ' + x.avance + '%' : ''}</span>${x.avance != null ? `<div class="avbar"><i style="width:${Math.min(100, x.avance)}%"></i></div>` : ''}` : ''}</button>`; }).join('');
       archRows = rows || [];
     } else {
-      $('#archPuestoTitle').textContent = baseName(archPuesto);
+      $('#archPuestoTitle').textContent = baseName(archPuesto); renderArchAntes(archPuesto);
       archRows = await rpc('rq_reportes_listar', { p_puesto: archPuesto, p_desde: desde, p_hasta: hasta, p_limite: 300 }) || [];
     }
     const authors = [...new Map(archRows.map(r => [r.autor_id, r.autor_nombre + (r.empresa ? ' · ' + r.empresa : '')])).entries()];
@@ -2110,6 +2247,22 @@ async function buildWeeklyPdf(rows, ws, puesto, prog){
   need(10); font(11, 'bold'); color(C.olive); doc.text('REPORTES POR DÍA', M, y); y += 5;
   [...Array(7)].map((_, i) => addDays(ws, i)).forEach(d => { const n = rows.filter(r => r.fecha === d).length; need(6); font(9, n ? 'bold' : 'normal'); color(n ? C.dark : C.grey); doc.text(pdfTxt(`${DIAS_C[isoParts(d).wd]} ${fmt(d)}`), M + 2, y + 4); doc.text(n ? `${n} reporte${n === 1 ? '' : 's'}` : 'Sin reportes', M + 60, y + 4); y += 6; });
 
+  // ----- Antes de la intervención (solo cuando el PDF es de una base) -----
+  if (puesto) {
+    let antes = []; try { antes = (await rpc('rq_antes_listar', { p_puesto: puesto }) || []).filter(a => a.tipo === 'foto').slice(0, 9); } catch (e) {}
+    if (antes.length) {
+      prog('Cargando fotos del antes…'); const au = await signed(antes.map(a => a.path)); const ims = [];
+      for (const a of antes) { try { ims.push(await loadPdfImage(au(a.path), 1000)); } catch (e) {} }
+      if (ims.length) {
+        newPage(); fill(C.dark); doc.rect(0, 0, W, 20, 'F'); fill(C.orange); doc.rect(0, 20, W, 1.2, 'F');
+        font(15, 'bold'); color(C.cream); doc.text(pdfTxt('ANTES DE LA INTERVENCIÓN'), M, 13); font(9); doc.text(pdfTxt(baseName(puesto)), W - M, 13, { align:'right' });
+        y = 28; const gw = (CW - 6) / 3;
+        for (let i = 0; i < ims.length; i += 3) { const row = ims.slice(i, i + 3), rh = Math.min(gw * 0.8, Math.max(...row.map(im => gw * im.h / im.w))); need(rh + 3);
+          row.forEach((im, k) => { const x = M + k * (gw + 3), s = Math.min(gw / im.w, rh / im.h), iw = im.w * s, ih = im.h * s; fill([238,238,232]); doc.rect(x, y, gw, rh, 'F'); doc.addImage(im.data, 'JPEG', x + (gw - iw) / 2, y + (rh - ih) / 2, iw, ih, undefined, 'FAST'); });
+          y += rh + 3; }
+      }
+    }
+  }
   // ----- Detalle día por día -----
   const days = [...Array(7)].map((_, i) => addDays(ws, i)).filter(d => rows.some(r => r.fecha === d));
   const allPhotos = rows.flatMap(r => (r.archivos || []).filter(a => a.tipo === 'foto').slice(0, PHOTOS_PER).map(a => a.path));
@@ -2201,7 +2354,7 @@ $('#rpBody').addEventListener('click', e => {
 });
 $('#rpClose').onclick = () => $('#repDlg').close();
 $('#repDlg').addEventListener('close', () => $$('#rpBody video').forEach(v => v.pause()));
-function showLb(){ const it = lbItems[lbIdx]; if (!it) return; $('#lbImg').src = it.src; $('#lbPrev').disabled = lbIdx === 0; $('#lbNext').disabled = lbIdx >= lbItems.length - 1; }
+function showLb(){ const it = lbItems[lbIdx]; if (!it) return; $('#lbImg').src = it.src; $('#lbCap').textContent = it.cap || ''; $('#lbDel').hidden = !(it.antesId && canAntes()); $('#lbPrev').disabled = lbIdx === 0; $('#lbNext').disabled = lbIdx >= lbItems.length - 1; }
 $('#lbPrev').onclick = () => { if (lbIdx > 0) { lbIdx--; showLb(); } };
 $('#lbNext').onclick = () => { if (lbIdx < lbItems.length - 1) { lbIdx++; showLb(); } };
 $('#lbDl').onclick = e => { e.preventDefault(); const it = lbItems[lbIdx]; if (it) downloadFile(it.path, it.name); };
