@@ -18,6 +18,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@4.2.1/dist/jspdf.umd.min.js"></script>
 <style>
 :root{
   --bg:#E9ECE7; --surface:#FFFFFF; --sunk:#F3F5F1; --ink:#1B2220; --muted:#5E6A66; --rule:#CDD3CC;
@@ -276,6 +277,16 @@ dialog.lb{background:#000}
 .ftab td small{display:block;color:var(--muted)}
 .dayh{display:flex;justify-content:space-between;align-items:center}
 .dayh button{font:600 13px Barlow,sans-serif;text-transform:none;min-height:34px;padding:0 10px}
+.weeknav{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.weeknav b{flex:1;text-align:center;font:700 17px/1.2 "Barlow Condensed",sans-serif}
+.weeknav .btn{min-width:48px;font-size:22px}
+.wdays{list-style:none;margin:0 0 14px;padding:0}
+.wdays li{padding:8px 0;border-bottom:1px dashed var(--rule);color:var(--muted)}
+.wdays li:last-child{border-bottom:0}
+.wdays li b{display:block;font-weight:600}
+.wdays li.has{color:var(--ink)}
+.wdays li.has b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:4px;background:var(--green);margin-right:6px;vertical-align:1px}
+.wdays li span{font-size:14px}
 </style>
 </head>
 <body>
@@ -377,6 +388,7 @@ dialog.lb{background:#000}
       <button role="tab" aria-selected="false" data-tab="mias" data-mod="req" hidden>Mías</button>
       <button role="tab" aria-selected="false" data-tab="rnuevo" data-mod="rep" hidden>Nuevo reporte</button>
       <button role="tab" aria-selected="false" data-tab="rarch" data-mod="rep" hidden>Archivo de obra</button>
+      <button role="tab" aria-selected="false" data-tab="rsem" data-mod="rep" hidden>Semanal</button>
       <button role="tab" aria-selected="false" data-tab="ajustes" data-mod="both" class="gear" aria-label="Ajustes y cuenta" title="Ajustes y cuenta"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.7h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span class="cnt" id="cUsers" hidden></span></button>
     </nav>
   </header>
@@ -509,6 +521,20 @@ dialog.lb{background:#000}
       </div>
       <div id="archList"></div>
       <div class="empty" id="archEmpty" hidden></div>
+    </div>
+  </section>
+
+  <!-- REPORTE SEMANAL -->
+  <section class="panel" id="p-rsem">
+    <div class="block">
+      <h2>Reporte semanal</h2>
+      <p class="hint" style="margin-top:-6px">PDF con los reportes y las fotos de la semana, desglosado día por día, con el resumen de avance de cada base.</p>
+      <div class="weeknav"><button class="btn" id="w-prev" aria-label="Semana anterior">‹</button><b id="w-label"></b><button class="btn" id="w-next" aria-label="Semana siguiente">›</button></div>
+      <label class="f"><span>Base</span><select class="in" id="w-base"><option value="">Todo el proyecto (13 bases)</option></select></label>
+      <div id="w-sum"></div>
+      <p class="err" id="w-err" hidden></p>
+      <button class="btn primary block100" id="w-btn">Generar PDF semanal</button>
+      <p class="hint" id="w-prog" style="text-align:center;margin-top:8px"></p>
     </div>
   </section>
 
@@ -1694,6 +1720,164 @@ async function dailyExcel(fecha, btn){
 }
 $('#a-xbtn').onclick = () => dailyExcel($('#a-xdate').value, $('#a-xbtn'));
 
+/* ---------- Reporte semanal en PDF ---------- */
+const canWeekly = () => me && (me.rol !== 'contratista' || me.es_master);
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DIAS_C = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const weekStart = iso => { const [y,m,d] = iso.split('-').map(Number); const dt = new Date(Date.UTC(y, m-1, d)); const wd = (dt.getUTCDay() + 6) % 7; return addDays(iso, -wd); };
+const isoParts = iso => { const [y,m,d] = iso.split('-').map(Number); return { y, m, d, wd: new Date(Date.UTC(y, m-1, d)).getUTCDay() }; };
+const weekLabel = ws => { const a = isoParts(ws), b = isoParts(addDays(ws, 6));
+  return a.m === b.m ? `Semana del ${a.d} al ${b.d} de ${MESES[b.m-1]} de ${b.y}` : `Semana del ${a.d} de ${MESES[a.m-1]} al ${b.d} de ${MESES[b.m-1]} de ${b.y}`; };
+let wStart = null, wRows = [];
+CECOS.bases.forEach(b => { const o = document.createElement('option'); o.value = b.n; o.textContent = b.n + '. ' + b.nombre.replace('B.P.F ', ''); $('#w-base').appendChild(o); });
+$('#w-prev').onclick = () => { wStart = addDays(wStart, -7); loadWeek(); };
+$('#w-next').onclick = () => { if (addDays(wStart, 7) <= today()) { wStart = addDays(wStart, 7); loadWeek(); } };
+$('#w-base').onchange = () => loadWeek();
+async function loadWeek(){
+  if (!wStart) wStart = weekStart(today());
+  const wEnd = addDays(wStart, 6);
+  $('#w-label').textContent = weekLabel(wStart);
+  $('#w-next').disabled = addDays(wStart, 7) > today();
+  $('#w-err').hidden = true; $('#w-prog').textContent = '';
+  $('#w-sum').innerHTML = '<p class="hint">Cargando…</p>';
+  try {
+    wRows = await rpc('rq_reportes_listar', { p_desde: wStart, p_hasta: wEnd, p_puesto: $('#w-base').value ? +$('#w-base').value : null, p_limite: 300 }) || [];
+    const days = [...Array(7)].map((_, i) => addDays(wStart, i));
+    $('#w-sum').innerHTML = `<ul class="wdays">${days.map(d => { const L = wRows.filter(r => r.fecha === d), f = L.reduce((a, r) => a + (r.archivos || []).filter(x => x.tipo === 'foto').length, 0);
+      return `<li class="${L.length ? 'has' : ''}"><b>${DIAS_C[isoParts(d).wd]} ${fmt(d)}</b><span>${L.length ? `${L.length} reporte${L.length === 1 ? '' : 's'} · ${[...new Set(L.map(r => r.puesto_nombre.replace('B.P.F ', '')))].join(', ')} · ${f} foto${f === 1 ? '' : 's'}` : 'Sin reportes'}</span></li>`; }).join('')}</ul>`;
+    $('#w-btn').disabled = !wRows.length;
+    $('#w-btn').textContent = wRows.length ? `Generar PDF semanal (${wRows.length} reporte${wRows.length === 1 ? '' : 's'})` : 'No hay reportes esta semana';
+  } catch (e) { $('#w-sum').innerHTML = ''; $('#w-err').textContent = e.message; $('#w-err').hidden = false; }
+}
+$('#w-btn').onclick = async () => {
+  const b = $('#w-btn'); b.disabled = true;
+  try {
+    if (!window.jspdf) throw new Error('No se pudo cargar el generador de PDF. Revisa la conexión.');
+    const puesto = $('#w-base').value ? +$('#w-base').value : null;
+    const blob = await buildWeeklyPdf(wRows, wStart, puesto, t => { $('#w-prog').textContent = t; });
+    const name = `Reporte_semanal_${wStart}_al_${addDays(wStart, 6)}${puesto ? '_' + baseName(puesto).replace('B.P.F ', '').replace(/\s+/g, '_') : ''}.pdf`;
+    $('#w-prog').textContent = 'Listo: ' + name + ' (' + fileSize(blob.size) + ')';
+    const r = await deliver({ name, blob }); if (r === 'declined') toast('Descarga cancelada');
+  } catch (e) { $('#w-err').textContent = e.message || 'No se pudo generar el PDF'; $('#w-err').hidden = false; $('#w-prog').textContent = ''; }
+  finally { b.disabled = false; }
+};
+
+async function loadPdfImage(url, maxPx){
+  const res = await fetch(url); if (!res.ok) throw new Error('img');
+  const blob = await res.blob(); const bmp = await createImageBitmap(blob);
+  const s = Math.min(1, maxPx / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas'); c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(bmp, 0, 0, c.width, c.height); if (bmp.close) bmp.close();
+  return { data: c.toDataURL('image/jpeg', 0.72), w: c.width, h: c.height };
+}
+// jsPDF usa la codificación WinAnsi: se limpian caracteres que no puede dibujar.
+const pdfTxt = s => String(s == null ? '' : s).replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[^\u0009\u000A\u0020-\u007E\u00A0-\u00FF\u2013\u2014\u2022\u2026\u203A\u20AC]/g, '');
+
+async function buildWeeklyPdf(rows, ws, puesto, prog){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4', compress:true });
+  const W = 210, H = 297, M = 14, CW = W - 2*M;
+  const C = { dark:[26,26,26], olive:[75,83,32], olive2:[85,99,37], cream:[245,239,224], orange:[217,108,36], pale:[242,244,234], grey:[110,110,100], line:[200,200,185], green:[46,94,79] };
+  const PHOTOS_PER = 6;
+  let y = M, page = 1;
+  const we = addDays(ws, 6), scope = puesto ? baseName(puesto) : 'Todo el proyecto (13 bases)';
+  const fill = c => doc.setFillColor(c[0], c[1], c[2]), color = c => doc.setTextColor(c[0], c[1], c[2]), draw = c => doc.setDrawColor(c[0], c[1], c[2]);
+  const font = (sz, st) => { doc.setFont('helvetica', st || 'normal'); doc.setFontSize(sz); };
+  const footer = () => { font(8); color(C.grey); doc.text(pdfTxt(`Puestos Fronterizos · Constructora Rafmor · ${weekLabel(ws)} · ${scope}`), M, H - 8); doc.text('Página ' + page, W - M, H - 8, { align:'right' }); };
+  const newPage = () => { footer(); doc.addPage(); page++; y = M; };
+  const need = h => { if (y + h > H - 16) newPage(); };
+  const para = (txt, sz, st, col, lh) => { font(sz, st); color(col || C.dark); const lines = doc.splitTextToSize(pdfTxt(txt), CW); lines.forEach(l => { need(lh || sz * 0.45); doc.text(l, M, y + (lh || sz * 0.45) - 1); y += (lh || sz * 0.45); }); };
+
+  // ----- Portada -----
+  fill(C.dark); doc.rect(0, 0, W, 46, 'F'); fill(C.orange); doc.rect(0, 46, W, 1.6, 'F');
+  try { const lg = logoNow(); if (lg && lg.data) { const lh = 15, lw = Math.min(52, lg.w * lh / lg.h); fill([255,255,255]); doc.roundedRect(M - 2, 13, lw + 4, lh + 4, 2, 2, 'F'); doc.addImage(lg.data, lg.ext === 'png' ? 'PNG' : 'JPEG', M, 15, lw, lh); } } catch (e) {}
+  font(16, 'bold'); color(C.cream); doc.text('REPORTE SEMANAL DE AVANCE', W - M, 22, { align:'right' });
+  font(11); doc.text(pdfTxt(weekLabel(ws)), W - M, 30, { align:'right' });
+  font(9); color([185,179,166]); doc.text(pdfTxt(scope), W - M, 37, { align:'right' });
+  y = 56;
+  const tot = { rep: rows.length, fotos: 0, vids: 0 }; rows.forEach(r => (r.archivos || []).forEach(a => a.tipo === 'foto' ? tot.fotos++ : tot.vids++));
+  const kpis = [['Reportes', tot.rep], ['Bases con reporte', new Set(rows.map(r => r.puesto)).size], ['Fotos', tot.fotos], ['Videos', tot.vids]];
+  const kw = (CW - 9) / 4;
+  kpis.forEach(([l, v], i) => { const x = M + i * (kw + 3); fill(C.pale); draw(C.line); doc.roundedRect(x, y, kw, 20, 2, 2, 'FD'); font(18, 'bold'); color(C.olive); doc.text(String(v), x + 4, y + 10); font(8.5); color(C.grey); doc.text(pdfTxt(l), x + 4, y + 16); });
+  y += 28;
+  // Resumen por base
+  font(11, 'bold'); color(C.olive); doc.text('RESUMEN POR BASE', M, y); y += 3;
+  const cols = [['Base', 58], ['Reportes', 20], ['Avance inicio', 25], ['Avance fin', 23], ['Variación', 22], ['Fotos', 16], ['Videos', 18]];
+  const th = () => { fill(C.olive2); doc.rect(M, y, CW, 8, 'F'); font(8.5, 'bold'); color(C.cream); let x = M; cols.forEach(([t, w]) => { doc.text(pdfTxt(t), x + 2, y + 5.3); x += w; }); y += 8; };
+  th();
+  const bases = puesto ? CECOS.bases.filter(b => b.n === puesto) : CECOS.bases;
+  bases.forEach((b, k) => {
+    const L = rows.filter(r => r.puesto === b.n).slice().sort((a, c) => (a.fecha + a.creado).localeCompare(c.fecha + c.creado));
+    const av = L.filter(r => r.avance != null), ini = av.length ? +av[0].avance : null, fin = av.length ? +av[av.length - 1].avance : null;
+    const f = L.reduce((a, r) => a + (r.archivos || []).filter(x => x.tipo === 'foto').length, 0), v = L.reduce((a, r) => a + (r.archivos || []).filter(x => x.tipo === 'video').length, 0);
+    need(7); if (y === M) th();
+    if (k % 2) { fill(C.pale); doc.rect(M, y, CW, 7, 'F'); }
+    font(8.5, L.length ? 'bold' : 'normal'); color(L.length ? C.dark : C.grey);
+    const vals = [b.n + '. ' + b.nombre.replace('B.P.F ', ''), L.length || '—', ini != null ? ini + '%' : '—', fin != null ? fin + '%' : '—', ini != null ? ((fin - ini) >= 0 ? '+' : '') + (Math.round((fin - ini) * 10) / 10) + ' pts' : '—', L.length ? f : '—', L.length ? v : '—'];
+    let x = M; vals.forEach((t, i) => { doc.text(pdfTxt(String(t)), x + 2, y + 4.8); x += cols[i][1]; });
+    draw(C.line); doc.line(M, y + 7, M + CW, y + 7); y += 7;
+  });
+  y += 6;
+  // Días de la semana
+  need(10); font(11, 'bold'); color(C.olive); doc.text('REPORTES POR DÍA', M, y); y += 5;
+  [...Array(7)].map((_, i) => addDays(ws, i)).forEach(d => { const n = rows.filter(r => r.fecha === d).length; need(6); font(9, n ? 'bold' : 'normal'); color(n ? C.dark : C.grey); doc.text(pdfTxt(`${DIAS_C[isoParts(d).wd]} ${fmt(d)}`), M + 2, y + 4); doc.text(n ? `${n} reporte${n === 1 ? '' : 's'}` : 'Sin reportes', M + 60, y + 4); y += 6; });
+
+  // ----- Detalle día por día -----
+  const days = [...Array(7)].map((_, i) => addDays(ws, i)).filter(d => rows.some(r => r.fecha === d));
+  const allPhotos = rows.flatMap(r => (r.archivos || []).filter(a => a.tipo === 'foto').slice(0, PHOTOS_PER).map(a => a.path));
+  prog('Preparando ' + allPhotos.length + ' fotos…');
+  const url = await signed(allPhotos);
+  const imgs = new Map(); let done = 0;
+  const queue = allPhotos.slice();
+  await Promise.all([...Array(4)].map(async () => { while (queue.length) { const p = queue.shift(); try { imgs.set(p, await loadPdfImage(url(p), 1000)); } catch (e) {} done++; prog(`Cargando fotos ${done} de ${allPhotos.length}…`); } }));
+  prog('Armando el PDF…');
+  for (const d of days) {
+    newPage();
+    fill(C.dark); doc.rect(0, 0, W, 20, 'F'); fill(C.orange); doc.rect(0, 20, W, 1.2, 'F');
+    font(15, 'bold'); color(C.cream); doc.text(pdfTxt(`${DIAS_C[isoParts(d).wd].toUpperCase()} ${fmt(d)}`), M, 13);
+    const L = rows.filter(r => r.fecha === d).sort((a, c) => a.puesto - c.puesto);
+    font(9); doc.text(`${L.length} reporte${L.length === 1 ? '' : 's'}`, W - M, 13, { align:'right' });
+    y = 28;
+    for (const r of L) {
+      need(40);
+      fill(C.olive); doc.rect(M, y, CW, 9, 'F'); font(10.5, 'bold'); color(C.cream);
+      doc.text(pdfTxt(r.puesto_nombre), M + 3, y + 6); doc.text(r.avance != null ? `Avance general ${r.avance}%` : '', W - M - 3, y + 6, { align:'right' }); y += 9;
+      if (r.avance != null) { fill(C.pale); doc.rect(M, y, CW, 2.2, 'F'); fill(C.green); doc.rect(M, y, CW * Math.min(100, +r.avance) / 100, 2.2, 'F'); y += 2.2; }
+      y += 3;
+      para([`Responsable: ${r.autor_nombre}`, r.empresa ? `Contratista: ${r.empresa}` : '', r.frente ? `Frente: ${r.frente}` : '', r.personal != null ? `Personal: ${r.personal}` : '', r.clima ? `Clima: ${r.clima}` : ''].filter(Boolean).join('   ·   '), 8.5, 'normal', C.grey, 4.2);
+      y += 1.5;
+      const fs = (r.fases || []).filter(f => f.pct != null || f.obs);
+      if (fs.length) {
+        need(8 + 6); fill(C.pale); doc.rect(M, y, CW, 6, 'F'); font(8, 'bold'); color(C.olive); doc.text('Fase', M + 2, y + 4.2); doc.text('%', M + 52, y + 4.2); doc.text('Qué se ejecutó', M + 66, y + 4.2); y += 6;
+        fs.forEach(f => { font(8.5); const ol = doc.splitTextToSize(pdfTxt(f.obs || ''), CW - 68); const h = Math.max(5.5, ol.length * 3.8 + 1.7); need(h);
+          color(C.dark); font(8.5, 'bold'); doc.text(pdfTxt(f.fase), M + 2, y + 4); doc.text(f.pct != null ? f.pct + '%' : '—', M + 52, y + 4); font(8.5); color([60,60,55]); doc.text(ol, M + 66, y + 4);
+          draw(C.line); doc.line(M, y + h, M + CW, y + h); y += h; });
+        y += 3;
+      }
+      font(9, 'bold'); color(C.olive); need(6); doc.text('Avance del día', M, y + 4); y += 5.5;
+      para(r.descripcion, 9, 'normal', C.dark, 4.4);
+      if (r.observaciones) { y += 1.5; font(9, 'bold'); color(C.olive); need(6); doc.text('Observaciones', M, y + 4); y += 5.5; para(r.observaciones, 9, 'normal', C.dark, 4.4); }
+      const fotos = (r.archivos || []).filter(a => a.tipo === 'foto'), vids = (r.archivos || []).filter(a => a.tipo === 'video');
+      const show = fotos.slice(0, PHOTOS_PER).map(a => imgs.get(a.path)).filter(Boolean);
+      if (show.length) {
+        y += 3; const gw = (CW - 6) / 3;
+        for (let i = 0; i < show.length; i += 3) {
+          const rowImgs = show.slice(i, i + 3); const rh = Math.min(gw * 0.75, Math.max(...rowImgs.map(im => gw * im.h / im.w)));
+          need(rh + 3);
+          rowImgs.forEach((im, k) => { const x = M + k * (gw + 3); const s = Math.min(gw / im.w, rh / im.h); const iw = im.w * s, ih = im.h * s;
+            fill([238,238,232]); doc.rect(x, y, gw, rh, 'F'); doc.addImage(im.data, 'JPEG', x + (gw - iw) / 2, y + (rh - ih) / 2, iw, ih, undefined, 'FAST'); });
+          y += rh + 3;
+        }
+      }
+      const extra = fotos.length - show.length;
+      if (extra > 0 || vids.length) { para([extra > 0 ? `${extra} foto${extra === 1 ? '' : 's'} más` : '', vids.length ? `${vids.length} video${vids.length === 1 ? '' : 's'}` : ''].filter(Boolean).join(' y ') + ` disponible${(extra + vids.length) === 1 ? '' : 's'} en el Archivo de obra de la plataforma.`, 8.5, 'italic', C.grey, 4.2); }
+      y += 7;
+    }
+  }
+  footer();
+  return doc.output('blob');
+}
+
 /* ---------- Detalle del reporte y visor ---------- */
 let lbItems = [], lbIdx = 0;
 async function openReport(id, row){
@@ -1753,6 +1937,7 @@ function showTab(t){
   if (t === 'nueva') fillForm();
   if (t === 'rnuevo') fillRep();
   if (t === 'rarch') { archPuesto = null; loadArchive(); }
+  if (t === 'rsem') loadWeek();
   if (t === 'verif') loadVerif();
   if (t === 'aprob') loadAprob();
   if (t === 'mias') loadMias();
@@ -1764,6 +1949,7 @@ function tabAllowed(t){
   if (t === 'nueva' || t === 'mias') return canCreate();
   if (t === 'verif' || t === 'aprob') return seesAll();
   if (t === 'rnuevo') return canReport();
+  if (t === 'rsem') return canWeekly();
   return true;
 }
 function applyTabVisibility(){ $$('#mainTabs button').forEach(b => { b.hidden = !((b.dataset.mod === curMod || b.dataset.mod === 'both') && tabAllowed(b.dataset.tab)); }); }
