@@ -683,7 +683,7 @@ const ROLES = {
   gerente_general:{ label:'Gerente General', desc:'Acceso a toda la plataforma. Aprueba las requisiciones.' }
 };
 let me = null; // perfil activo
-const canCreate = () => me && ['contratista','costos','gerente_general'].includes(me.rol);
+const canCreate = () => me && (me.es_master || ['contratista','costos','gerente_general'].includes(me.rol));
 const seesAll = () => me && (me.rol !== 'contratista' || me.es_master);
 const seesUsers = () => me && (me.es_master || me.rol === 'gerente_general');
 
