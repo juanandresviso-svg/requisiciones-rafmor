@@ -330,6 +330,13 @@ dialog.lb{background:#000}
 .adjchip{display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px 8px 8px 12px;border-radius:10px;background:var(--sunk);border:1px solid var(--rule);font-size:14px}
 .adjchip span{flex:1;word-break:break-word}
 .adjchip .btn{min-height:36px}
+.vis{display:grid;gap:8px}
+.chk{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--rule);border-radius:10px;background:var(--sunk);cursor:pointer;font-weight:600}
+.chk input{width:22px;height:22px;accent-color:var(--green);flex:0 0 auto}
+.chk:has(input:checked){background:var(--green-soft);border-color:transparent;color:var(--green)}
+.folders button.gen{grid-column:1/-1;background:#EEF0E6}
+.folders button.gen.has{background:var(--surface)}
+.tag.gen{background:#E3EDF8;border-color:transparent;color:#2D5687}
 </style>
 </head>
 <body>
@@ -521,19 +528,30 @@ dialog.lb{background:#000}
   <!-- NUEVO REPORTE -->
   <section class="panel" id="p-rnuevo">
     <div class="todaybar" id="todayBar" hidden></div>
+    <div class="block" id="r-tipoBlock" hidden>
+      <h2>Tipo de reporte</h2>
+      <div class="seg" id="r-tipoSeg"><button type="button" data-v="puesto" aria-pressed="true">Un puesto fronterizo</button><button type="button" data-v="general" aria-pressed="false">Tema general del proyecto</button></div>
+      <label class="f" id="r-temaWrap" hidden style="margin:12px 0 0"><span>Tema</span><input class="in" id="r-tema" list="dl-temas" autocomplete="off" placeholder="Ej. Logística, Seguridad, Reunión con el comando"></label>
+      <div class="sec">¿Quién más lo puede ver?</div>
+      <p class="hint" style="margin:-4px 0 8px">Gerentes, Compras y Costos siempre lo ven. Marca si también lo pueden ver:</p>
+      <div class="vis">
+        <label class="chk"><input type="checkbox" id="r-vc"><span id="r-vcLbl">Comandante de la base</span></label>
+        <label class="chk"><input type="checkbox" id="r-vr"><span>Reporte General</span></label>
+      </div>
+    </div>
     <div class="block">
       <h2>Reporte de avance</h2>
       <div class="row2">
         <label class="f"><span>Fecha</span><input class="in" type="date" id="r-fecha"></label>
         <label class="f"><span>Personal en obra</span><input class="in" id="r-personal" inputmode="numeric" placeholder="Ej. 12"></label>
       </div>
-      <label class="f"><span>Puesto fronterizo (B.P.F)</span><select class="in" id="r-puesto"><option value="">Elige el puesto…</option></select></label>
+      <label class="f" id="r-puestoWrap"><span>Puesto fronterizo (B.P.F)</span><select class="in" id="r-puesto"><option value="">Elige el puesto…</option></select></label>
       <label class="f"><span>Frente o actividad principal</span><input class="in" id="r-frente" autocomplete="off" placeholder="Ej. Losa de techo, módulo de dormitorios"></label>
       <label class="f"><span>Descripción del avance</span><textarea class="in" id="r-desc" rows="5" placeholder="Qué se hizo hoy, cantidades ejecutadas, porcentaje de avance…"></textarea></label>
       <div class="f"><span class="lbl">Clima</span><div class="chips" id="r-clima"><button type="button" aria-pressed="false">Soleado</button><button type="button" aria-pressed="false">Nublado</button><button type="button" aria-pressed="false">Lluvia</button></div></div>
       <label class="f" style="margin-bottom:0"><span>Observaciones o incidencias</span><textarea class="in" id="r-obs" placeholder="Retrasos, faltantes, seguridad, visitas…"></textarea></label>
     </div>
-    <div class="block">
+    <div class="block" id="r-fasesBlock">
       <h2>Avance por fase de ejecución <span class="st ok" id="r-avg">—</span></h2>
       <p class="hint" id="r-prev" style="margin-top:-6px">Escribe el % de avance acumulado de cada fase. El avance general se calcula solo.</p>
       <div class="fases" id="r-fases"></div>
@@ -822,6 +840,7 @@ dialog.lb{background:#000}
   </div>
 </dialog>
 
+<datalist id="dl-temas"><option value="Logística"><option value="Seguridad"><option value="Reunión con el comando"><option value="Planificación"><option value="Personal"><option value="Clima y accesos"><option value="Proveedores"></datalist>
 <datalist id="dl-areas"></datalist><datalist id="dl-coord"></datalist>
 <datalist id="dl-equipos"></datalist><datalist id="dl-locaciones"></datalist><datalist id="dl-und"></datalist>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -927,7 +946,7 @@ async function buildAvanceDiario(ExcelJS, tplBuf, reps, fechaTxt){
   reps.forEach((r, k) => {
     const row = rs.getRow(5 + k); row.height = 20;
     const fotos = (r.archivos || []).filter(a => a.tipo === 'foto').length, vids = (r.archivos || []).filter(a => a.tipo === 'video').length;
-    const vals = [r.puesto_nombre, r.empresa || '', r.autor_nombre].concat(FASES.map((f, i) => { const x = (r.fases || [])[i]; return x && x.pct != null ? Number(x.pct) / 100 : null; })).concat([r.avance != null ? Number(r.avance) / 100 : null, fotos, vids]);
+    const vals = [r.puesto == null ? 'Proyecto general · ' + (r.tema || '') : r.puesto_nombre, r.empresa || '', r.autor_nombre].concat(FASES.map((f, i) => { const x = (r.fases || [])[i]; return x && x.pct != null ? Number(x.pct) / 100 : null; })).concat([r.avance != null ? Number(r.avance) / 100 : null, fotos, vids]);
     vals.forEach((v, i) => { const c = row.getCell(i+1); c.value = v; c.border = box; c.font = { name:'Arial', size:10, bold: i === 3 + FASES.length };
       c.alignment = { vertical:'middle', horizontal: i < 3 ? 'left' : 'center', wrapText: i < 3 };
       if (i >= 3 && i <= 3 + FASES.length) c.numFmt = '0%';
@@ -937,7 +956,7 @@ async function buildAvanceDiario(ExcelJS, tplBuf, reps, fechaTxt){
   // ----- Una hoja por reporte, con el formato original -----
   const used = new Set();
   reps.forEach((r, k) => {
-    let name = (r.puesto_nombre || 'Reporte').replace('B.P.F ', '').replace(/[\\\/\?\*\[\]:]/g, '').slice(0, 26);
+    let name = (r.puesto == null ? 'General ' + (r.tema || '') : (r.puesto_nombre || 'Reporte')).replace('B.P.F ', '').replace(/[\\\/\?\*\[\]:]/g, '').slice(0, 26);
     let base = name, n = 2; while (used.has(name)) name = (base.slice(0, 23) + ' (' + (n++) + ')'); used.add(name);
     const ws = wb.addWorksheet(name);
     const m = Object.assign({}, tpl.model); m.name = name; m.id = ws.id; m.orderNo = ws.orderNo;
@@ -945,7 +964,7 @@ async function buildAvanceDiario(ExcelJS, tplBuf, reps, fechaTxt){
     const merges = (tpl.model.merges || []); merges.forEach(rg => { try { ws.mergeCells(rg); } catch (e) {} });
     ws.pageSetup = Object.assign({}, tpl.pageSetup, { fitToPage:true, fitToWidth:1, fitToHeight:1, orientation:'landscape' });
     const set = (a, v) => { ws.getCell(a).value = v; };
-    set('C6', r.puesto_nombre); set('C7', r.empresa || ''); set('C8', r.autor_nombre); set('C9', fechaTxt);
+    set('C6', r.puesto == null ? 'Proyecto general · ' + (r.tema || '') : r.puesto_nombre); set('C7', r.empresa || ''); set('C8', r.autor_nombre); set('C9', fechaTxt);
     const fotos = (r.archivos || []).filter(a => a.tipo === 'foto').length, vids = (r.archivos || []).filter(a => a.tipo === 'video').length;
     const ref = `Archivo de obra › ${r.puesto_nombre} › ${fechaTxt}`;
     FASES.forEach((f, i) => { const x = (r.fases || [])[i] || {}; const row = 14 + i;
@@ -2096,7 +2115,21 @@ let rep = LS.get('repDraft', null);
 let repFiles = [];   // { file, kind, thumb, path, size, mime, status }
 let repId = null;
 const FASES = ['Demolición','Albañilería','Aguas Negras','Aguas Blancas','Electricidad','Acabados','Paisajismo','Equipamiento','Obras Complementarias'];
-const repBlank = () => ({ owner: me ? me.id : null, fecha: today(), puesto: '', frente: '', descripcion: '', personal: '', clima: '', observaciones: '', fases: FASES.map(() => ({ pct:'', obs:'' })), prev: null });
+const repBlank = () => ({ owner: me ? me.id : null, fecha: today(), puesto: '', frente: '', descripcion: '', personal: '', clima: '', observaciones: '', fases: FASES.map(() => ({ pct:'', obs:'' })), prev: null, general: false, tema: '', vc: false, vr: false });
+const esGerente = () => me && (me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol));
+Object.assign(ERRS, { falta_tema:'Escribe el tema del reporte general.' });
+function syncTipo(){
+  const g = esGerente() && rep.general;
+  $('#r-tipoBlock').hidden = !esGerente();
+  segSet('r-tipoSeg', g ? 'general' : 'puesto');
+  $('#r-temaWrap').hidden = !g; $('#r-puestoWrap').hidden = g; $('#r-fasesBlock').hidden = g;
+  $('#r-tema').value = rep.tema || ''; $('#r-vc').checked = !!rep.vc; $('#r-vr').checked = !!rep.vr;
+  $('#r-vcLbl').textContent = g ? 'Comandantes de todas las bases' : 'Comandante de la base';
+}
+$('#r-tipoSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; rep.general = b.dataset.v === 'general'; saveRep(); syncTipo(); $('#r-err').hidden = true; });
+$('#r-tema').addEventListener('input', e => { rep.tema = e.target.value; e.target.classList.remove('bad'); saveRep(); });
+$('#r-vc').addEventListener('change', e => { rep.vc = e.target.checked; saveRep(); });
+$('#r-vr').addEventListener('change', e => { rep.vr = e.target.checked; saveRep(); });
 Object.assign(ERRS, { sin_fases:'Escribe el % de avance de al menos una fase.', pct_invalido:'Los porcentajes van de 0 a 100.' });
 const avgPct = fs => { const v = fs.map(f => f.pct).filter(x => x !== '' && x != null && !isNaN(+x)).map(Number); return v.length ? Math.round(v.reduce((a,b)=>a+b,0) / v.length * 10) / 10 : null; };
 function renderFases(){
@@ -2140,7 +2173,7 @@ function fillRep(){
   $('#r-fecha').max = t; $('#r-fecha').min = addDays(t, -3);
   if (rep.fecha && (rep.fecha > t || rep.fecha < addDays(t, -3))) { rep.fecha = t; saveRep(); }
   repBind.forEach(([id,k]) => $('#'+id).value = rep[k] || '');
-  syncClima(); renderMedia(); loadToday(); renderFases(); if (rep.puesto && !rep.prev) loadPrev();
+  syncClima(); renderMedia(); loadToday(); renderFases(); syncTipo(); if (rep.puesto && !rep.prev && !rep.general) loadPrev();
 }
 function renderMedia(){
   const box = $('#r-media'); box.innerHTML = '';
@@ -2193,9 +2226,11 @@ async function prepImage(f){
 function upRow(i, txt, cls){ const li = $('#upList').children[i]; if (li) li.lastChild.outerHTML = `<span class="${cls || ''}">${txt}</span>`; }
 async function sendReport(){
   const err = m => { $('#r-err').textContent = m; $('#r-err').hidden = false; $('#r-err').scrollIntoView({ behavior:'smooth', block:'center' }); };
-  if (!rep.puesto) { $('#r-puesto').classList.add('bad'); return err('Elige el puesto fronterizo.'); }
-  if ((rep.descripcion || '').trim().length < 10) { $('#r-desc').classList.add('bad'); return err('Describe el avance del día.'); }
-  if (avgPct(rep.fases) == null) { const f = $('#r-fases input'); if (f) f.classList.add('bad'); return err('Escribe el % de avance de al menos una fase.'); }
+  const gen = esGerente() && rep.general;
+  if (gen && !(rep.tema || '').trim()) { $('#r-tema').classList.add('bad'); return err('Escribe el tema del reporte general.'); }
+  if (!gen && !rep.puesto) { $('#r-puesto').classList.add('bad'); return err('Elige el puesto fronterizo.'); }
+  if ((rep.descripcion || '').trim().length < 10) { $('#r-desc').classList.add('bad'); return err(gen ? 'Describe el tema del reporte.' : 'Describe el avance del día.'); }
+  if (!gen && avgPct(rep.fases) == null) { const f = $('#r-fases input'); if (f) f.classList.add('bad'); return err('Escribe el % de avance de al menos una fase.'); }
   if (!repFiles.length) return err('Agrega al menos una foto o un video.');
   const fecha = rep.fecha || today();
   repId = repId || uuid();
@@ -2217,10 +2252,10 @@ async function sendReport(){
       f.path = path; f.size = blob.size; f.upMime = mime; upRow(i, '✓', 'ok');
     }
     const archivos = repFiles.map(f => ({ path: f.path, tipo: f.kind, mime: f.upMime || f.mime, size: f.size || f.file.size, nombre: f.file.name }));
-    await rpc('rq_reporte_crear', { p_id: repId, p_datos: { fecha, puesto: +rep.puesto, frente: rep.frente, descripcion: rep.descripcion, personal: rep.personal, clima: rep.clima, observaciones: rep.observaciones, fases: rep.fases.map(f => ({ pct: f.pct === '' ? null : +f.pct, obs: f.obs })) }, p_archivos: archivos });
+    await rpc('rq_reporte_crear', { p_id: repId, p_datos: { fecha, general: gen, tema: rep.tema, visible_comandante: !!rep.vc, visible_reporte_general: !!rep.vr, puesto: gen ? null : +rep.puesto, frente: rep.frente, descripcion: rep.descripcion, personal: rep.personal, clima: rep.clima, observaciones: rep.observaciones, fases: rep.fases.map(f => ({ pct: f.pct === '' ? null : +f.pct, obs: f.obs })) }, p_archivos: archivos });
     const n = repFiles.length;
     repFiles.forEach(f => URL.revokeObjectURL(f.thumb)); repFiles = []; repId = null;
-    rep = Object.assign(repBlank(), { puesto: rep.puesto, frente: rep.frente }); saveRep(); fillRep(); loadPrev();
+    rep = Object.assign(repBlank(), { puesto: rep.puesto, frente: rep.frente, general: rep.general, tema: rep.tema, vc: rep.vc, vr: rep.vr }); saveRep(); fillRep(); if (!rep.general) loadPrev();
     $('#upTitle').textContent = 'Reporte registrado'; $('#upHint').textContent = `Se guardaron ${n} archivo${n === 1 ? '' : 's'} en el archivo de obra. Se avisó al Gerente de Operaciones.`;
     $('#upActs').hidden = false; $('#upRetry').hidden = true; $('#upClose').textContent = 'Listo';
   } catch (e) {
@@ -2271,10 +2306,12 @@ async function loadArchive(){
     if (archPuesto === null) {
       const [res, rows, antesN] = await Promise.all([rpc('rq_reportes_resumen', { p_desde: desde, p_hasta: hasta }), rpc('rq_reportes_listar', { p_desde: desde, p_hasta: hasta, p_limite: 300 }), rpc('rq_antes_resumen').catch(() => ({}))]);
       const by = Object.fromEntries((res || []).map(x => [x.puesto, x]));
-      $('#archFolders').innerHTML = CECOS.bases.map(b => { const x = by[b.n]; return `<button type="button" data-pu="${b.n}" class="${x ? 'has' : ''}"><b>${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</b><span>${x ? `${x.reportes} reporte${x.reportes === 1 ? '' : 's'} · ${x.fotos} foto${x.fotos === 1 ? '' : 's'} · ${x.videos} video${x.videos === 1 ? '' : 's'}` : 'Sin reportes este mes'}</span>${antesN && antesN[b.n] ? `<span class="antn">Antes: ${antesN[b.n]} foto${antesN[b.n] === 1 ? '' : 's'}</span>` : ''}${x ? `<span>Último: ${fmt(x.ultima)}${x.avance != null ? ' · Avance ' + x.avance + '%' : ''}</span>${x.avance != null ? `<div class="avbar"><i style="width:${Math.min(100, x.avance)}%"></i></div>` : ''}` : ''}</button>`; }).join('');
+      const xg = (res || []).find(x => x.puesto == null);
+      const genCard = (xg || esGerente()) ? `<button type="button" data-pu="0" class="gen ${xg ? 'has' : ''}"><b>Proyecto general</b><span>${xg ? `${xg.reportes} reporte${xg.reportes === 1 ? '' : 's'} · ${xg.fotos} foto${xg.fotos === 1 ? '' : 's'} · ${xg.videos} video${xg.videos === 1 ? '' : 's'}` : 'Sin reportes este mes'}</span>${xg ? `<span>Último: ${fmt(xg.ultima)}</span>` : ''}</button>` : '';
+      $('#archFolders').innerHTML = genCard + CECOS.bases.map(b => { const x = by[b.n]; return `<button type="button" data-pu="${b.n}" class="${x ? 'has' : ''}"><b>${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</b><span>${x ? `${x.reportes} reporte${x.reportes === 1 ? '' : 's'} · ${x.fotos} foto${x.fotos === 1 ? '' : 's'} · ${x.videos} video${x.videos === 1 ? '' : 's'}` : 'Sin reportes este mes'}</span>${antesN && antesN[b.n] ? `<span class="antn">Antes: ${antesN[b.n]} foto${antesN[b.n] === 1 ? '' : 's'}</span>` : ''}${x ? `<span>Último: ${fmt(x.ultima)}${x.avance != null ? ' · Avance ' + x.avance + '%' : ''}</span>${x.avance != null ? `<div class="avbar"><i style="width:${Math.min(100, x.avance)}%"></i></div>` : ''}` : ''}</button>`; }).join('');
       archRows = rows || [];
     } else {
-      $('#archPuestoTitle').textContent = baseName(archPuesto); renderArchAntes(archPuesto);
+      $('#archPuestoTitle').textContent = archPuesto === 0 ? 'Proyecto general' : baseName(archPuesto); if (archPuesto) renderArchAntes(archPuesto); else $('#archAntes').innerHTML = '';
       archRows = await rpc('rq_reportes_listar', { p_puesto: archPuesto, p_desde: desde, p_hasta: hasta, p_limite: 300 }) || [];
     }
     const authors = [...new Map(archRows.map(r => [r.autor_id, r.autor_nombre + (r.empresa ? ' · ' + r.empresa : '')])).entries()];
@@ -2301,8 +2338,9 @@ async function renderArchiveList(){
     const shown = fotos.slice(0, 4 - (videos.length ? 1 : 0));
     const extra = (r.archivos || []).length - shown.length - (videos.length ? 1 : 0);
     const el = document.createElement('article'); el.className = 'rep'; el.dataset.rep = r.id; el.tabIndex = 0;
-    el.innerHTML = `<div class="rh"><span>${esc(r.puesto_nombre.replace('B.P.F ', 'B.P.F '))}</span><span style="color:var(--muted);font-weight:500">${(r.archivos || []).length} archivo${(r.archivos || []).length === 1 ? '' : 's'}</span></div>
-      ${r.historico ? '<div class="tags" style="margin:2px 0"><span class="tag hist">Histórico</span></div>' : ''}<div class="rm">${esc(r.autor_nombre)}${r.empresa ? ' · ' + esc(r.empresa) : ''}${r.frente ? ' · ' + esc(r.frente) : ''}${r.avance != null ? ' · <b style="color:var(--green)">Avance ' + r.avance + '%</b>' : ''}</div>
+    const visTags = esGerente() && (r.visible_comandante === false || r.visible_reporte_general === false || r.puesto == null) ? `<div class="tags" style="margin:2px 0">${r.puesto == null ? '<span class="tag gen">General</span>' : ''}${!r.visible_comandante ? '<span class="tag">Oculto a Comandante</span>' : ''}${!r.visible_reporte_general ? '<span class="tag">Oculto a Reporte General</span>' : ''}</div>` : '';
+    el.innerHTML = `<div class="rh"><span>${esc(r.puesto == null ? 'Proyecto general · ' + (r.tema || '') : r.puesto_nombre)}</span><span style="color:var(--muted);font-weight:500">${(r.archivos || []).length} archivo${(r.archivos || []).length === 1 ? '' : 's'}</span></div>
+      ${visTags}${r.historico ? '<div class="tags" style="margin:2px 0"><span class="tag hist">Histórico</span></div>' : ''}<div class="rm">${esc(r.autor_nombre)}${r.empresa ? ' · ' + esc(r.empresa) : ''}${r.frente ? ' · ' + esc(r.frente) : ''}${r.avance != null ? ' · <b style="color:var(--green)">Avance ' + r.avance + '%</b>' : ''}</div>
       <p class="rd">${esc(r.descripcion)}</p>
       <div class="thumbs">${shown.map(a => `<div class="t"><img loading="lazy" alt="" src="${url(a.path)}"></div>`).join('')}${videos.length ? `<div class="t">▶ ${videos.length}</div>` : ''}${extra > 0 ? `<div class="t">+${extra}</div>` : ''}</div>`;
     box.appendChild(el);
@@ -2319,7 +2357,7 @@ async function dailyExcel(fecha, btn){
     if (!window.ExcelJS) throw new Error('No se pudo cargar el generador de Excel.');
     const rows = await rpc('rq_reportes_listar', { p_desde: fecha, p_hasta: fecha, p_limite: 300 }) || [];
     if (!rows.length) { toast('No hay reportes el ' + fmt(fecha)); return; }
-    rows.sort((a, b) => a.puesto - b.puesto || String(a.creado).localeCompare(String(b.creado)));
+    rows.sort((a, b) => (a.puesto || 99) - (b.puesto || 99) || String(a.creado).localeCompare(String(b.creado)));
     const buf = await buildAvanceDiario(window.ExcelJS, b64ToBuf(AVANCE_B64), rows, fmt(fecha));
     const r = await deliver({ name: `Avance_diario_${fecha}.xlsx`, blob: new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }) });
     if (r === 'declined') toast('Descarga cancelada');
@@ -2352,7 +2390,7 @@ async function loadWeek(){
   $('#w-err').hidden = true; $('#w-prog').textContent = '';
   $('#w-sum').innerHTML = '<p class="hint">Cargando…</p>';
   try {
-    wRows = await rpc('rq_reportes_listar', { p_desde: wStart, p_hasta: wEnd, p_puesto: $('#w-base').value ? +$('#w-base').value : null, p_limite: 300 }) || [];
+    wRows = await rpc('rq_reportes_listar', { p_desde: wStart, p_hasta: wEnd, p_puesto: lock ? null : ($('#w-base').value ? +$('#w-base').value : null), p_limite: 300 }) || [];
     const days = [...Array(7)].map((_, i) => addDays(wStart, i));
     $('#w-sum').innerHTML = `<ul class="wdays">${days.map(d => { const L = wRows.filter(r => r.fecha === d), f = L.reduce((a, r) => a + (r.archivos || []).filter(x => x.tipo === 'foto').length, 0);
       return `<li class="${L.length ? 'has' : ''}"><b>${DIAS_C[isoParts(d).wd]} ${fmt(d)}</b><span>${L.length ? `${L.length} reporte${L.length === 1 ? '' : 's'} · ${[...new Set(L.map(r => r.puesto_nombre.replace('B.P.F ', '')))].join(', ')} · ${f} foto${f === 1 ? '' : 's'}` : 'Sin reportes'}</span></li>`; }).join('')}</ul>`;
@@ -2428,6 +2466,8 @@ async function buildWeeklyPdf(rows, ws, puesto, prog){
     let x = M; vals.forEach((t, i) => { doc.text(pdfTxt(String(t)), x + 2, y + 4.8); x += cols[i][1]; });
     draw(C.line); doc.line(M, y + 7, M + CW, y + 7); y += 7;
   });
+  const nGen = rows.filter(r => r.puesto == null).length;
+  if (nGen) { need(8); font(9, 'bold'); color(C.dark); doc.text(pdfTxt(`Reportes de temas generales del proyecto: ${nGen}`), M + 2, y + 5); y += 7; }
   y += 6;
   // Días de la semana
   need(10); font(11, 'bold'); color(C.olive); doc.text('REPORTES POR DÍA', M, y); y += 5;
@@ -2466,13 +2506,13 @@ async function buildWeeklyPdf(rows, ws, puesto, prog){
     newPage();
     fill(C.dark); doc.rect(0, 0, W, 20, 'F'); fill(C.orange); doc.rect(0, 20, W, 1.2, 'F');
     font(15, 'bold'); color(C.cream); doc.text(pdfTxt(`${DIAS_C[isoParts(d).wd].toUpperCase()} ${fmt(d)}`), M, 13);
-    const L = rows.filter(r => r.fecha === d).sort((a, c) => a.puesto - c.puesto);
+    const L = rows.filter(r => r.fecha === d).sort((a, c) => (a.puesto || 99) - (c.puesto || 99));
     font(9); doc.text(`${L.length} reporte${L.length === 1 ? '' : 's'}`, W - M, 13, { align:'right' });
     y = 28;
     for (const r of L) {
       need(40);
       fill(C.olive); doc.rect(M, y, CW, 9, 'F'); font(10.5, 'bold'); color(C.cream);
-      doc.text(pdfTxt(r.puesto_nombre), M + 3, y + 6); doc.text(r.avance != null ? `Avance general ${r.avance}%` : '', W - M - 3, y + 6, { align:'right' }); y += 9;
+      doc.text(pdfTxt(r.puesto == null ? 'PROYECTO GENERAL · ' + String(r.tema || '').toUpperCase() : r.puesto_nombre), M + 3, y + 6); doc.text(r.avance != null ? `Avance general ${r.avance}%` : '', W - M - 3, y + 6, { align:'right' }); y += 9;
       if (r.avance != null) { fill(C.pale); doc.rect(M, y, CW, 2.2, 'F'); fill(C.green); doc.rect(M, y, CW * Math.min(100, +r.avance) / 100, 2.2, 'F'); y += 2.2; }
       y += 3;
       para([`Responsable: ${r.autor_nombre}`, r.empresa ? `Contratista: ${r.empresa}` : '', r.frente ? `Frente: ${r.frente}` : '', r.personal != null ? `Personal: ${r.personal}` : '', r.clima ? `Clima: ${r.clima}` : ''].filter(Boolean).join('   ·   '), 8.5, 'normal', C.grey, 4.2);
@@ -2521,9 +2561,10 @@ async function openReport(id, row){
     const url = await signed(files.map(a => a.path));
     lbItems = files.filter(a => a.tipo === 'foto').map(a => ({ src: url(a.path), path: a.path, name: a.nombre }));
     $('#rpBody').innerHTML = `<dl class="dl">
-        <dt>Puesto</dt><dd>${esc(r.puesto_nombre)}</dd>
+        ${r.puesto == null ? `<dt>Tipo</dt><dd>Proyecto general</dd><dt>Tema</dt><dd>${esc(r.tema || '')}</dd>` : `<dt>Puesto</dt><dd>${esc(r.puesto_nombre)}</dd>`}
+        ${esGerente() ? `<dt>Visible para</dt><dd>Gerentes, Compras, Costos${r.visible_comandante ? (r.puesto == null ? ', Comandantes' : ', Comandante de la base') : ''}${r.visible_reporte_general ? ', Reporte General' : ''}</dd>` : ''}
         ${r.frente ? `<dt>Frente</dt><dd>${esc(r.frente)}</dd>` : ''}
-        <dt>Contratista</dt><dd>${esc(r.autor_nombre)}${r.empresa ? ', ' + esc(r.empresa) : ''}</dd>
+        <dt>${r.puesto == null ? 'Responsable' : 'Reportó'}</dt><dd>${esc(r.autor_nombre)}${r.empresa ? ', ' + esc(r.empresa) : ''}</dd>
         ${r.personal != null ? `<dt>Personal</dt><dd>${esc(r.personal)}</dd>` : ''}
         ${r.clima ? `<dt>Clima</dt><dd>${esc(r.clima)}</dd>` : ''}
         <dt>Registrado</dt><dd>${new Date(r.creado).toLocaleString('es-VE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</dd>
