@@ -351,6 +351,13 @@ dialog.lb{background:#000}
 .verimg{border:0;background:none;padding:6px 0;font:600 15px Barlow,sans-serif;color:#2D5687;text-decoration:underline;text-underline-offset:3px;cursor:pointer;min-height:36px}
 .vidn{font-size:14px;color:var(--muted)}
 .rep .rh span:last-child{font-weight:600}
+.ctlb{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0}
+.bpf{font:600 14px/1.2 Barlow,sans-serif;color:#2D5687;background:#E3EDF8;border-radius:6px;padding:2px 7px}
+#dTitle .bpf{font-size:13px;vertical-align:middle}
+.rautor{color:var(--ink)}
+.rcargo{font-weight:600;color:var(--ink)}
+#w-ver button{line-height:1.15;padding:6px 4px}
+#w-ver button small{font-weight:500;font-size:12px;opacity:.8}
 </style>
 </head>
 <body>
@@ -626,6 +633,11 @@ dialog.lb{background:#000}
       <h2>Reporte semanal</h2>
       <p class="hint" style="margin-top:-6px">PDF con los reportes y las fotos de la semana, desglosado día por día, con el resumen de avance de cada base.</p>
       <div class="weeknav"><button class="btn" id="w-prev" aria-label="Semana anterior">‹</button><b id="w-label"></b><button class="btn" id="w-next" aria-label="Semana siguiente">›</button></div>
+      <div id="w-verWrap" hidden>
+        <span class="lbl">Versión del reporte</span>
+        <div class="seg" id="w-ver"><button type="button" data-v="interno" aria-pressed="true">Interno<br><small>para superiores</small></button><button type="button" data-v="cliente" aria-pressed="false">Cliente<br><small>Comandante / Reporte General</small></button></div>
+        <p class="hint" id="w-verHint" style="margin:8px 0 12px"></p>
+      </div>
       <label class="f"><span>Base</span><select class="in" id="w-base"><option value="">Todo el proyecto (13 bases)</option></select></label>
       <div id="w-sum"></div>
       <p class="err" id="w-err" hidden></p>
@@ -1496,10 +1508,12 @@ function estadoTag(r){
   if (r.verificado) return `<span class="tag ok">Verificada por ${esc(r.verificado)}</span><span class="tag pend">Falta aprobar</span>`;
   return '<span class="tag pend">Falta verificar</span>';
 }
+function basesTxt(r){ if (r.general) return 'Proyecto general'; const B = r.bases || []; if (B.length === 1) return baseName(B[0]); if (B.length > 1) return `Varias bases (${B.length})`; return ''; }
 function rowLi(r, primaryLabel, extra){
   const when = new Date(r.creado).toLocaleDateString('es-VE', { day:'2-digit', month:'short' });
   const li = document.createElement('li');
-  li.innerHTML = `<div class="h1"><b>${esc(r.control)}</b><span style="color:var(--muted);font-weight:500">${when}</span></div>
+  const bt = basesTxt(r);
+  li.innerHTML = `<div class="h1"><span class="ctlb"><b>${esc(r.control)}</b>${bt ? `<span class="bpf">${esc(bt)}</span>` : ''}</span><span style="color:var(--muted);font-weight:500;flex:0 0 auto">${when}</span></div>
     <div class="tags" style="margin:4px 0 2px">${estadoTag(r)}${r.editada ? '<span class="tag">Editada</span>' : ''}${r.historica ? '<span class="tag hist">Histórica</span>' : ''}${r.adjunto ? '<span class="tag">📎 Con documento</span>' : ''}${r.general ? '<span class="tag gen">General</span>' : ''}</div>
     <div class="h2">${esc(r.area || '')}${r.coordinacion ? ', ' + esc(r.coordinacion) : ''}. ${r.n} material${r.n === 1 ? '' : 'es'}. Pidió ${esc(r.solicitante || '')}${r.fechaRequerida ? '. Para el ' + fmt(r.fechaRequerida) : ''}</div>
     <div class="hb"><button class="btn ${primaryLabel ? 'primary' : ''}" data-open="${esc(r.control)}">${primaryLabel || 'Ver'}</button><button class="btn" data-rdl="${esc(r.control)}">Descargar</button>${extra || ''}</div>`;
@@ -1596,6 +1610,8 @@ function permsFor(r){
 }
 function renderDetail(){
   const r = detRow, d = r.datos || {}, f = d.firmas || {}, v = r.verificado, a = r.autorizado, rc = r.recibido, x = r.rechazo;
+  { const B = [...new Set((d.items || []).map(i => +i.base).filter(n => n >= 1 && n <= 13))]; const bt = d.general ? 'Proyecto general' : B.length === 1 ? baseName(B[0]) : B.length > 1 ? `Varias bases (${B.length})` : '';
+    $('#dTitle').innerHTML = `${esc(r.control)}${bt ? ` <small class="bpf">${esc(bt)}</small>` : ''}`; }
   const fdate = ts => fmt(isoLocal(ts));
   const items = (d.items || []).map((it, i) => `<li class="item" style="grid-template-columns:32px 1fr"><div class="num">${i+1}</div><div><div class="qty">${esc(it.cant)} ${esc(it.und)}</div><div class="d">${esc(it.desc)}</div><div class="m">${esc([it.locacion, it.equipo].filter(Boolean).join(', '))}</div>${it.ceco ? `<div class="m" style="font-weight:600;color:var(--green)">${esc(it.ceco)}</div>` : ''}<div class="tags">${it.stock === 'com' ? '<span class="tag com">A compras</span>' : it.stock === 'si' ? '<span class="tag ok">En almacén</span>' : it.stock === 'no' ? '<span class="tag">Sin stock</span>' : ''}${it.espec === 'si' ? '<span class="tag">Con especificación</span>' : ''}</div></div></li>`).join('');
   const cambios = (r.cambios || []).map(c => `${esc(c.nombre)} (${esc(c.etapa)}, ${fdate(c.fecha)})`).join('; ');
@@ -2380,10 +2396,11 @@ function repCard(r){
   const link = fotos.length ? `<button type="button" class="verimg" data-verimg="${r.id}">Ver imágenes (${fotos.length})</button>${videos.length ? `<span class="vidn">· ${videos.length} video${videos.length === 1 ? '' : 's'}</span>` : ''}`
     : videos.length ? `<button type="button" class="verimg" data-vervid="${r.id}">Ver video${videos.length === 1 ? '' : 's'} (${videos.length})</button>` : '';
   el.innerHTML = `<div class="rh"><span>${esc(r.puesto == null ? 'Proyecto general · ' + (r.tema || '') : r.puesto_nombre)}</span>${r.avance != null ? `<span style="color:var(--green)">Avance ${r.avance}%</span>` : ''}</div>
-    ${visTags}${r.historico ? '<div class="tags" style="margin:2px 0"><span class="tag hist">Histórico</span></div>' : ''}<div class="rm">${esc(r.autor_nombre)}${r.empresa ? ' · ' + esc(r.empresa) : ''}${r.frente ? ' · ' + esc(r.frente) : ''}</div>
+    ${visTags}${r.historico ? '<div class="tags" style="margin:2px 0"><span class="tag hist">Histórico</span></div>' : ''}<div class="rm"><b class="rautor">${esc(r.autor_nombre)}</b>${cargoDe(r) ? ' · <span class="rcargo">' + esc(cargoDe(r)) + '</span>' : ''}${r.empresa ? ' · ' + esc(r.empresa) : ''}${r.frente ? ' · ' + esc(r.frente) : ''}</div>
     <p class="rd">${esc(r.descripcion)}</p>${link ? `<div class="verrow">${link}</div>` : ''}`;
   return el;
 }
+const cargoDe = r => r.autor_cargo || (r.autor_rol && ROLES[r.autor_rol] ? ROLES[r.autor_rol].label : '');
 function pintarLista(box, rows){
   box.innerHTML = ''; let day = '';
   rows.forEach(r => {
@@ -2482,7 +2499,14 @@ const weekStart = iso => { const [y,m,d] = iso.split('-').map(Number); const dt 
 const isoParts = iso => { const [y,m,d] = iso.split('-').map(Number); return { y, m, d, wd: new Date(Date.UTC(y, m-1, d)).getUTCDay() }; };
 const weekLabel = ws => { const a = isoParts(ws), b = isoParts(addDays(ws, 6));
   return a.m === b.m ? `Semana del ${a.d} al ${b.d} de ${MESES[b.m-1]} de ${b.y}` : `Semana del ${a.d} de ${MESES[a.m-1]} al ${b.d} de ${MESES[b.m-1]} de ${b.y}`; };
-let wStart = null, wRows = [];
+let wStart = null, wRows = [], wVer = 'interno';
+const esCliente = () => soloSemanal() || wVer === 'cliente';
+function filasVersion(){
+  if (!esCliente() || soloSemanal()) return wRows;
+  const pu = $('#w-base').value ? +$('#w-base').value : null;
+  return wRows.filter(r => pu ? (r.visible_comandante && (r.puesto === pu || r.puesto == null)) : r.visible_reporte_general);
+}
+$('#w-ver').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; wVer = b.dataset.v; pintarSemana(); });
 CECOS.bases.forEach(b => { const o = document.createElement('option'); o.value = b.n; o.textContent = b.n + '. ' + b.nombre.replace('B.P.F ', ''); $('#w-base').appendChild(o); });
 $('#w-prev').onclick = () => { wStart = addDays(wStart, -7); loadWeek(); };
 $('#w-next').onclick = () => { if (addDays(wStart, 7) <= today()) { wStart = addDays(wStart, 7); loadWeek(); } };
@@ -2498,21 +2522,36 @@ async function loadWeek(){
   $('#w-err').hidden = true; $('#w-prog').textContent = '';
   $('#w-sum').innerHTML = '<p class="hint">Cargando…</p>';
   try {
-    wRows = await rpc('rq_reportes_listar', { p_desde: wStart, p_hasta: wEnd, p_puesto: lock ? null : ($('#w-base').value ? +$('#w-base').value : null), p_limite: 300 }) || [];
-    const days = [...Array(7)].map((_, i) => addDays(wStart, i));
-    $('#w-sum').innerHTML = `<ul class="wdays">${days.map(d => { const L = wRows.filter(r => r.fecha === d), f = L.reduce((a, r) => a + (r.archivos || []).filter(x => x.tipo === 'foto').length, 0);
-      return `<li class="${L.length ? 'has' : ''}"><b>${DIAS_C[isoParts(d).wd]} ${fmt(d)}</b><span>${L.length ? `${L.length} reporte${L.length === 1 ? '' : 's'} · ${[...new Set(L.map(r => r.puesto_nombre.replace('B.P.F ', '')))].join(', ')} · ${f} foto${f === 1 ? '' : 's'}` : 'Sin reportes'}</span></li>`; }).join('')}</ul>`;
-    $('#w-btn').disabled = !wRows.length;
-    $('#w-btn').textContent = wRows.length ? `Generar PDF semanal (${wRows.length} reporte${wRows.length === 1 ? '' : 's'})` : 'No hay reportes esta semana';
+    const pu = lock ? null : ($('#w-base').value ? +$('#w-base').value : null);
+    wRows = await rpc('rq_reportes_listar', { p_desde: wStart, p_hasta: wEnd, p_puesto: pu, p_limite: 300 }) || [];
+    if (pu) { try { const gen = await rpc('rq_reportes_listar', { p_desde: wStart, p_hasta: wEnd, p_puesto: 0, p_limite: 300 }) || []; wRows = wRows.concat(gen.filter(g => g.visible_comandante)); } catch (e) {} }
+    pintarSemana();
   } catch (e) { $('#w-sum').innerHTML = ''; $('#w-err').textContent = e.message; $('#w-err').hidden = false; }
 }
+function pintarSemana(){
+    $('#w-verWrap').hidden = soloSemanal();
+    segSet('w-ver', wVer);
+    const pu = $('#w-base').value ? +$('#w-base').value : null;
+    $('#w-verHint').textContent = wVer === 'interno'
+      ? 'Todos los reportes de la semana, con observaciones e incidencias. Para gerencia y superiores internos.' + (pu ? ' Con una base elegida no incluye los reportes generales.' : '')
+      : (pu ? 'Solo los reportes compartidos con el Comandante de la base (de esta base y los generales marcados para comandantes).' : 'Solo los reportes compartidos con Reporte General.') + ' No incluye observaciones internas.';
+    const rows = filasVersion().filter(r => wVer === 'cliente' || soloSemanal() || !pu || r.puesto === pu);
+    const days = [...Array(7)].map((_, i) => addDays(wStart, i));
+    $('#w-sum').innerHTML = `<ul class="wdays">${days.map(d => { const L = rows.filter(r => r.fecha === d), f = L.reduce((a, r) => a + (r.archivos || []).filter(x => x.tipo === 'foto').length, 0);
+      return `<li class="${L.length ? 'has' : ''}"><b>${DIAS_C[isoParts(d).wd]} ${fmt(d)}</b><span>${L.length ? `${L.length} reporte${L.length === 1 ? '' : 's'} · ${[...new Set(L.map(r => r.puesto_nombre.replace('B.P.F ', '')))].join(', ')} · ${f} foto${f === 1 ? '' : 's'}` : 'Sin reportes'}</span></li>`; }).join('')}</ul>`;
+    $('#w-btn').disabled = !rows.length;
+    $('#w-btn').textContent = rows.length ? `Generar PDF ${esCliente() ? 'para el cliente' : 'interno'} (${rows.length} reporte${rows.length === 1 ? '' : 's'})` : 'No hay reportes esta semana';
+    wFilas = rows;
+}
+let wFilas = [];
 $('#w-btn').onclick = async () => {
   const b = $('#w-btn'); b.disabled = true;
   try {
     if (!window.jspdf) throw new Error('No se pudo cargar el generador de PDF. Revisa la conexión.');
     const puesto = $('#w-base').value ? +$('#w-base').value : null;
-    const blob = await buildWeeklyPdf(wRows, wStart, puesto, t => { $('#w-prog').textContent = t; });
-    const name = `Reporte_semanal_${wStart}_al_${addDays(wStart, 6)}${puesto ? '_' + baseName(puesto).replace('B.P.F ', '').replace(/\s+/g, '_') : ''}.pdf`;
+    const cli = esCliente();
+    const blob = await buildWeeklyPdf(wFilas, wStart, puesto, t => { $('#w-prog').textContent = t; }, { cliente: cli });
+    const name = `Reporte_semanal_${cli ? 'cliente' : 'interno'}_${wStart}_al_${addDays(wStart, 6)}${puesto ? '_' + baseName(puesto).replace('B.P.F ', '').replace(/\s+/g, '_') : ''}.pdf`;
     $('#w-prog').textContent = 'Listo: ' + name + ' (' + fileSize(blob.size) + ')';
     const r = await deliver({ name, blob }); if (r === 'declined') toast('Descarga cancelada');
   } catch (e) { $('#w-err').textContent = e.message || 'No se pudo generar el PDF'; $('#w-err').hidden = false; $('#w-prog').textContent = ''; }
@@ -2530,7 +2569,8 @@ async function loadPdfImage(url, maxPx){
 // jsPDF usa la codificación WinAnsi: se limpian caracteres que no puede dibujar.
 const pdfTxt = s => String(s == null ? '' : s).replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[^\u0009\u000A\u0020-\u007E\u00A0-\u00FF\u2013\u2014\u2022\u2026\u203A\u20AC]/g, '');
 
-async function buildWeeklyPdf(rows, ws, puesto, prog){
+async function buildWeeklyPdf(rows, ws, puesto, prog, opts){
+  opts = opts || {}; const cliente = !!opts.cliente;
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit:'mm', format:'a4', compress:true });
   const W = 210, H = 297, M = 14, CW = W - 2*M;
@@ -2540,7 +2580,7 @@ async function buildWeeklyPdf(rows, ws, puesto, prog){
   const we = addDays(ws, 6), scope = puesto ? baseName(puesto) : 'Todo el proyecto (13 bases)';
   const fill = c => doc.setFillColor(c[0], c[1], c[2]), color = c => doc.setTextColor(c[0], c[1], c[2]), draw = c => doc.setDrawColor(c[0], c[1], c[2]);
   const font = (sz, st) => { doc.setFont('helvetica', st || 'normal'); doc.setFontSize(sz); };
-  const footer = () => { font(8); color(C.grey); doc.text(pdfTxt(`Puestos Fronterizos · Constructora Rafmor · ${weekLabel(ws)} · ${scope}`), M, H - 8); doc.text('Página ' + page, W - M, H - 8, { align:'right' }); };
+  const footer = () => { font(8); color(C.grey); doc.text(pdfTxt(`Puestos Fronterizos · Constructora Rafmor · ${weekLabel(ws)} · ${scope} · ${cliente ? 'Informe para el cliente' : 'Informe interno'}`), M, H - 8); doc.text('Página ' + page, W - M, H - 8, { align:'right' }); };
   const newPage = () => { footer(); doc.addPage(); page++; y = M; };
   const need = h => { if (y + h > H - 16) newPage(); };
   const para = (txt, sz, st, col, lh) => { font(sz, st); color(col || C.dark); const lines = doc.splitTextToSize(pdfTxt(txt), CW); lines.forEach(l => { need(lh || sz * 0.45); doc.text(l, M, y + (lh || sz * 0.45) - 1); y += (lh || sz * 0.45); }); };
@@ -2550,7 +2590,7 @@ async function buildWeeklyPdf(rows, ws, puesto, prog){
   try { const lg = logoNow(); if (lg && lg.data) { const lh = 15, lw = Math.min(52, lg.w * lh / lg.h); fill([255,255,255]); doc.roundedRect(M - 2, 13, lw + 4, lh + 4, 2, 2, 'F'); doc.addImage(lg.data, lg.ext === 'png' ? 'PNG' : 'JPEG', M, 15, lw, lh); } } catch (e) {}
   font(16, 'bold'); color(C.cream); doc.text('REPORTE SEMANAL DE AVANCE', W - M, 22, { align:'right' });
   font(11); doc.text(pdfTxt(weekLabel(ws)), W - M, 30, { align:'right' });
-  font(9); color([185,179,166]); doc.text(pdfTxt(scope), W - M, 37, { align:'right' });
+  font(9); color([185,179,166]); doc.text(pdfTxt(scope + ' · ' + (cliente ? 'Informe para el cliente' : 'Informe interno')), W - M, 37, { align:'right' });
   y = 56;
   const tot = { rep: rows.length, fotos: 0, vids: 0 }; rows.forEach(r => (r.archivos || []).forEach(a => a.tipo === 'foto' ? tot.fotos++ : tot.vids++));
   const kpis = [['Reportes', tot.rep], ['Bases con reporte', new Set(rows.map(r => r.puesto)).size], ['Fotos', tot.fotos], ['Videos', tot.vids]];
@@ -2623,7 +2663,7 @@ async function buildWeeklyPdf(rows, ws, puesto, prog){
       doc.text(pdfTxt(r.puesto == null ? 'PROYECTO GENERAL · ' + String(r.tema || '').toUpperCase() : r.puesto_nombre), M + 3, y + 6); doc.text(r.avance != null ? `Avance general ${r.avance}%` : '', W - M - 3, y + 6, { align:'right' }); y += 9;
       if (r.avance != null) { fill(C.pale); doc.rect(M, y, CW, 2.2, 'F'); fill(C.green); doc.rect(M, y, CW * Math.min(100, +r.avance) / 100, 2.2, 'F'); y += 2.2; }
       y += 3;
-      para([`Responsable: ${r.autor_nombre}`, r.empresa ? `Contratista: ${r.empresa}` : '', r.frente ? `Frente: ${r.frente}` : '', r.personal != null ? `Personal: ${r.personal}` : '', r.clima ? `Clima: ${r.clima}` : ''].filter(Boolean).join('   ·   '), 8.5, 'normal', C.grey, 4.2);
+      para([`Responsable: ${r.autor_nombre}${cargoDe(r) ? ' (' + cargoDe(r) + ')' : ''}`, r.empresa ? `Empresa: ${r.empresa}` : '', r.frente ? `Frente: ${r.frente}` : '', r.personal != null ? `Personal: ${r.personal}` : '', r.clima ? `Clima: ${r.clima}` : ''].filter(Boolean).join('   ·   '), 8.5, 'normal', C.grey, 4.2);
       y += 1.5;
       const fs = (r.fases || []).filter(f => f.pct != null || f.obs);
       if (fs.length) {
@@ -2635,7 +2675,7 @@ async function buildWeeklyPdf(rows, ws, puesto, prog){
       }
       font(9, 'bold'); color(C.olive); need(6); doc.text('Avance del día', M, y + 4); y += 5.5;
       para(r.descripcion, 9, 'normal', C.dark, 4.4);
-      if (r.observaciones) { y += 1.5; font(9, 'bold'); color(C.olive); need(6); doc.text('Observaciones', M, y + 4); y += 5.5; para(r.observaciones, 9, 'normal', C.dark, 4.4); }
+      if (r.observaciones && !cliente) { y += 1.5; font(9, 'bold'); color(C.olive); need(6); doc.text('Observaciones', M, y + 4); y += 5.5; para(r.observaciones, 9, 'normal', C.dark, 4.4); }
       const fotos = (r.archivos || []).filter(a => a.tipo === 'foto'), vids = (r.archivos || []).filter(a => a.tipo === 'video');
       const show = fotos.slice(0, PHOTOS_PER).map(a => imgs.get(a.path)).filter(Boolean);
       if (show.length) {
@@ -2672,7 +2712,7 @@ async function openReport(id, row){
         ${r.puesto == null ? `<dt>Tipo</dt><dd>Proyecto general</dd><dt>Tema</dt><dd>${esc(r.tema || '')}</dd>` : `<dt>Puesto</dt><dd>${esc(r.puesto_nombre)}</dd>`}
         ${esGerente() ? `<dt>Visible para</dt><dd>Gerentes, Compras, Costos${r.visible_comandante ? (r.puesto == null ? ', Comandantes' : ', Comandante de la base') : ''}${r.visible_reporte_general ? ', Reporte General' : ''}</dd>` : ''}
         ${r.frente ? `<dt>Frente</dt><dd>${esc(r.frente)}</dd>` : ''}
-        <dt>${r.puesto == null ? 'Responsable' : 'Reportó'}</dt><dd>${esc(r.autor_nombre)}${r.empresa ? ', ' + esc(r.empresa) : ''}</dd>
+        <dt>${r.puesto == null ? 'Responsable' : 'Reportó'}</dt><dd>${esc(r.autor_nombre)}${cargoDe(r) ? ', ' + esc(cargoDe(r)) : ''}${r.empresa ? ' · ' + esc(r.empresa) : ''}</dd>
         ${r.personal != null ? `<dt>Personal</dt><dd>${esc(r.personal)}</dd>` : ''}
         ${r.clima ? `<dt>Clima</dt><dd>${esc(r.clima)}</dd>` : ''}
         <dt>Registrado</dt><dd>${new Date(r.creado).toLocaleString('es-VE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</dd>
@@ -2714,8 +2754,13 @@ $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mo
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.4.0';
+const APP_VERSION = '4.5.0';
 const NOVEDADES = [
+  { v: '4.5.0', fecha: '2026-09-25', titulo: 'Novedades', items: [
+    { r: ['contratista','gerente_operaciones','compras','costos','gerente_general','master'], t: 'En Diario, cada reporte muestra el nombre y el cargo de quien lo hizo.' },
+    { r: ['contratista','gerente_operaciones','compras','costos','gerente_general','master'], t: 'En la lista de requisiciones, al lado del número aparece la base de protección fronteriza (o "Varias bases" / "Proyecto general").' },
+    { r: ['gerente_operaciones','compras','costos','gerente_general','master'], t: 'El PDF semanal ahora tiene dos versiones: Interno, para los superiores, con todos los reportes; y Cliente, solo con lo compartido con el Comandante de la base o Reporte General y sin observaciones internas.' }
+  ] },
   { v: '4.4.0', fecha: '2026-09-25', titulo: 'Nuevo diseño de Reportes', items: [
     { r: ['*'], t: 'El módulo "Reportes diarios" ahora se llama "Reportes".' },
     { r: ['contratista','gerente_operaciones','compras','costos','gerente_general','master'], t: 'El "Archivo de obra" ahora se llama "Diario". Al abrirlo ves primero los últimos reportes (hoy y ayer); toca "Ver imágenes" para ver las fotos de cada reporte.' },
