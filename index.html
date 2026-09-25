@@ -9,10 +9,10 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Requisiciones">
+<meta name="apple-mobile-web-app-title" content="Puestos Fronterizos">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="robots" content="noindex">
-<title>Requisiciones · Obra La Frontera</title>
+<title>Puestos Fronterizos · Constructora Rafmor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
@@ -211,6 +211,52 @@ dialog::backdrop{background:rgba(10,14,13,.55)}
 nav.tabs button.gear{position:relative}
 nav.tabs button.gear svg{flex-shrink:0}
 nav.tabs button.gear .cnt{position:absolute;top:0;right:-4px;margin:0}
+.mods{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:14px;background:var(--sunk);border:1px solid var(--rule);border-radius:12px;padding:4px}
+.mods button{position:relative;min-height:42px;border:0;border-radius:9px;background:none;font-weight:600;color:var(--muted);cursor:pointer}
+.mods button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.mods .dot{position:absolute;top:8px;right:10px;width:10px;height:10px;border-radius:5px;background:var(--amber)}
+.todaybar{margin-bottom:14px;padding:12px 14px;border-radius:var(--radius);font-weight:600}
+.todaybar.pend{background:var(--amber);color:var(--amber-ink)}
+.todaybar.ok{background:var(--green-soft);color:var(--green)}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pick label:last-child{grid-column:1/-1}
+.media{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.media .mi{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:#111}
+.media .mi img,.media .mi video{width:100%;height:100%;object-fit:cover;display:block}
+.media .mi .x{position:absolute;top:4px;right:4px;width:30px;height:30px;border-radius:15px;border:0;background:rgba(0,0,0,.65);color:#fff;font-size:18px;cursor:pointer}
+.media .mi .vb{position:absolute;left:4px;bottom:4px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.65);padding:2px 6px;border-radius:5px}
+.folders{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+.folders button{text-align:left;padding:10px 12px;border:1.5px solid var(--rule);border-radius:10px;background:var(--sunk);cursor:pointer;min-height:74px}
+.folders button b{display:block;font:700 16px/1.1 "Barlow Condensed",sans-serif}
+.folders button span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
+.folders button.has{background:var(--surface);border-color:var(--ink)}
+.folders button.has b::before{content:"";display:inline-block;width:14px;height:11px;margin-right:6px;border-radius:2px;background:var(--amber);vertical-align:0}
+.dayh{font:700 17px/1 "Barlow Condensed",sans-serif;color:var(--muted);margin:16px 0 8px;text-transform:capitalize}
+.rep{border:1px solid var(--rule);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--surface);cursor:pointer}
+.rep .rh{display:flex;justify-content:space-between;gap:8px;font-weight:600}
+.rep .rm{font-size:14px;color:var(--muted);margin:2px 0 6px}
+.rep .rd{margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.thumbs .t{position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;background:#222;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+.thumbs .t img{width:100%;height:100%;object-fit:cover}
+.gal{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0 10px}
+.gal .g{position:relative;border-radius:8px;overflow:hidden;background:#111}
+.gal .g img{width:100%;aspect-ratio:1;object-fit:cover;display:block;cursor:zoom-in}
+.gal .g video{width:100%;display:block;max-height:320px;background:#000}
+.gal .g.v{grid-column:1/-1}
+.gal .g a{position:absolute;right:6px;bottom:6px;font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.65);padding:4px 8px;border-radius:6px;text-decoration:none}
+dialog.lb{background:#000}
+.lbwrap{position:absolute;inset:0;display:flex;flex-direction:column;background:#000;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+.lbwrap img{flex:1;min-height:0;width:100%;object-fit:contain}
+.lbbar{display:flex;gap:8px;padding:10px;justify-content:center}
+.lbbar .btn{min-height:46px;text-decoration:none}
+.uplist{list-style:none;margin:0 0 10px;padding:0}
+.uplist li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px dashed var(--rule);font-size:14px}
+.uplist li:first-child{border-top:0}
+.uplist li b{font-weight:600}
+.uplist .ok{color:var(--green);font-weight:700}
+.uplist .bad{color:var(--red);font-weight:700}
+.bell .cnt{display:inline-block;min-width:20px;padding:1px 6px;border-radius:10px;background:var(--amber);color:var(--amber-ink);font-size:12px;font-weight:700;line-height:18px;text-align:center;box-shadow:0 0 0 2px var(--bg)}
 </style>
 </head>
 <body>
@@ -218,7 +264,7 @@ nav.tabs button.gear .cnt{position:absolute;top:0;right:-4px;margin:0}
 <div id="authView" hidden>
   <div class="wrap">
     <header class="top">
-      <div class="brand"><div><h1>Requisiciones</h1><small>Constructora Rafmor, 13 B.P.F del Zulia</small></div></div>
+      <div class="brand"><div><h1>Puestos Fronterizos</h1><small>Constructora Rafmor, 13 B.P.F del Zulia</small></div></div>
       <nav class="tabs" role="tablist" id="authTabs">
         <button role="tab" aria-selected="true" data-atab="entrar">Entrar</button>
         <button role="tab" aria-selected="false" data-atab="registro">Registrarme</button>
@@ -284,7 +330,7 @@ nav.tabs button.gear .cnt{position:absolute;top:0;right:-4px;margin:0}
 <!-- ================= CUENTA EN REVISIÓN ================= -->
 <div id="pendView" hidden>
   <div class="wrap">
-    <header class="top"><div class="brand"><div><h1>Requisiciones</h1><small>Constructora Rafmor, 13 B.P.F del Zulia</small></div></div></header>
+    <header class="top"><div class="brand"><div><h1>Puestos Fronterizos</h1><small>Constructora Rafmor, 13 B.P.F del Zulia</small></div></div></header>
     <div class="block" style="margin-top:18px">
       <div class="big-ico" id="pd-ico" aria-hidden="true">⏳</div>
       <h2 id="pd-title" style="justify-content:center;text-align:center">Tu cuenta está en revisión</h2>
@@ -301,15 +347,18 @@ nav.tabs button.gear .cnt{position:absolute;top:0;right:-4px;margin:0}
 <div class="wrap">
   <header class="top">
     <div class="brand">
-      <div style="min-width:0"><h1>Requisiciones</h1><small id="hUser"></small></div>
+      <div style="min-width:0"><h1 id="hTitle">Puestos Fronterizos</h1><small id="hUser"></small></div>
       <button class="bell" id="bellBtn" aria-label="Avisos"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1z"/></svg><span class="cnt" id="bellCnt" hidden></span></button>
     </div>
+    <div class="mods" id="mods" role="group" aria-label="Módulo"><button type="button" data-mod="req" aria-pressed="true">Requisiciones</button><button type="button" data-mod="rep" aria-pressed="false">Reportes diarios<span class="dot" id="repDot" hidden></span></button></div>
     <nav class="tabs" role="tablist" id="mainTabs">
-      <button role="tab" aria-selected="false" data-tab="nueva" hidden>Nueva</button>
-      <button role="tab" aria-selected="false" data-tab="verif" hidden>Por verificar<span class="cnt" id="cVerif" hidden></span></button>
-      <button role="tab" aria-selected="false" data-tab="aprob" hidden>Aprobadas<span class="cnt" id="cAprob" hidden></span></button>
-      <button role="tab" aria-selected="false" data-tab="mias" hidden>Mías</button>
-      <button role="tab" aria-selected="false" data-tab="ajustes" class="gear" aria-label="Ajustes y cuenta" title="Ajustes y cuenta"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.7h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span class="cnt" id="cUsers" hidden></span></button>
+      <button role="tab" aria-selected="false" data-tab="nueva" data-mod="req" hidden>Nueva</button>
+      <button role="tab" aria-selected="false" data-tab="verif" data-mod="req" hidden>Por verificar<span class="cnt" id="cVerif" hidden></span></button>
+      <button role="tab" aria-selected="false" data-tab="aprob" data-mod="req" hidden>Aprobadas<span class="cnt" id="cAprob" hidden></span></button>
+      <button role="tab" aria-selected="false" data-tab="mias" data-mod="req" hidden>Mías</button>
+      <button role="tab" aria-selected="false" data-tab="rnuevo" data-mod="rep" hidden>Nuevo reporte</button>
+      <button role="tab" aria-selected="false" data-tab="rarch" data-mod="rep" hidden>Archivo de obra</button>
+      <button role="tab" aria-selected="false" data-tab="ajustes" data-mod="both" class="gear" aria-label="Ajustes y cuenta" title="Ajustes y cuenta"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.7h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span class="cnt" id="cUsers" hidden></span></button>
     </nav>
   </header>
 
@@ -388,6 +437,56 @@ nav.tabs button.gear .cnt{position:absolute;top:0;right:-4px;margin:0}
     </div>
   </section>
 
+  <!-- NUEVO REPORTE -->
+  <section class="panel" id="p-rnuevo">
+    <div class="todaybar" id="todayBar" hidden></div>
+    <div class="block">
+      <h2>Reporte de avance</h2>
+      <div class="row2">
+        <label class="f"><span>Fecha</span><input class="in" type="date" id="r-fecha"></label>
+        <label class="f"><span>Personal en obra</span><input class="in" id="r-personal" inputmode="numeric" placeholder="Ej. 12"></label>
+      </div>
+      <label class="f"><span>Puesto fronterizo (B.P.F)</span><select class="in" id="r-puesto"><option value="">Elige el puesto…</option></select></label>
+      <label class="f"><span>Frente o actividad principal</span><input class="in" id="r-frente" autocomplete="off" placeholder="Ej. Losa de techo, módulo de dormitorios"></label>
+      <label class="f"><span>Descripción del avance</span><textarea class="in" id="r-desc" rows="5" placeholder="Qué se hizo hoy, cantidades ejecutadas, porcentaje de avance…"></textarea></label>
+      <div class="f"><span class="lbl">Clima</span><div class="chips" id="r-clima"><button type="button" aria-pressed="false">Soleado</button><button type="button" aria-pressed="false">Nublado</button><button type="button" aria-pressed="false">Lluvia</button></div></div>
+      <label class="f" style="margin-bottom:0"><span>Observaciones o incidencias</span><textarea class="in" id="r-obs" placeholder="Retrasos, faltantes, seguridad, visitas…"></textarea></label>
+    </div>
+    <div class="block">
+      <h2>Fotos y videos <span id="r-count">0 de 30</span></h2>
+      <div class="pick">
+        <label class="btn dark">Tomar foto<input type="file" accept="image/*" capture="environment" hidden data-pick></label>
+        <label class="btn dark">Grabar video<input type="file" accept="video/*" capture="environment" hidden data-pick></label>
+        <label class="btn">Elegir de la galería<input type="file" accept="image/*,video/*" multiple hidden data-pick></label>
+      </div>
+      <p class="hint" style="margin:10px 0">Hasta 30 archivos por reporte. Videos de máximo 50 MB (unos 30 a 60 segundos). Las fotos se reducen solas para subir más rápido.</p>
+      <div class="media" id="r-media"></div>
+      <p class="err" id="r-err" hidden></p>
+    </div>
+    <button class="btn ghost block100" id="r-reset">Descartar y empezar de nuevo</button>
+  </section>
+
+  <!-- ARCHIVO DE OBRA -->
+  <section class="panel" id="p-rarch">
+    <div class="block">
+      <h2 id="archTitle">Archivo de obra <button class="btn ghost" id="archRefresh" style="min-height:36px;padding:0 8px;font-size:15px">Actualizar</button></h2>
+      <div class="row2">
+        <label class="f"><span>Mes</span><input class="in" type="month" id="a-mes"></label>
+        <label class="f" id="a-autorWrap"><span>Contratista</span><select class="in" id="a-autor"><option value="">Todos</option></select></label>
+      </div>
+      <div id="archRoot">
+        <div class="folders" id="archFolders"></div>
+        <div class="sec">Últimos reportes del mes</div>
+      </div>
+      <div id="archPuesto" hidden>
+        <button class="btn ghost" id="archBack" style="padding-left:0">← Todos los puestos</button>
+        <div class="sec" id="archPuestoTitle" style="margin-top:4px"></div>
+      </div>
+      <div id="archList"></div>
+      <div class="empty" id="archEmpty" hidden></div>
+    </div>
+  </section>
+
   <!-- AJUSTES -->
   <section class="panel" id="p-ajustes">
     <div class="block" id="usersBlock" hidden>
@@ -434,6 +533,9 @@ nav.tabs button.gear .cnt{position:absolute;top:0;right:-4px;margin:0}
 <div class="dock" id="dock" hidden>
   <div class="in2"><button class="btn primary" id="gen">Enviar a verificación</button></div>
 </div>
+<div class="dock" id="dockRep" hidden>
+  <div class="in2"><button class="btn primary" id="r-send">Enviar reporte</button></div>
+</div>
 </div>
 
 <dialog id="itemDlg">
@@ -475,8 +577,8 @@ nav.tabs button.gear .cnt{position:absolute;top:0;right:-4px;margin:0}
         <li><div>Abre este enlace en <b>Safari</b>.</div></li>
         <li><div>Toca el botón de <b>compartir</b> <span class="ico">⬆︎</span> (abajo en el centro, o arriba a la derecha en iPad).</div></li>
         <li><div>Desliza hacia abajo y toca <b>Agregar a pantalla de inicio</b> <span class="ico">＋</span>.</div></li>
-        <li><div>Deja el nombre <b>Requisiciones</b> y toca <b>Agregar</b>.</div></li>
-        <li><div>Abre la app siempre desde el ícono amarillo nuevo. Así no pierdes tu historial.</div></li>
+        <li><div>Deja el nombre <b>Puestos Fronterizos</b> y toca <b>Agregar</b>.</div></li>
+        <li><div>Abre la app siempre desde el ícono nuevo de Rafmor. Así tu sesión queda abierta.</div></li>
       </ol>
       <p class="hint">Los Excel quedan en la app <b>Archivos</b>, carpeta <b>Descargas</b>.</p>
     </div>
@@ -486,7 +588,7 @@ nav.tabs button.gear .cnt{position:absolute;top:0;right:-4px;margin:0}
         <li><div>Toca el menú <span class="ico">⋮</span> arriba a la derecha.</div></li>
         <li><div>Toca <b>Agregar a la pantalla principal</b>. En algunos teléfonos dice <b>Instalar app</b>.</div></li>
         <li><div>Confirma con <b>Agregar</b>. Si pregunta, arrastra el ícono a donde lo quieras.</div></li>
-        <li><div>Abre la app siempre desde el ícono amarillo nuevo. Así no pierdes tu historial.</div></li>
+        <li><div>Abre la app siempre desde el ícono nuevo de Rafmor. Así tu sesión queda abierta.</div></li>
       </ol>
       <p class="hint">Los Excel quedan en la carpeta <b>Descargas</b> (app Archivos o Mis archivos).</p>
     </div>
@@ -535,6 +637,33 @@ nav.tabs button.gear .cnt{position:absolute;top:0;right:-4px;margin:0}
       <button class="btn" id="doneDl">Descargar Excel</button>
       <button class="btn primary" id="doneOk">Listo</button>
     </div>
+  </div>
+</dialog>
+
+<!-- Reporte -->
+<dialog id="repDlg">
+  <div class="sheet"><div class="grab"></div>
+    <h3><span id="rpTitle">Reporte</span><button class="btn ghost" id="rpClose" style="min-height:40px">Cerrar</button></h3>
+    <div id="rpBody"><p class="hint">Cargando…</p></div>
+  </div>
+</dialog>
+
+<!-- Visor de fotos -->
+<dialog id="lbDlg" class="lb">
+  <div class="lbwrap">
+    <img id="lbImg" alt="">
+    <div class="lbbar"><button class="btn" id="lbPrev" aria-label="Anterior">‹</button><a class="btn" id="lbDl" download>Descargar</a><button class="btn" id="lbNext" aria-label="Siguiente">›</button><button class="btn primary" id="lbClose">Cerrar</button></div>
+  </div>
+</dialog>
+
+<!-- Subida -->
+<dialog id="upDlg">
+  <div class="sheet"><div class="grab"></div>
+    <h3 id="upTitle">Subiendo reporte</h3>
+    <p class="hint" id="upHint">No cierres la app hasta que termine.</p>
+    <ul class="uplist" id="upList"></ul>
+    <p class="err" id="upErr" hidden></p>
+    <div class="acts" style="position:static" id="upActs" hidden><button class="btn" id="upClose">Cerrar</button><button class="btn primary" id="upRetry">Reintentar</button></div>
   </div>
 </dialog>
 
@@ -642,9 +771,10 @@ const LS = {
 };
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 2800); }
-const today = () => { const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+const today = () => { try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Caracas', year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date()); } catch (e) { const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); } };
+const addDays = (iso, n) => { const [y,m,d] = iso.split('-').map(Number); const dt = new Date(Date.UTC(y, m-1, d + n)); return dt.toISOString().slice(0,10); };
 const fmt = iso => { if(!iso) return ''; const [y,m,d] = String(iso).slice(0,10).split('-'); return `${+d}-${+m}-${y}`; };
-const isoLocal = ts => { if (!ts) return ''; const d = new Date(ts); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+const isoLocal = ts => { if (!ts) return ''; try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Caracas', year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date(ts)); } catch (e) { const d = new Date(ts); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); } };
 
 /* ---------- Supabase ---------- */
 const SB_URL = 'https://rekpmxjpfcrikamujvao.supabase.co';
@@ -963,6 +1093,7 @@ async function refreshCounts(){
     if (seesAll()) tasks.push(rpc('rq_listar', { p_estado: 'por_verificar', p_limite: 300 }), rpc('rq_listar', { p_estado: me.rol === 'compras' ? 'por_recibir' : 'por_aprobar', p_limite: 300 }));
     const [av, v, a] = await Promise.all(tasks);
     setCount('bellCnt', av ? av.sin_leer : 0);
+    if (canReport()) loadToday(); else $('#repDot').hidden = true;
     if (v) setCount('cVerif', v.length); if (a) setCount('cAprob', a.length);
     if (me.es_master) { const us = await rpc('rq_usuarios'); setCount('cUsers', (us || []).filter(u => u.estado === 'pendiente').length); }
   } catch (e) {}
@@ -1117,13 +1248,19 @@ $('#bellBtn').onclick = async () => {
   try {
     const r = await rpc('rq_avisos', { p_limite: 50 });
     const L = (r && r.avisos) || [];
-    $('#avList').innerHTML = L.map(a => `<li class="${a.leida ? '' : 'new'}" ${a.control ? `data-av="${esc(a.control)}" role="button" tabindex="0"` : ''}><b>${esc(a.titulo)}</b><span>${esc(a.mensaje || '')}</span><small>${new Date(a.creado).toLocaleString('es-VE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</small></li>`).join('');
+    $('#avList').innerHTML = L.map(a => `<li class="${a.leida ? '' : 'new'}" ${a.control || a.tipo === 'recordatorio' ? `data-av="${esc(a.control || '')}" data-tipo="${esc(a.tipo)}" role="button" tabindex="0"` : ''}><b>${esc(a.titulo)}</b><span>${esc(a.mensaje || '')}</span><small>${new Date(a.creado).toLocaleString('es-VE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</small></li>`).join('');
     $('#avEmpty').hidden = L.length > 0;
     if (r && r.sin_leer) { await rpc('rq_avisos_leidos'); setCount('bellCnt', 0); }
   } catch (e) { $('#avList').innerHTML = `<li class="err">${esc(e.message)}</li>`; }
 };
 $('#avClose').onclick = () => $('#avDlg').close();
-$('#avList').addEventListener('click', e => { const li = e.target.closest('[data-av]'); if (!li) return; $('#avDlg').close(); openDetail(li.dataset.av); });
+$('#avList').addEventListener('click', e => {
+  const li = e.target.closest('[data-av]'); if (!li) return; $('#avDlg').close();
+  const c = li.dataset.av;
+  if (li.dataset.tipo === 'recordatorio') { if (canReport()) setMod('rep', 'rnuevo'); return; }
+  if (c.startsWith('rep:')) { openReport(c.slice(4)); return; }
+  openDetail(c);
+});
 
 /* ---------- Usuarios (maestro) ---------- */
 let uFilter = 'pendiente', usersCache = [];
@@ -1216,12 +1353,264 @@ $('#logoFile').addEventListener('change', e => {
 });
 $('#logoDel').onclick = () => { settings.logo = null; LS.set('settings', settings); renderSettings(); };
 
+/* =====================================================================
+   REPORTES DIARIOS
+   ===================================================================== */
+const MAX_FILES = 30, MAX_VIDEO = 50 * 1024 * 1024, BUCKET = 'reportes';
+const canReport = () => me && (me.es_master || ['contratista','gerente_operaciones','gerente_general'].includes(me.rol));
+const uuid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c === 'x' ? r : (r&0x3|0x8)).toString(16); });
+const DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const dayLabel = iso => { const [y,m,d] = iso.split('-').map(Number); const dt = new Date(y, m-1, d); return `${DIAS[dt.getDay()]} ${d}-${m}-${y}`; };
+const fileSize = n => n >= 1048576 ? (n/1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n/1024)) + ' KB';
+const EXT = { 'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/heic':'heic','image/heif':'heif','video/mp4':'mp4','video/quicktime':'mov','video/webm':'webm','video/3gpp':'3gp' };
+const guessMime = f => f.type || ({ jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', heic:'image/heic', mp4:'video/mp4', mov:'video/quicktime', webm:'video/webm', '3gp':'video/3gpp' })[(f.name.split('.').pop() || '').toLowerCase()] || '';
+Object.assign(ERRS, { fecha_invalida:'La fecha solo puede ser de hoy o de los 3 días anteriores.', falta_puesto:'Elige el puesto fronterizo.', falta_descripcion:'Describe el avance (al menos una frase).', sin_archivos:'Agrega al menos una foto o un video.', max_archivos:'Máximo 30 archivos por reporte.', archivo_invalido:'Un archivo no se subió bien. Toca Reintentar.', ya_existe:'Este reporte ya fue registrado.' });
+
+/* ---------- Borrador del reporte ---------- */
+let rep = LS.get('repDraft', null);
+let repFiles = [];   // { file, kind, thumb, path, size, mime, status }
+let repId = null;
+const repBlank = () => ({ owner: me ? me.id : null, fecha: today(), puesto: '', frente: '', descripcion: '', personal: '', clima: '', observaciones: '' });
+function saveRep(){ LS.set('repDraft', rep); }
+CECOS.bases.forEach(b => { const o = document.createElement('option'); o.value = b.n; o.textContent = b.n + '. ' + b.nombre.replace('B.P.F ', ''); $('#r-puesto').appendChild(o); });
+const repBind = [['r-fecha','fecha'],['r-puesto','puesto'],['r-frente','frente'],['r-desc','descripcion'],['r-personal','personal'],['r-obs','observaciones']];
+repBind.forEach(([id,k]) => $('#'+id).addEventListener('input', e => { rep[k] = e.target.value; e.target.classList.remove('bad'); $('#r-err').hidden = true; saveRep(); }));
+$('#r-puesto').addEventListener('change', e => { rep.puesto = e.target.value; e.target.classList.remove('bad'); saveRep(); });
+$('#r-clima').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; rep.clima = rep.clima === b.textContent ? '' : b.textContent; saveRep(); syncClima(); });
+function syncClima(){ $$('#r-clima button').forEach(b => b.setAttribute('aria-pressed', b.textContent === rep.clima)); }
+function fillRep(){
+  if (!rep || rep.owner !== (me && me.id)) { rep = repBlank(); saveRep(); }
+  const t = today();
+  $('#r-fecha').max = t; $('#r-fecha').min = addDays(t, -3);
+  if (rep.fecha && (rep.fecha > t || rep.fecha < addDays(t, -3))) { rep.fecha = t; saveRep(); }
+  repBind.forEach(([id,k]) => $('#'+id).value = rep[k] || '');
+  syncClima(); renderMedia(); loadToday();
+}
+function renderMedia(){
+  const box = $('#r-media'); box.innerHTML = '';
+  repFiles.forEach((f, i) => {
+    const d = document.createElement('div'); d.className = 'mi';
+    d.innerHTML = (f.kind === 'video' ? `<video src="${f.thumb}" muted playsinline preload="metadata"></video><span class="vb">Video · ${fileSize(f.file.size)}</span>` : `<img src="${f.thumb}" alt="Foto ${i+1}">`) + `<button class="x" data-rm="${i}" aria-label="Quitar archivo ${i+1}">×</button>`;
+    box.appendChild(d);
+  });
+  $('#r-count').textContent = `${repFiles.length} de ${MAX_FILES}`;
+  $$('[data-pick]').forEach(inp => inp.closest('label').classList.toggle('disabled', repFiles.length >= MAX_FILES));
+}
+$('#r-media').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (!b) return; const f = repFiles.splice(+b.dataset.rm, 1)[0]; if (f) URL.revokeObjectURL(f.thumb); renderMedia(); });
+$$('[data-pick]').forEach(inp => inp.addEventListener('change', e => {
+  const skipped = [];
+  [...e.target.files].forEach(file => {
+    const mime = guessMime(file), kind = mime.startsWith('video/') ? 'video' : mime.startsWith('image/') ? 'foto' : '';
+    if (!kind) return skipped.push(file.name + ' (formato no válido)');
+    if (repFiles.length >= MAX_FILES) return skipped.push(file.name + ' (máximo 30)');
+    if (kind === 'video' && file.size > MAX_VIDEO) return skipped.push(file.name + ' (' + fileSize(file.size) + ', máximo 50 MB)');
+    repFiles.push({ file, kind, mime, thumb: URL.createObjectURL(file) });
+  });
+  e.target.value = ''; renderMedia(); $('#r-err').hidden = true;
+  if (skipped.length) toast('No se agregó: ' + skipped.join(', '));
+}));
+$('#r-reset').onclick = () => { if (!confirm('¿Descartar este reporte?')) return; repFiles.forEach(f => URL.revokeObjectURL(f.thumb)); repFiles = []; repId = null; rep = repBlank(); saveRep(); fillRep(); };
+
+async function loadToday(){
+  if (!canReport()) return;
+  try {
+    const r = await rpc('rq_reporte_hoy');
+    const bar = $('#todayBar'); bar.hidden = false;
+    if (r.enviados > 0) { bar.className = 'todaybar ok'; bar.textContent = `Ya registraste ${r.enviados} reporte${r.enviados === 1 ? '' : 's'} hoy. Si trabajaste en otro puesto, puedes agregar otro.`; }
+    else { bar.className = 'todaybar pend'; bar.textContent = `Hoy, ${dayLabel(r.hoy)}, todavía no registras tu reporte de avance.`; }
+    $('#repDot').hidden = r.enviados > 0;
+  } catch (e) {}
+}
+
+/* ---------- Preparar y subir ---------- */
+async function prepImage(f){
+  try {
+    const bmp = await createImageBitmap(f.file);
+    const s = Math.min(1, 1920 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas'); c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height); if (bmp.close) bmp.close();
+    const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', 0.82));
+    if (blob && blob.size < f.file.size) return { blob, mime: 'image/jpeg' };
+  } catch (e) {}
+  return { blob: f.file, mime: f.mime };
+}
+function upRow(i, txt, cls){ const li = $('#upList').children[i]; if (li) li.lastChild.outerHTML = `<span class="${cls || ''}">${txt}</span>`; }
+async function sendReport(){
+  const err = m => { $('#r-err').textContent = m; $('#r-err').hidden = false; $('#r-err').scrollIntoView({ behavior:'smooth', block:'center' }); };
+  if (!rep.puesto) { $('#r-puesto').classList.add('bad'); return err('Elige el puesto fronterizo.'); }
+  if ((rep.descripcion || '').trim().length < 10) { $('#r-desc').classList.add('bad'); return err('Describe el avance del día.'); }
+  if (!repFiles.length) return err('Agrega al menos una foto o un video.');
+  const fecha = rep.fecha || today();
+  repId = repId || uuid();
+  $('#upList').innerHTML = repFiles.map((f, i) => `<li><b>${f.kind === 'video' ? 'Video' : 'Foto'} ${i+1}</b><span>${f.path ? '✓' : 'En espera'}</span></li>`).join('');
+  $('#upTitle').textContent = 'Subiendo reporte'; $('#upHint').textContent = 'No cierres la app hasta que termine.';
+  $('#upErr').hidden = true; $('#upActs').hidden = true; if (!$('#upDlg').open) $('#upDlg').showModal();
+  $('#r-send').disabled = true;
+  try {
+    for (let i = 0; i < repFiles.length; i++) {
+      const f = repFiles[i];
+      if (f.path) { upRow(i, '✓', 'ok'); continue; }
+      upRow(i, f.kind === 'foto' ? 'Preparando…' : 'Subiendo ' + fileSize(f.file.size) + '…');
+      const { blob, mime } = f.kind === 'foto' ? await prepImage(f) : { blob: f.file, mime: f.mime };
+      if (f.kind === 'foto') upRow(i, 'Subiendo ' + fileSize(blob.size) + '…');
+      const path = `${me.id}/${fecha}/${repId}/${String(i+1).padStart(2,'0')}-${f.kind}.${EXT[mime] || 'bin'}`;
+      const buf = await blob.arrayBuffer();
+      const { error } = await sb.storage.from(BUCKET).upload(path, buf, { contentType: mime, upsert: false, cacheControl: '31536000' });
+      if (error && !/exists|Duplicate/i.test(error.message || '')) { upRow(i, 'Error', 'bad'); throw mapErr(error); }
+      f.path = path; f.size = blob.size; f.upMime = mime; upRow(i, '✓', 'ok');
+    }
+    const archivos = repFiles.map(f => ({ path: f.path, tipo: f.kind, mime: f.upMime || f.mime, size: f.size || f.file.size, nombre: f.file.name }));
+    await rpc('rq_reporte_crear', { p_id: repId, p_datos: { fecha, puesto: +rep.puesto, frente: rep.frente, descripcion: rep.descripcion, personal: rep.personal, clima: rep.clima, observaciones: rep.observaciones }, p_archivos: archivos });
+    const n = repFiles.length;
+    repFiles.forEach(f => URL.revokeObjectURL(f.thumb)); repFiles = []; repId = null;
+    rep = Object.assign(repBlank(), { puesto: rep.puesto, frente: rep.frente }); saveRep(); fillRep();
+    $('#upTitle').textContent = 'Reporte registrado'; $('#upHint').textContent = `Se guardaron ${n} archivo${n === 1 ? '' : 's'} en el archivo de obra. Se avisó al Gerente de Operaciones.`;
+    $('#upActs').hidden = false; $('#upRetry').hidden = true; $('#upClose').textContent = 'Listo';
+  } catch (e) {
+    $('#upErr').textContent = (e && e.message) || 'No se pudo subir.'; $('#upErr').hidden = false;
+    $('#upHint').textContent = 'Lo que ya subió queda guardado. Toca Reintentar cuando tengas señal.';
+    $('#upActs').hidden = false; $('#upRetry').hidden = false; $('#upClose').textContent = 'Cerrar';
+  } finally { $('#r-send').disabled = false; }
+}
+$('#r-send').onclick = sendReport;
+$('#upRetry').onclick = sendReport;
+$('#upClose').onclick = () => $('#upDlg').close();
+
+/* ---------- Enlaces temporales a los archivos ---------- */
+const urlCache = new Map();
+async function signed(paths){
+  const now = Date.now(), need = [...new Set(paths)].filter(p => { const c = urlCache.get(p); return !c || c.exp < now; });
+  for (let i = 0; i < need.length; i += 100) {
+    const chunk = need.slice(i, i + 100);
+    const { data, error } = await sb.storage.from(BUCKET).createSignedUrls(chunk, 3600);
+    if (!error && data) data.forEach(d => { if (d.signedUrl) urlCache.set(d.path, { url: d.signedUrl, exp: now + 3300 * 1000 }); });
+  }
+  return p => (urlCache.get(p) || {}).url || '';
+}
+async function downloadFile(path, name){
+  const { data, error } = await sb.storage.from(BUCKET).createSignedUrl(path, 600, { download: name || true });
+  if (error || !data) return toast('No se pudo descargar');
+  const a = document.createElement('a'); a.href = data.signedUrl; a.download = name || ''; document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ---------- Archivo de obra ---------- */
+let archPuesto = null, archRows = [];
+const monthRange = m => { const [y, mo] = m.split('-').map(Number); const last = new Date(y, mo, 0).getDate(); return [`${m}-01`, `${m}-${String(last).padStart(2,'0')}`]; };
+$('#a-mes').addEventListener('change', () => loadArchive());
+$('#a-autor').addEventListener('change', () => renderArchiveList());
+$('#archRefresh').onclick = () => loadArchive();
+$('#archBack').onclick = () => { archPuesto = null; loadArchive(); };
+$('#archFolders').addEventListener('click', e => { const b = e.target.closest('[data-pu]'); if (!b) return; archPuesto = +b.dataset.pu; loadArchive(); });
+async function loadArchive(){
+  if (!$('#a-mes').value) $('#a-mes').value = today().slice(0,7);
+  const mine = me.rol === 'contratista' && !me.es_master;
+  $('#archTitle').firstChild.textContent = mine ? 'Mis reportes ' : 'Archivo de obra ';
+  $('#a-autorWrap').hidden = mine;
+  const [desde, hasta] = monthRange($('#a-mes').value);
+  $('#archRoot').hidden = archPuesto !== null; $('#archPuesto').hidden = archPuesto === null;
+  $('#archEmpty').hidden = false; $('#archEmpty').textContent = 'Cargando…'; $('#archList').innerHTML = '';
+  try {
+    if (archPuesto === null) {
+      const [res, rows] = await Promise.all([rpc('rq_reportes_resumen', { p_desde: desde, p_hasta: hasta }), rpc('rq_reportes_listar', { p_desde: desde, p_hasta: hasta, p_limite: 300 })]);
+      const by = Object.fromEntries((res || []).map(x => [x.puesto, x]));
+      $('#archFolders').innerHTML = CECOS.bases.map(b => { const x = by[b.n]; return `<button type="button" data-pu="${b.n}" class="${x ? 'has' : ''}"><b>${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</b><span>${x ? `${x.reportes} reporte${x.reportes === 1 ? '' : 's'} · ${x.fotos} foto${x.fotos === 1 ? '' : 's'} · ${x.videos} video${x.videos === 1 ? '' : 's'}` : 'Sin reportes este mes'}</span>${x ? `<span>Último: ${fmt(x.ultima)}</span>` : ''}</button>`; }).join('');
+      archRows = rows || [];
+    } else {
+      $('#archPuestoTitle').textContent = baseName(archPuesto);
+      archRows = await rpc('rq_reportes_listar', { p_puesto: archPuesto, p_desde: desde, p_hasta: hasta, p_limite: 300 }) || [];
+    }
+    const authors = [...new Map(archRows.map(r => [r.autor_id, r.autor_nombre + (r.empresa ? ' · ' + r.empresa : '')])).entries()];
+    const sel = $('#a-autor'), cur = sel.value;
+    sel.innerHTML = '<option value="">Todos</option>' + authors.map(([id, n]) => `<option value="${id}">${esc(n)}</option>`).join('');
+    if (authors.some(([id]) => id === cur)) sel.value = cur;
+    await renderArchiveList();
+  } catch (e) { $('#archEmpty').hidden = false; $('#archEmpty').textContent = e.message; }
+}
+async function renderArchiveList(){
+  const aut = $('#a-autor').value;
+  let rows = archRows.filter(r => !aut || r.autor_id === aut);
+  if (archPuesto === null) rows = rows.slice(0, 20);
+  const box = $('#archList'); box.innerHTML = '';
+  $('#archEmpty').hidden = rows.length > 0;
+  $('#archEmpty').textContent = archPuesto === null ? 'No hay reportes este mes.' : 'No hay reportes de este puesto en el mes.';
+  if (!rows.length) return;
+  const imgs = rows.flatMap(r => (r.archivos || []).filter(a => a.tipo === 'foto').slice(0, 4).map(a => a.path));
+  const url = await signed(imgs);
+  let day = '';
+  rows.forEach(r => {
+    if (r.fecha !== day) { day = r.fecha; const h = document.createElement('div'); h.className = 'dayh'; h.textContent = dayLabel(day); box.appendChild(h); }
+    const fotos = (r.archivos || []).filter(a => a.tipo === 'foto'), videos = (r.archivos || []).filter(a => a.tipo === 'video');
+    const shown = fotos.slice(0, 4 - (videos.length ? 1 : 0));
+    const extra = (r.archivos || []).length - shown.length - (videos.length ? 1 : 0);
+    const el = document.createElement('article'); el.className = 'rep'; el.dataset.rep = r.id; el.tabIndex = 0;
+    el.innerHTML = `<div class="rh"><span>${esc(r.puesto_nombre.replace('B.P.F ', 'B.P.F '))}</span><span style="color:var(--muted);font-weight:500">${(r.archivos || []).length} archivo${(r.archivos || []).length === 1 ? '' : 's'}</span></div>
+      <div class="rm">${esc(r.autor_nombre)}${r.empresa ? ' · ' + esc(r.empresa) : ''}${r.frente ? ' · ' + esc(r.frente) : ''}</div>
+      <p class="rd">${esc(r.descripcion)}</p>
+      <div class="thumbs">${shown.map(a => `<div class="t"><img loading="lazy" alt="" src="${url(a.path)}"></div>`).join('')}${videos.length ? `<div class="t">▶ ${videos.length}</div>` : ''}${extra > 0 ? `<div class="t">+${extra}</div>` : ''}</div>`;
+    box.appendChild(el);
+  });
+}
+$('#archList').addEventListener('click', e => { const a = e.target.closest('[data-rep]'); if (a) openReport(a.dataset.rep, archRows.find(r => r.id === a.dataset.rep)); });
+$('#archList').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset.rep) openReport(e.target.dataset.rep, archRows.find(r => r.id === e.target.dataset.rep)); });
+
+/* ---------- Detalle del reporte y visor ---------- */
+let lbItems = [], lbIdx = 0;
+async function openReport(id, row){
+  $('#rpBody').innerHTML = '<p class="hint">Cargando…</p>'; $('#rpTitle').textContent = 'Reporte diario';
+  if (!$('#repDlg').open) $('#repDlg').showModal();
+  try {
+    const r = row || await rpc('rq_reporte_obtener', { p_id: id });
+    $('#rpTitle').textContent = 'Reporte del ' + fmt(r.fecha);
+    const files = r.archivos || [];
+    const url = await signed(files.map(a => a.path));
+    lbItems = files.filter(a => a.tipo === 'foto').map(a => ({ src: url(a.path), path: a.path, name: a.nombre }));
+    $('#rpBody').innerHTML = `<dl class="dl">
+        <dt>Puesto</dt><dd>${esc(r.puesto_nombre)}</dd>
+        ${r.frente ? `<dt>Frente</dt><dd>${esc(r.frente)}</dd>` : ''}
+        <dt>Contratista</dt><dd>${esc(r.autor_nombre)}${r.empresa ? ', ' + esc(r.empresa) : ''}</dd>
+        ${r.personal != null ? `<dt>Personal</dt><dd>${esc(r.personal)}</dd>` : ''}
+        ${r.clima ? `<dt>Clima</dt><dd>${esc(r.clima)}</dd>` : ''}
+        <dt>Registrado</dt><dd>${new Date(r.creado).toLocaleString('es-VE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</dd>
+      </dl>
+      <div class="sec">Avance del día</div><p style="margin:0 0 10px;white-space:pre-wrap">${esc(r.descripcion)}</p>
+      ${r.observaciones ? `<div class="sec">Observaciones</div><p style="margin:0 0 10px;white-space:pre-wrap">${esc(r.observaciones)}</p>` : ''}
+      <div class="sec">Fotos y videos (${files.length})</div>
+      <div class="gal">${files.map((a, i) => a.tipo === 'video'
+        ? `<div class="g v"><video controls playsinline preload="metadata" src="${url(a.path)}"></video><a href="#" data-dlp="${esc(a.path)}" data-dln="${esc(a.nombre || '')}">Descargar</a></div>`
+        : `<div class="g"><img loading="lazy" alt="Foto ${i+1}" src="${url(a.path)}" data-lb="${lbItems.findIndex(x => x.path === a.path)}"><a href="#" data-dlp="${esc(a.path)}" data-dln="${esc(a.nombre || '')}">Descargar</a></div>`).join('')}</div>`;
+  } catch (e) { $('#rpBody').innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+}
+$('#rpBody').addEventListener('click', e => {
+  const d = e.target.closest('[data-dlp]'); if (d) { e.preventDefault(); downloadFile(d.dataset.dlp, d.dataset.dln); return; }
+  const im = e.target.closest('[data-lb]'); if (im) { lbIdx = +im.dataset.lb; showLb(); $('#lbDlg').showModal(); }
+});
+$('#rpClose').onclick = () => $('#repDlg').close();
+$('#repDlg').addEventListener('close', () => $$('#rpBody video').forEach(v => v.pause()));
+function showLb(){ const it = lbItems[lbIdx]; if (!it) return; $('#lbImg').src = it.src; $('#lbPrev').disabled = lbIdx === 0; $('#lbNext').disabled = lbIdx >= lbItems.length - 1; }
+$('#lbPrev').onclick = () => { if (lbIdx > 0) { lbIdx--; showLb(); } };
+$('#lbNext').onclick = () => { if (lbIdx < lbItems.length - 1) { lbIdx++; showLb(); } };
+$('#lbDl').onclick = e => { e.preventDefault(); const it = lbItems[lbIdx]; if (it) downloadFile(it.path, it.name); };
+$('#lbClose').onclick = () => $('#lbDlg').close();
+
+/* ---------- Módulos ---------- */
+let curMod = LS.get('mod', 'req');
+function setMod(m, tab){
+  curMod = m; LS.set('mod', m);
+  $$('#mods button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mod === m));
+  applyTabVisibility();
+  const first = tab || (m === 'rep' ? (canReport() ? 'rnuevo' : 'rarch') : defaultReqTab());
+  showTab(first);
+}
+$('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mod]'); if (b) setMod(b.dataset.mod); });
+
 /* ---------- Pestañas ---------- */
 function showTab(t){
   $$('#mainTabs button').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === t));
   $$('#mainView section.panel').forEach(p => p.classList.toggle('on', p.id === 'p-'+t));
-  $('#dock').hidden = t !== 'nueva';
+  $('#dock').hidden = t !== 'nueva'; $('#dockRep').hidden = t !== 'rnuevo';
   if (t === 'nueva') fillForm();
+  if (t === 'rnuevo') fillRep();
+  if (t === 'rarch') { archPuesto = null; loadArchive(); }
   if (t === 'verif') loadVerif();
   if (t === 'aprob') loadAprob();
   if (t === 'mias') loadMias();
@@ -1229,6 +1618,14 @@ function showTab(t){
   window.scrollTo(0,0);
 }
 $$('#mainTabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+function tabAllowed(t){
+  if (t === 'nueva' || t === 'mias') return canCreate();
+  if (t === 'verif' || t === 'aprob') return seesAll();
+  if (t === 'rnuevo') return canReport();
+  return true;
+}
+function applyTabVisibility(){ $$('#mainTabs button').forEach(b => { b.hidden = !((b.dataset.mod === curMod || b.dataset.mod === 'both') && tabAllowed(b.dataset.tab)); }); }
+function defaultReqTab(){ return canCreate() && me.rol !== 'gerente_general' ? 'nueva' : me.rol === 'gerente_operaciones' ? 'verif' : seesAll() ? 'aprob' : 'nueva'; }
 function setHeader(){ $('#hUser').textContent = `${me.nombre}, ${(ROLES[me.rol] || {}).label}${me.es_master ? ' · Maestro' : ''}`; }
 
 /* ---------- Entrar / registro ---------- */
@@ -1307,9 +1704,9 @@ async function route(){
     if (perfil.estado !== 'activo') { showPend('⛔', perfil.estado === 'rechazado' ? 'Registro no aprobado' : 'Cuenta desactivada', 'Si crees que es un error, comunícate con el administrador.', perfil); return; }
     const first = !me || me.id !== perfil.id; me = perfil;
     setHeader(); showView('main');
-    $$('#mainTabs button').forEach(b => { const t = b.dataset.tab; b.hidden = (t === 'nueva' || t === 'mias') ? !canCreate() : (t === 'verif' || t === 'aprob') ? !seesAll() : false; });
     if (!draft || draft.owner !== me.id) { draft = blank(); saveDraft(); }
-    if (first) showTab(canCreate() && me.rol !== 'gerente_general' ? 'nueva' : me.rol === 'gerente_operaciones' ? 'verif' : seesAll() ? 'aprob' : 'nueva');
+    if (!rep || rep.owner !== me.id) { rep = repBlank(); saveRep(); }
+    if (first) setMod(curMod); else applyTabVisibility();
     refreshCounts();
   } finally { routing = false; }
 }

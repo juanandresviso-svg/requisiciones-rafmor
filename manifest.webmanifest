@@ -1,10 +1,10 @@
 {
-  "name": "Requisiciones Rafmor",
-  "short_name": "Requisiciones",
+  "name": "Puestos Fronterizos · Constructora Rafmor",
+  "short_name": "Puestos Fronterizos",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#E9ECE7",
+  "background_color": "#FFFFFF",
   "theme_color": "#F2A900",
   "lang": "es",
   "icons": [
