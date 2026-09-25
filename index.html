@@ -298,6 +298,11 @@ dialog.lb{background:#000}
 .ucon.hoy b{color:var(--green)}
 .umeta{font-size:12.5px;color:var(--muted);line-height:1.45;margin-bottom:6px}
 .ucon .uf{color:var(--muted);font-size:13px}
+.tag.hist{background:#EDE6F5;border-color:transparent;color:#5B3F86}
+.histsum{display:grid;gap:4px;margin:12px 0;padding:12px;border-radius:10px;background:var(--sunk);border:1px solid var(--rule);font-size:14px}
+.histsum b{font-size:16px}
+.histsum.ok{background:var(--green-soft);border-color:transparent;color:var(--green)}
+.histlist{max-height:420px;overflow:auto;border:1px solid var(--rule);border-radius:10px;padding:0 12px;margin-bottom:12px}
 </style>
 </head>
 <body>
@@ -560,6 +565,14 @@ dialog.lb{background:#000}
       <input class="in" id="uSearch" type="search" placeholder="Buscar por nombre, correo, empresa o rol" style="margin-top:10px" autocomplete="off">
       <ul class="hist" id="lUsers" style="margin-top:8px"></ul>
       <div class="empty" id="eUsers" hidden></div>
+    </div>
+    <div class="block" id="histBlock" hidden>
+      <h2>Requisiciones históricas</h2>
+      <p class="hint" style="margin-top:-6px">Sube el Excel con requisiciones ya aprobadas y ejecutadas, una hoja por requisición en el formato de administración. Quedan en la plataforma como aprobadas y recibidas, marcadas como históricas, para tener la base de datos completa.</p>
+      <label class="btn block100">Elegir archivo Excel<input type="file" id="histFile" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></label>
+      <div id="histPrev"></div>
+      <p class="err" id="histErr" hidden></p>
+      <button class="btn primary block100" id="histBtn" hidden>Importar</button>
     </div>
     <div class="block">
       <h2>Mi cuenta <span class="st ok" id="myRole"></span></h2>
@@ -1185,7 +1198,7 @@ function rowLi(r, primaryLabel, extra){
   const when = new Date(r.creado).toLocaleDateString('es-VE', { day:'2-digit', month:'short' });
   const li = document.createElement('li');
   li.innerHTML = `<div class="h1"><b>${esc(r.control)}</b><span style="color:var(--muted);font-weight:500">${when}</span></div>
-    <div class="tags" style="margin:4px 0 2px">${estadoTag(r)}${r.editada ? '<span class="tag">Editada</span>' : ''}</div>
+    <div class="tags" style="margin:4px 0 2px">${estadoTag(r)}${r.editada ? '<span class="tag">Editada</span>' : ''}${r.historica ? '<span class="tag hist">Histórica</span>' : ''}</div>
     <div class="h2">${esc(r.area || '')}${r.coordinacion ? ', ' + esc(r.coordinacion) : ''}. ${r.n} material${r.n === 1 ? '' : 'es'}. Pidió ${esc(r.solicitante || '')}${r.fechaRequerida ? '. Para el ' + fmt(r.fechaRequerida) : ''}</div>
     <div class="hb"><button class="btn ${primaryLabel ? 'primary' : ''}" data-open="${esc(r.control)}">${primaryLabel || 'Ver'}</button><button class="btn" data-rdl="${esc(r.control)}">Descargar</button>${extra || ''}</div>`;
   return li;
@@ -1263,6 +1276,7 @@ async function openDetail(control){
 function permsFor(r){
   const out = { edit:false, verificar:false, autorizar:false, recibir:false, rechazar:false, why:'' };
   if (r.estado === 'rechazada') { out.why = 'Rechazada. Ya no se puede modificar.'; return out; }
+  if (r.datos && r.datos.historica) { const im = r.datos.importado || {}; out.why = `Requisición histórica, aprobada y ejecutada antes de la plataforma. Cargada desde Excel${im.hoja ? ' (hoja ' + im.hoja + ')' : ''}${im.por ? ' por ' + im.por : ''}. Las firmas son las del documento original, sin firma digital.`; return out; }
   if (r.estado === 'aprobada') {
     if (!r.recibido && me.rol === 'compras') { out.recibir = true; return out; }
     out.why = r.recibido ? 'Aprobada y recibida por compras. Proceso completo.' : 'Aprobada y cerrada. Falta que Compras firme el recibido.'; return out;
@@ -1458,9 +1472,92 @@ $('#lUsers').addEventListener('click', async e => {
   catch (er) { toast(er.message); b.disabled = false; }
 });
 
+/* ---------- Importar requisiciones históricas (maestro) ---------- */
+const normTxt = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
+function cellVal(c){
+  let v = c && c.value; if (v == null) return null;
+  if (v instanceof Date) return v;
+  if (typeof v === 'object') { if (v.richText) return v.richText.map(t => t.text).join(''); if ('result' in v) v = v.result; else if (v.text) return v.text; }
+  return v instanceof Date ? v : v;
+}
+const toIso = v => { if (v instanceof Date) return v.toISOString().slice(0,10); const m = String(v || '').match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/); if (!m) return ''; const y = m[3].length === 2 ? '20' + m[3] : m[3]; return `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`; };
+function baseFromText(t){ const n = normTxt(t).replace(/^PARA\s*BPF\s*/, '').replace(/^B\.?P\.?F\.?\s*/, ''); if (!n || /^X+$/.test(n)) return null;
+  const b = CECOS.bases.find(b => { const bn = normTxt(b.nombre).replace('B.P.F ', ''); return n.includes(bn) || bn.includes(n); }); return b ? b.n : null; }
+function parseHojaHistorica(ws){
+  const cells = [], warn = [];
+  for (let r = 1; r <= 45; r++) for (let c = 1; c <= 22; c++) { const cell = ws.getCell(r, c); if (cell.isMerged && cell.master && cell.master.address !== cell.address) continue; const v = cellVal(cell); if (v !== null && v !== '') cells.push({ r, c, v, t: v instanceof Date ? '' : String(v).trim() }); }
+  const find = re => cells.find(x => re.test(x.t));
+  const dateBelow = hit => { if (!hit) return ''; for (let r = hit.r + 1; r <= hit.r + 3; r++) { const x = cells.find(y => y.r === r && y.c === hit.c); if (x) { const iso = toIso(x.v); if (iso) return iso; } } return toIso(hit.t.replace(/^[^0-9]*/, '')); };
+  const ctl = find(/N[°º]?\s*CONTROL/i); const num = ctl && (ctl.t.match(/(\d+)/) || [])[1] || (ws.name.match(/(\d+)/) || [])[1];
+  const after = (re) => { const x = find(re); if (!x) return ''; const v = x.t.replace(re, '').replace(/^[\s:]+/, '').trim(); if (v) return v; const nx = cells.find(y => y.r === x.r && y.c > x.c && y.t); return nx ? nx.t : ''; };
+  const area = after(/^AREA SOLICITANTE\s*:?/i), coord = after(/^COORDINACI[OÓ]N\s*:?/i);
+  const fs = dateBelow(find(/FECHA DE SOLICITUD/i)), fr = dateBelow(find(/FECHA REQUERIDA/i));
+  const para = find(/PARA\s*B\.?P\.?F/i); const paraBase = para ? baseFromText(para.t) : null;
+  const hdr = cells.find(x => normTxt(x.t) === 'RENG');
+  if (!hdr) return { hoja: ws.name, error: 'No se encontró la tabla de materiales' };
+  const col = {}; cells.filter(x => x.r === hdr.r).sort((a, b) => a.c - b.c).forEach(x => { const n = normTxt(x.t); if (Object.values(col).includes(x.c)) return;
+    const k = n === 'EQUIPO' ? 'equipo' : n.startsWith('LOCACION') ? 'loc' : n === 'CECO' ? 'ceco' : n.startsWith('CANT') ? 'cant' : n.startsWith('UND') ? 'und' : n.startsWith('DESCRIPCION') ? 'desc' : n.startsWith('TIENE ESPECIF') ? 'esp' : n.includes('STOCK') ? 'stock' : '';
+    if (k && !col[k]) col[k] = x.c; });
+  const g = (r, c) => { if (!c) return ''; const v = cellVal(ws.getCell(r, c)); return v == null ? '' : v instanceof Date ? toIso(v) : String(v).trim(); };
+  const isX = (r, c) => c && /^X$/i.test(g(r, c));
+  const items = [];
+  for (let r = hdr.r + 1; r <= hdr.r + 16; r++) {
+    if (/NOTA/i.test(g(r, 2)) || /NOTA/i.test(g(r, 1))) break;
+    const desc = g(r, col.desc), cant = g(r, col.cant);
+    if (!desc && !cant) continue; if (normTxt(desc) === 'DESCRIPCION' || normTxt(g(r, col.esp)) === 'SI') continue;
+    const ceco = g(r, col.ceco).toUpperCase(), f = findCeco(ceco), base = f ? f.base : paraBase;
+    if (ceco && !f) warn.push(`CeCo desconocido: ${ceco}`);
+    items.push({ desc, cant, und: g(r, col.und), equipo: g(r, col.equipo), locacion: g(r, col.loc) || (base ? baseName(base) : ''), ceco, base: base || '', tipo: f ? f.tipo : '',
+      espec: isX(r, col.esp) ? 'si' : isX(r, col.esp && col.esp + 1) ? 'no' : '', stock: isX(r, col.stock) ? 'si' : isX(r, col.stock && col.stock + 1) ? 'no' : isX(r, col.stock && col.stock + 2) ? 'com' : '' });
+  }
+  const nota = cells.find(x => /^NOTA/i.test(x.t)); let notas = '';
+  if (nota) notas = cells.filter(x => x.r > nota.r && x.r <= nota.r + 4 && x.c < (col.esp || 9) && x.t && !/^(LEYENDA|COM=|COMPRAS)$/i.test(x.t)).map(x => x.t).join(' ').trim();
+  const firmas = { solicitado:'', verificado:'', autorizado:'', recibido:'' };
+  cells.filter(x => x.r > (nota ? nota.r : hdr.r + 14) && (/^NOMBRE\s*:/i.test(x.t) || /REPRESENTANTE/i.test(x.t))).forEach(x => {
+    const k = x.c <= 4 ? 'solicitado' : x.c <= 6 ? 'verificado' : x.c <= 8 ? 'autorizado' : 'recibido';
+    const v = x.t.replace(/^NOMBRE\s*:\s*/i, '').trim(); if (v && !firmas[k]) firmas[k] = v; });
+  if (!num) warn.push('Sin N° de control'); if (!fs) warn.push('Sin fecha de solicitud'); if (!items.length) warn.push('Sin materiales');
+  return { hoja: ws.name, numero: num ? String(+num) : '', area, coordinacion: coord, fechaSolicitud: fs, fechaRequerida: fr, notas, items,
+    solicitado: firmas.solicitado, verificado: firmas.verificado, autorizado: firmas.autorizado, recibido: firmas.recibido, base: paraBase, warn };
+}
+let histData = null;
+$('#histFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  $('#histErr').hidden = true; $('#histBtn').hidden = true; $('#histPrev').innerHTML = '<p class="hint">Leyendo ' + esc(f.name) + '…</p>';
+  try {
+    if (!window.ExcelJS) throw new Error('No se pudo cargar el lector de Excel.');
+    const wb = new ExcelJS.Workbook(); await wb.xlsx.load(await f.arrayBuffer());
+    const hojas = wb.worksheets.map(parseHojaHistorica);
+    histData = hojas.filter(h => !h.error && h.numero && h.items.length).map(h => Object.assign(h, { archivo: f.name }));
+    const malas = hojas.filter(h => h.error || !h.numero || !h.items.length);
+    const nIt = histData.reduce((a, h) => a + h.items.length, 0), fechas = histData.map(h => h.fechaSolicitud).filter(Boolean).sort();
+    $('#histPrev').innerHTML = `<div class="histsum"><b>${histData.length} requisiciones · ${nIt} materiales</b>${fechas.length ? `<span>Del ${fmt(fechas[0])} al ${fmt(fechas[fechas.length-1])}</span>` : ''}${malas.length ? `<span class="err" style="margin:0">${malas.length} hoja${malas.length === 1 ? '' : 's'} no se pudo leer: ${malas.map(m => esc(m.hoja)).join(', ')}</span>` : ''}</div>
+      <ul class="hist histlist">${histData.map(h => `<li><div class="h1"><b>N° ${esc(h.numero.padStart(3,'0'))}</b><span style="color:var(--muted);font-weight:500">${fmt(h.fechaSolicitud)}</span></div>
+        <div class="h2">${h.items.length} material${h.items.length === 1 ? '' : 'es'} · ${esc(h.items[0].desc).slice(0, 70)}${h.items.length > 1 ? '…' : ''}</div>
+        <div class="h2" style="font-size:13px">${esc([h.area, h.base ? baseName(h.base) : (h.items[0].base ? baseName(h.items[0].base) : ''), h.autorizado ? 'Autorizó: ' + h.autorizado : ''].filter(Boolean).join(' · '))}</div>
+        ${h.warn.length ? `<div class="err" style="margin:2px 0 0;font-size:13px">${esc(h.warn.join('. '))}</div>` : ''}</li>`).join('')}</ul>`;
+    $('#histBtn').hidden = !histData.length; $('#histBtn').textContent = `Importar ${histData.length} requisiciones`;
+  } catch (er) { $('#histPrev').innerHTML = ''; $('#histErr').textContent = er.message || 'No se pudo leer el archivo'; $('#histErr').hidden = false; }
+});
+$('#histBtn').onclick = async () => {
+  if (!histData || !histData.length) return;
+  if (!confirm(`¿Importar ${histData.length} requisiciones históricas? Quedarán como aprobadas y recibidas.`)) return;
+  const b = $('#histBtn'); b.disabled = true; b.textContent = 'Importando…';
+  try {
+    const lista = histData.map(h => ({ numero: h.numero, area: h.area, coordinacion: h.coordinacion, fechaSolicitud: h.fechaSolicitud, fechaRequerida: h.fechaRequerida,
+      items: h.items, notas: h.notas, solicitado: h.solicitado, verificado: h.verificado, autorizado: h.autorizado, recibido: h.recibido, hoja: h.hoja, archivo: h.archivo }));
+    const r = await rpc('rq_importar_historicas', { p_lista: lista });
+    $('#histPrev').innerHTML = `<div class="histsum ok"><b>${r.importadas.length} requisiciones importadas</b>${r.importadas.length ? `<span>${esc(r.importadas[0])} a ${esc(r.importadas[r.importadas.length-1])}. La próxima requisición nueva será la ${esc(r.siguiente)}.</span>` : ''}
+      ${r.omitidas.length ? `<span>${r.omitidas.length} omitida${r.omitidas.length === 1 ? '' : 's'}: ${r.omitidas.map(o => esc((o.control || o.hoja) + ' (' + o.motivo + ')')).join(', ')}</span>` : ''}</div>`;
+    b.hidden = true; histData = null; toast('Importación terminada');
+  } catch (e) { $('#histErr').textContent = e.message; $('#histErr').hidden = false; }
+  finally { b.disabled = false; }
+};
+
 /* ---------- Mi cuenta y ajustes ---------- */
 function renderSettings(){
   $('#usersBlock').hidden = !seesUsers(); if (seesUsers()) loadUsers();
+  $('#histBlock').hidden = !me.es_master;
   $('#myRole').textContent = roleText(me) + (me.es_master ? ' · Maestro' : '');
   $('#myEmail').textContent = me.email;
   [['my-nombre','nombre'],['my-empresa','empresa'],['my-cargo','cargo'],['my-tel','telefono'],['my-area','area'],['my-coord','coordinacion']].forEach(([id,k]) => $('#'+id).value = me[k] || '');
