@@ -16,6 +16,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
 <style>
 :root{
   --bg:#E9ECE7; --surface:#FFFFFF; --sunk:#F3F5F1; --ink:#1B2220; --muted:#5E6A66; --rule:#CDD3CC;
@@ -118,7 +119,20 @@ nav.tabs button .cnt{display:inline-block;min-width:20px;padding:1px 6px;margin-
 .appr div.bad{background:var(--red-soft);border-color:transparent;color:var(--red);font-weight:600}
 .sec{font:600 18px/1.1 "Barlow Condensed",sans-serif;margin:16px 0 8px}
 .dock .in2 .btn.alt{flex:0 0 auto}
-#seg-bfil button{font-size:14px;padding:0 3px;line-height:1.1}
+nav.tabs{gap:0}
+nav.tabs button{line-height:1.15;flex:1 1 auto;min-width:0;padding:10px 3px 12px;font-size:14.5px}
+nav.tabs button.gear{flex:0 0 38px;display:flex;align-items:center;justify-content:center}
+.sesscard{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--rule);border-radius:var(--radius);padding:12px 12px 12px 16px;margin-bottom:14px}
+.sesscard.on{background:var(--green-soft);border-color:transparent;color:var(--green)}
+.sesscard.warn{background:var(--red-soft);border-color:transparent;color:var(--red)}
+.sesscard p{margin:0;flex:1;font-size:15px;line-height:1.3}
+.sesscard p b{display:block;font:700 18px/1.15 "Barlow Condensed",sans-serif}
+.sesscard .in{width:108px;min-height:44px;text-align:center;letter-spacing:4px;flex:0 0 auto}
+.sesscard .btn{min-height:44px;padding:0 14px}
+.actbtns{display:grid;gap:8px}
+.actbtns .btn{width:100%}
+.lock{margin:14px 0 0;padding:10px 12px;border-radius:10px;background:var(--sunk);border:1px solid var(--rule);font-size:15px;color:var(--muted)}
+.chg{font-size:13px;color:var(--muted);margin:-6px 0 12px}
 .install[hidden]{display:none}
 .cecobox{margin:-2px 0 12px;padding:10px 12px;border-radius:10px;background:var(--green-soft);color:var(--green);font-size:14px;font-weight:600}
 .cecobox.bad{background:var(--red-soft);color:var(--red)}
@@ -168,41 +182,153 @@ dialog::backdrop{background:rgba(10,14,13,.55)}
 .osw{margin-bottom:10px}
 .done{text-align:center;padding:10px 0 4px}
 .done .big{font:700 34px/1 "Barlow Condensed",sans-serif;margin:6px 0}
+
+.brand{align-items:center}
+.bell{position:relative;flex:0 0 auto;width:48px;height:48px;border-radius:12px;border:1.5px solid var(--rule);background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.bell .cnt{position:absolute;top:-6px;right:-6px;margin:0}
+.brand small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.roles{display:grid;gap:8px}
+.roles button{display:block;text-align:left;padding:12px 14px;border:1.5px solid var(--rule);border-radius:10px;background:var(--sunk);cursor:pointer;min-height:56px}
+.roles button b{display:block;font:700 18px/1.15 "Barlow Condensed",sans-serif}
+.roles button span{display:block;font-size:14px;color:var(--muted);margin-top:2px}
+.roles button[aria-checked="true"]{border-color:var(--amber);background:var(--surface);box-shadow:inset 4px 0 0 var(--amber)}
+.me{margin:0 0 12px;font-size:16px;line-height:1.35}
+.flow{background:var(--surface);border:1px dashed var(--rule);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px}
+.flow ol{margin:0 0 6px;padding-left:20px}
+.flow li{margin:2px 0}
+.big-ico{font-size:40px;text-align:center;margin:4px 0 6px}
+.avisos{list-style:none;margin:0;padding:0}
+.avisos li{padding:12px 12px;border-radius:10px;margin-bottom:8px;background:var(--sunk);border:1px solid var(--rule)}
+.avisos li.new{border-color:var(--amber);background:var(--surface);box-shadow:inset 4px 0 0 var(--amber)}
+.avisos li[data-av]{cursor:pointer}
+.avisos b{display:block;font-weight:600}
+.avisos span{display:block;font-size:14px;margin-top:2px}
+.avisos small{display:block;font-size:12px;color:var(--muted);margin-top:4px}
+.hb .sel{width:auto;min-height:40px;padding:6px 8px;font-size:14px;flex:1 1 150px}
+.hb{align-items:center}
+.appr div{line-height:1.3}
+nav.tabs button.gear{position:relative}
+nav.tabs button.gear svg{flex-shrink:0}
+nav.tabs button.gear .cnt{position:absolute;top:0;right:-4px;margin:0}
 </style>
 </head>
 <body>
+<!-- ================= ENTRAR / REGISTRO ================= -->
+<div id="authView" hidden>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand"><div><h1>Requisiciones</h1><small>Constructora Rafmor, 13 B.P.F del Zulia</small></div></div>
+      <nav class="tabs" role="tablist" id="authTabs">
+        <button role="tab" aria-selected="true" data-atab="entrar">Entrar</button>
+        <button role="tab" aria-selected="false" data-atab="registro">Registrarme</button>
+      </nav>
+    </header>
+
+    <section class="panel on" id="a-entrar">
+      <div class="block">
+        <h2>Entra con tu cuenta</h2>
+        <label class="f"><span>Correo</span><input class="in" id="li-email" type="email" autocomplete="email" inputmode="email"></label>
+        <label class="f"><span>Contraseña</span><input class="in" id="li-pass" type="password" autocomplete="current-password"></label>
+        <p class="err" id="li-err" hidden></p>
+        <button class="btn primary block100" id="li-btn">Entrar</button>
+        <button class="btn ghost block100" id="li-forgot" style="margin-top:6px">Olvidé mi contraseña</button>
+      </div>
+      <p class="hint" style="text-align:center">¿Primera vez? Toca <b>Registrarme</b>. Tu cuenta la aprueba el administrador.</p>
+      <button class="btn ghost block100" data-install>¿Cómo instalo la app en mi teléfono?</button>
+    </section>
+
+    <section class="panel" id="a-registro">
+      <div class="block">
+        <h2>1. ¿Cuál es tu rol?</h2>
+        <div class="roles" id="roleCards" role="radiogroup" aria-label="Rol"></div>
+      </div>
+      <div class="block">
+        <h2>2. Tus datos</h2>
+        <label class="f"><span>Nombre y apellido</span><input class="in" id="rg-nombre" autocomplete="name"></label>
+        <label class="f"><span id="rg-empresa-lbl">Empresa</span><input class="in" id="rg-empresa" autocomplete="organization"></label>
+        <div class="row2">
+          <label class="f"><span>Cargo</span><input class="in" id="rg-cargo" autocomplete="organization-title"></label>
+          <label class="f"><span>Teléfono</span><input class="in" id="rg-tel" type="tel" autocomplete="tel" inputmode="tel"></label>
+        </div>
+      </div>
+      <div class="block" id="rg-reqblock">
+        <h2>3. Datos de tus requisiciones</h2>
+        <p class="hint" style="margin-top:-6px">Se llenan solos en cada requisición que hagas. Los puedes cambiar después.</p>
+        <label class="f"><span>Área solicitante</span><input class="in" id="rg-area" list="dl-areas" autocomplete="off" placeholder="Ej. Obras civiles"></label>
+        <label class="f" style="margin-bottom:0"><span>Coordinación</span><input class="in" id="rg-coord" list="dl-coord" autocomplete="off" placeholder="Ej. Frente norte"></label>
+      </div>
+      <div class="block">
+        <h2><span id="rg-step4">4.</span>&nbsp;Acceso</h2>
+        <label class="f"><span>Correo</span><input class="in" id="rg-email" type="email" autocomplete="email" inputmode="email"></label>
+        <label class="f"><span>Contraseña (mínimo 8 caracteres)</span><input class="in" id="rg-pass" type="password" autocomplete="new-password"></label>
+        <label class="f" style="margin-bottom:0"><span>Repite la contraseña</span><input class="in" id="rg-pass2" type="password" autocomplete="new-password"></label>
+      </div>
+      <p class="err" id="rg-err" hidden></p>
+      <button class="btn primary block100" id="rg-btn">Registrarme</button>
+      <p class="hint" style="text-align:center;margin-top:10px">Tu cuenta queda en revisión hasta que el administrador la apruebe. Te llegará un aviso.</p>
+    </section>
+
+    <section class="panel" id="a-reset">
+      <div class="block">
+        <h2>Nueva contraseña</h2>
+        <label class="f"><span>Contraseña nueva (mínimo 8 caracteres)</span><input class="in" id="rs-pass" type="password" autocomplete="new-password"></label>
+        <label class="f"><span>Repítela</span><input class="in" id="rs-pass2" type="password" autocomplete="new-password"></label>
+        <p class="err" id="rs-err" hidden></p>
+        <button class="btn primary block100" id="rs-btn">Guardar contraseña</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ================= CUENTA EN REVISIÓN ================= -->
+<div id="pendView" hidden>
+  <div class="wrap">
+    <header class="top"><div class="brand"><div><h1>Requisiciones</h1><small>Constructora Rafmor, 13 B.P.F del Zulia</small></div></div></header>
+    <div class="block" style="margin-top:18px">
+      <div class="big-ico" id="pd-ico" aria-hidden="true">⏳</div>
+      <h2 id="pd-title" style="justify-content:center;text-align:center">Tu cuenta está en revisión</h2>
+      <p id="pd-msg" style="text-align:center;margin:0 0 14px"></p>
+      <dl class="dl" id="pd-data"></dl>
+      <button class="btn dark block100" id="pd-refresh">Revisar de nuevo</button>
+      <button class="btn ghost block100" id="pd-out" style="margin-top:6px">Cerrar sesión</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PLATAFORMA ================= -->
+<div id="mainView" hidden>
 <div class="wrap">
   <header class="top">
     <div class="brand">
-      <div><h1>Requisición de materiales</h1><small id="obraName">Rafmor, 13 B.P.F del Zulia</small></div>
-      <div class="ctl" id="ctlBadge" title="N° de control">—</div>
+      <div style="min-width:0"><h1>Requisiciones</h1><small id="hUser"></small></div>
+      <button class="bell" id="bellBtn" aria-label="Avisos"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1z"/></svg><span class="cnt" id="bellCnt" hidden></span></button>
     </div>
-    <nav class="tabs" role="tablist">
-      <button role="tab" aria-selected="true" data-tab="nueva">Nueva</button>
-      <button role="tab" aria-selected="false" data-tab="bandeja" id="tabBandeja" hidden>Bandeja<span class="cnt" id="bCount" hidden></span></button>
-      <button role="tab" aria-selected="false" data-tab="historial">Historial</button>
-      <button role="tab" aria-selected="false" data-tab="ajustes">Ajustes</button>
+    <nav class="tabs" role="tablist" id="mainTabs">
+      <button role="tab" aria-selected="false" data-tab="nueva" hidden>Nueva</button>
+      <button role="tab" aria-selected="false" data-tab="verif" hidden>Por verificar<span class="cnt" id="cVerif" hidden></span></button>
+      <button role="tab" aria-selected="false" data-tab="aprob" hidden>Aprobadas<span class="cnt" id="cAprob" hidden></span></button>
+      <button role="tab" aria-selected="false" data-tab="mias" hidden>Mías</button>
+      <button role="tab" aria-selected="false" data-tab="ajustes" class="gear" aria-label="Ajustes y cuenta" title="Ajustes y cuenta"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.7h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span class="cnt" id="cUsers" hidden></span></button>
     </nav>
   </header>
 
+  <div class="install" id="installBar" hidden style="margin-top:16px">
+    <p><b>Instálala en tu teléfono</b>Tenla como un ícono en la pantalla de inicio.</p>
+    <button class="btn" data-install>Ver cómo</button>
+    <button class="x" id="installX" aria-label="Ocultar aviso">×</button>
+  </div>
+
   <!-- NUEVA -->
-  <section class="panel on" id="p-nueva">
-    <div class="install" id="installBar" hidden>
-      <p><b>Instálala en tu teléfono</b>Tenla como un ícono en la pantalla de inicio, sin buscar el enlace.</p>
-      <button class="btn" id="installOpen">Ver cómo</button>
-      <button class="x" id="installX" aria-label="Ocultar aviso">×</button>
-    </div>
+  <section class="panel" id="p-nueva">
     <div class="block">
       <h2>Datos de la solicitud</h2>
       <div class="row2">
-        <label class="f offl"><span>N° de control</span><input class="in" id="control" autocomplete="off"></label>
         <label class="f"><span>Fecha de solicitud</span><input class="in" type="date" id="fechaSolicitud"></label>
+        <label class="f"><span>¿Para cuándo?</span><input class="in" type="date" id="fechaRequerida"></label>
       </div>
       <label class="f"><span>Área solicitante</span><input class="in" id="area" list="dl-areas" autocomplete="off" placeholder="Ej. Obras civiles"></label>
-      <label class="f"><span>Coordinación</span><input class="in" id="coordinacion" list="dl-coord" autocomplete="off" placeholder="Ej. Frente norte"></label>
-      <label class="f" style="margin-bottom:0"><span>¿Para cuándo se necesita?</span><input class="in" type="date" id="fechaRequerida"></label>
+      <label class="f" style="margin-bottom:0"><span>Coordinación</span><input class="in" id="coordinacion" list="dl-coord" autocomplete="off" placeholder="Ej. Frente norte"></label>
     </div>
-
     <div class="block">
       <h2>Materiales <span id="count">0 de 13</span></h2>
       <ul class="items" id="items"></ul>
@@ -210,105 +336,90 @@ dialog::backdrop{background:rgba(10,14,13,.55)}
       <button class="btn dark block100" id="addItem">Agregar material</button>
       <p class="err" id="itemsErr" hidden></p>
     </div>
-
     <div class="block">
       <h2>Notas</h2>
       <textarea class="in" id="notas" placeholder="Urgencia, lugar de entrega, observaciones…"></textarea>
     </div>
-
     <div class="block">
       <h2>Solicitado por</h2>
-      <label class="f"><span>Nombre</span><input class="in" id="solicitado" list="dl-personas" autocomplete="off"></label>
-      <span class="lbl">Firma</span>
+      <p class="me" id="meName"></p>
+      <span class="lbl">Tu firma</span>
       <div class="sigbox"><canvas id="sig-solicitado"></canvas><div class="line"></div><div class="ph" id="sigph-solicitado">Firma aquí con el dedo</div></div>
       <div class="sigtools"><button class="btn ghost" data-clr="solicitado">Borrar firma</button></div>
+      <p class="err" id="sigErr" hidden></p>
     </div>
-
-    <div class="block" id="aprobBlock">
-      <h2>Aprobación <span class="st" id="aprobStatus">Pendiente</span></h2>
-      <div class="seg" id="seg-aprob"><button type="button" data-v="no" aria-pressed="true">Aprobar después</button><button type="button" data-v="si" aria-pressed="false">Aprobar ahora</button></div>
-      <p class="hint offl" id="aprobHintOff" style="margin:10px 0 0">Verificado y autorizado quedan en blanco para firmar a mano, o para aprobar luego desde el Historial en este mismo teléfono.</p>
-      <p class="hint onl" id="aprobHintOff2" style="margin:10px 0 0">La requisición llega a la bandeja y los aprobadores la firman desde su propio teléfono con su PIN.<span class="dp"> Primero la verifica una persona y después la autoriza otra.</span></p>
-      <div id="aprobOn" hidden>
-        <p class="hint offl" style="margin:10px 0 12px">Pasa el teléfono a quien verifica y a quien autoriza. Cada uno escribe su nombre y firma. La fecha de aprobación es la de hoy.<span class="dp"> Deben ser dos personas distintas.</span></p>
-        <p class="hint onl" style="margin:10px 0 12px">Pasa el teléfono a quien verifica y a quien autoriza. Cada uno escribe su PIN personal y firma. La fecha de aprobación es la de hoy.<span class="dp"> Deben ser dos personas distintas.</span></p>
-        <div class="signer">
-          <label class="f offl"><span>Verificado por</span><input class="in" id="verificado" list="dl-personas" autocomplete="off"></label>
-          <label class="f onl"><span>PIN de quien verifica</span><input class="in" id="pin-verificado" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></label>
-          <p class="who onl" id="who-verificado"></p>
-          <span class="lbl">Firma de quien verifica</span>
-          <div class="sigbox"><canvas id="sig-verificado"></canvas><div class="line"></div><div class="ph" id="sigph-verificado">Firma aquí con el dedo</div></div>
-          <div class="sigtools"><button class="btn ghost" data-clr="verificado">Borrar firma</button></div>
-        </div>
-        <div class="signer">
-          <label class="f offl"><span>Autorizado por</span><input class="in" id="autorizado" list="dl-personas" autocomplete="off"></label>
-          <label class="f onl"><span>PIN de quien autoriza</span><input class="in" id="pin-autorizado" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></label>
-          <p class="who onl" id="who-autorizado"></p>
-          <span class="lbl">Firma de quien autoriza</span>
-          <div class="sigbox"><canvas id="sig-autorizado"></canvas><div class="line"></div><div class="ph" id="sigph-autorizado">Firma aquí con el dedo</div></div>
-          <div class="sigtools"><button class="btn ghost" data-clr="autorizado">Borrar firma</button></div>
-        </div>
-        <p class="err" id="aprobErr" hidden></p>
-      </div>
-      <details class="more" style="margin-top:12px">
-        <summary>Recibido por compras (opcional)</summary>
-        <label class="f"><span>Nombre</span><input class="in" id="recibido" list="dl-personas" autocomplete="off"></label>
-      </details>
+    <div class="flow">
+      <div class="sec" style="margin-top:0">Qué pasa después</div>
+      <ol><li><b>Gerente de Operaciones</b> la revisa y la verifica.</li><li><b>Gerente General</b> la aprueba.</li><li><b>Compras</b> firma el recibido.</li></ol>
+      <p class="hint" style="margin:0">Recibes un aviso en cada paso.</p>
     </div>
     <button class="btn ghost block100" id="resetDraft">Descartar y empezar de nuevo</button>
   </section>
 
-  <!-- BANDEJA -->
-  <section class="panel" id="p-bandeja">
+  <!-- POR VERIFICAR -->
+  <section class="panel" id="p-verif">
     <div class="block">
-      <h2>Bandeja de la obra <button class="btn ghost" id="bRefresh" style="min-height:36px;padding:0 8px;font-size:15px">Actualizar</button></h2>
-      <div class="seg" id="seg-bfil"></div>
-      <ul class="hist" id="bList" style="margin-top:10px"></ul>
-      <div class="empty" id="bEmpty" hidden></div>
+      <h2>Por verificar <button class="btn ghost" data-refresh="verif" style="min-height:36px;padding:0 8px;font-size:15px">Actualizar</button></h2>
+      <p class="hint" id="verifHint" style="margin-top:-6px"></p>
+      <ul class="hist" id="lVerif"></ul>
+      <div class="empty" id="eVerif" hidden></div>
     </div>
   </section>
 
-  <!-- HISTORIAL -->
-  <section class="panel" id="p-historial">
+  <!-- APROBADAS -->
+  <section class="panel" id="p-aprob">
     <div class="block">
-      <h2>Requisiciones generadas</h2>
-      <p class="hint" style="margin-top:-6px">Se guardan en este teléfono. Puedes volver a descargar o usar una como base para otra.</p>
-      <ul class="hist" id="hist"></ul>
-      <div class="empty" id="emptyHist">Aún no has generado ninguna requisición.</div>
+      <h2>Aprobadas <button class="btn ghost" data-refresh="aprob" style="min-height:36px;padding:0 8px;font-size:15px">Actualizar</button></h2>
+      <div class="seg" id="seg-afil"><button type="button" data-v="por_aprobar" aria-pressed="true">Por aprobar</button><button type="button" data-v="aprobada" aria-pressed="false">Aprobadas</button><button type="button" data-v="rechazada" aria-pressed="false">Rechazadas</button></div>
+      <p class="hint" id="aprobHint" style="margin:10px 0 0"></p>
+      <ul class="hist" id="lAprob" style="margin-top:6px"></ul>
+      <div class="empty" id="eAprob" hidden></div>
+    </div>
+  </section>
+
+  <!-- MÍAS -->
+  <section class="panel" id="p-mias">
+    <div class="block">
+      <h2>Mis requisiciones <button class="btn ghost" data-refresh="mias" style="min-height:36px;padding:0 8px;font-size:15px">Actualizar</button></h2>
+      <p class="hint" style="margin-top:-6px">Todas las que enviaste, con el paso en que va cada una.</p>
+      <ul class="hist" id="lMias"></ul>
+      <div class="empty" id="eMias" hidden></div>
     </div>
   </section>
 
   <!-- AJUSTES -->
   <section class="panel" id="p-ajustes">
-    <div class="block" id="connBlock">
-      <h2>Conexión con la obra <span class="st" id="connSt">Sin conectar</span></h2>
-      <div id="connCfg">
-        <label class="f"><span>Dirección de Supabase (Project URL)</span><input class="in" id="sbUrl" autocomplete="off" placeholder="https://xxxx.supabase.co"></label>
-        <label class="f"><span>Clave pública (anon key)</span><input class="in" id="sbKey" autocomplete="off"></label>
-      </div>
-      <label class="f" id="connCodeWrap"><span>Código de la obra</span><input class="in" id="connCode" type="password" autocomplete="off"></label>
-      <p class="err" id="connErr" hidden></p>
-      <div class="addrow"><button class="btn dark" id="connBtn" style="flex:1">Conectar</button><button class="btn ghost" id="connOff" hidden>Desconectar</button></div>
-      <p class="hint" style="margin-top:10px">Conectado, las requisiciones se envían a una bandeja compartida y los aprobadores las firman desde su propio teléfono con su PIN. El número de control lo asigna el sistema para que nunca se repita.</p>
+    <div class="block" id="usersBlock" hidden>
+      <h2>Usuarios <button class="btn ghost" id="uRefresh" style="min-height:36px;padding:0 8px;font-size:15px">Actualizar</button></h2>
+      <p class="hint" id="usersHint" style="margin-top:-6px"></p>
+      <div class="seg" id="seg-ufil"><button type="button" data-v="pendiente" aria-pressed="true">Por aprobar</button><button type="button" data-v="activo" aria-pressed="false">Activos</button><button type="button" data-v="otros" aria-pressed="false">Inactivos</button></div>
+      <ul class="hist" id="lUsers" style="margin-top:8px"></ul>
+      <div class="empty" id="eUsers" hidden></div>
     </div>
     <div class="block">
-      <h2>Flujo de aprobación</h2>
-      <div class="seg" id="seg-dp"><button type="button" data-v="si" aria-pressed="false">Verifica uno, autoriza otro</button><button type="button" data-v="no" aria-pressed="false">Autorizar directo</button></div>
-      <p class="hint" id="dpHint" style="margin:10px 0 0"></p>
-    </div>
-    <div class="block"><h2>Instalar en el teléfono</h2><button class="btn block100" id="installOpen2">Ver instrucciones para Android y iPhone</button></div>
-    <div class="block offl">
-      <h2>Numeración</h2>
+      <h2>Mi cuenta <span class="st ok" id="myRole"></span></h2>
+      <p class="hint" id="myEmail" style="margin-top:-6px"></p>
+      <label class="f"><span>Nombre y apellido</span><input class="in" id="my-nombre"></label>
+      <label class="f"><span>Empresa</span><input class="in" id="my-empresa"></label>
       <div class="row2">
-        <label class="f"><span>Prefijo</span><input class="in" id="prefix" placeholder="LF-"></label>
-        <label class="f"><span>Próximo número</span><input class="in" id="nextNum" inputmode="numeric"></label>
+        <label class="f"><span>Cargo</span><input class="in" id="my-cargo"></label>
+        <label class="f"><span>Teléfono</span><input class="in" id="my-tel" type="tel"></label>
       </div>
-      <label class="f"><span>Nombre de la obra</span><input class="in" id="obra" placeholder="Obra La Frontera"></label>
-      <p class="hint">El nombre de la obra aparece en la app y en el nombre del archivo.</p>
+      <label class="f"><span>Área solicitante</span><input class="in" id="my-area" list="dl-areas"></label>
+      <label class="f"><span>Coordinación</span><input class="in" id="my-coord" list="dl-coord"></label>
+      <p class="err" id="my-err" hidden></p>
+      <button class="btn dark block100" id="my-save">Guardar mis datos</button>
+      <details class="more" style="margin-top:12px">
+        <summary>Cambiar contraseña</summary>
+        <label class="f"><span>Contraseña nueva (mínimo 8 caracteres)</span><input class="in" id="my-pass" type="password" autocomplete="new-password"></label>
+        <button class="btn block100" id="my-pass-btn">Cambiar contraseña</button>
+      </details>
+      <button class="btn ghost block100 danger" id="logout" style="border:0;margin-top:8px">Cerrar sesión</button>
     </div>
+    <div class="block"><h2>Instalar en el teléfono</h2><button class="btn block100" data-install>Ver instrucciones para Android y iPhone</button></div>
     <div class="block">
       <h2>Logo de la empresa</h2>
-      <p class="hint" style="margin-top:-6px">Va en la esquina superior izquierda del formato.</p>
+      <p class="hint" style="margin-top:-6px">Va en la esquina superior izquierda del Excel. Se guarda en este teléfono.</p>
       <div class="logoprev" id="logoPrev"></div>
       <div class="addrow">
         <label class="btn" style="flex:1">Elegir imagen<input type="file" id="logoFile" accept="image/png,image/jpeg" hidden></label>
@@ -319,11 +430,11 @@ dialog::backdrop{background:rgba(10,14,13,.55)}
   </section>
 </div>
 
-<div class="dock" id="dock">
-  <div class="in2"><button class="btn primary" id="gen">Generar Excel</button></div>
+<div class="dock" id="dock" hidden>
+  <div class="in2"><button class="btn primary" id="gen">Enviar a verificación</button></div>
+</div>
 </div>
 
-<!-- Item editor -->
 <dialog id="itemDlg">
   <div class="sheet" role="document">
     <div class="grab"></div>
@@ -381,40 +492,62 @@ dialog::backdrop{background:rgba(10,14,13,.55)}
   </div>
 </dialog>
 
+
+<!-- Detalle -->
 <dialog id="detDlg">
   <div class="sheet"><div class="grab"></div>
     <h3><span id="dTitle">Requisición</span><button class="btn ghost" id="dClose" style="min-height:40px">Cerrar</button></h3>
     <div id="dBody"><p class="hint">Cargando…</p></div>
+    <div id="dEdit" hidden>
+      <div class="sec">Editar requisición</div>
+      <label class="f"><span>Área solicitante</span><input class="in" id="e-area" list="dl-areas" autocomplete="off"></label>
+      <label class="f"><span>Coordinación</span><input class="in" id="e-coord" list="dl-coord" autocomplete="off"></label>
+      <label class="f"><span>¿Para cuándo se necesita?</span><input class="in" type="date" id="e-freq"></label>
+      <div class="sec">Materiales <span class="hint" id="eCount" style="font:500 14px Barlow,sans-serif"></span></div>
+      <ul class="items" id="eItems"></ul>
+      <button class="btn dark block100" id="eAdd">Agregar material</button>
+      <label class="f" style="margin-top:12px"><span>Notas</span><textarea class="in" id="e-notas"></textarea></label>
+      <p class="hint">El nombre, la firma y la fecha de quien solicitó no se pueden cambiar. El cambio queda registrado con tu nombre.</p>
+      <p class="err" id="eErr" hidden></p>
+      <div class="acts" style="position:static"><button class="btn" id="eCancel">Cancelar</button><button class="btn primary" id="eSave">Guardar cambios</button></div>
+    </div>
     <div id="dAct" hidden>
-      <div class="sec">Firmar</div>
-      <div class="seg" id="seg-dact"><button type="button" data-v="verificar" aria-pressed="false">Verificar</button><button type="button" data-v="autorizar" aria-pressed="false">Autorizar</button><button type="button" data-v="rechazar" aria-pressed="false">Rechazar</button></div>
+      <div class="sec" id="dActTitle">Acciones</div>
+      <div class="actbtns" id="dActBtns"></div>
       <div id="dForm" hidden style="margin-top:12px">
-        <label class="f"><span>Tu PIN</span><input class="in" id="dPin" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></label>
-        <p class="who" id="dWho"></p>
-        <div id="dSigWrap"><span class="lbl">Tu firma</span><div class="sigbox"><canvas id="sig-det"></canvas><div class="line"></div><div class="ph" id="sigph-det">Firma aquí con el dedo</div></div><div class="sigtools"><button class="btn ghost" data-clr="det">Borrar firma</button></div></div>
+        <div id="dSigWrap"><span class="lbl" id="dSigLbl">Tu firma</span><div class="sigbox"><canvas id="sig-det"></canvas><div class="line"></div><div class="ph" id="sigph-det">Firma aquí con el dedo</div></div><div class="sigtools"><button class="btn ghost" data-clr="det">Borrar firma</button></div></div>
         <label class="f" id="dMotWrap" hidden><span>Motivo del rechazo</span><textarea class="in" id="dMot" placeholder="Qué hay que corregir"></textarea></label>
         <p class="err" id="dErr" hidden></p>
-        <button class="btn primary block100" id="dOk">Confirmar</button>
+        <div class="acts" style="position:static"><button class="btn" id="dCancel">Cancelar</button><button class="btn primary" id="dOk">Confirmar</button></div>
       </div>
     </div>
+    <p class="lock" id="dLock" hidden></p>
     <button class="btn block100" id="dDl" style="margin-top:12px">Descargar Excel</button>
   </div>
 </dialog>
 
-<!-- Done -->
+<!-- Enviada -->
 <dialog id="doneDlg">
   <div class="sheet"><div class="grab"></div>
-    <div class="done"><div>Excel generado</div><div class="big" id="doneCtl"></div><p class="hint" id="doneMsg"></p></div>
+    <div class="done"><div id="doneTop">Requisición enviada</div><div class="big" id="doneCtl"></div><p class="hint" id="doneMsg"></p></div>
     <div class="acts" style="position:static">
-      <button class="btn" id="doneKeep">Seguir editando</button>
-      <button class="btn primary" id="doneNew">Nueva requisición</button>
+      <button class="btn" id="doneDl">Descargar Excel</button>
+      <button class="btn primary" id="doneOk">Listo</button>
     </div>
-    <button class="btn dark block100" id="doneDl" hidden style="margin-top:10px">Descargar Excel</button>
   </div>
 </dialog>
 
-<datalist id="dl-areas"></datalist><datalist id="dl-coord"></datalist><datalist id="dl-personas"></datalist>
-<datalist id="dl-equipos"></datalist><datalist id="dl-locaciones"></datalist><datalist id="dl-cecos"></datalist><datalist id="dl-und"></datalist>
+<!-- Avisos -->
+<dialog id="avDlg">
+  <div class="sheet"><div class="grab"></div>
+    <h3>Avisos<button class="btn ghost" id="avClose" style="min-height:40px">Cerrar</button></h3>
+    <ul class="avisos" id="avList"></ul>
+    <div class="empty" id="avEmpty" hidden>No tienes avisos todavía.</div>
+  </div>
+</dialog>
+
+<datalist id="dl-areas"></datalist><datalist id="dl-coord"></datalist>
+<datalist id="dl-equipos"></datalist><datalist id="dl-locaciones"></datalist><datalist id="dl-und"></datalist>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -473,8 +606,9 @@ async function buildRequisicion(ExcelJS, templateBuf, d){
   set('G28', 'Nombre: ' + (f.autorizado || ''));
   set('I28', 'NOMBRE: ' + (f.recibido || ''));
   if (f.solicitado) set('B32', 'Fecha: ' + (d.fechaSolicitud || ''));
-  if (f.verificado && d.fechaAprob) set('E32', 'Fecha: ' + d.fechaAprob);
-  if (f.autorizado && d.fechaAprob) set('G32', 'Fecha: ' + d.fechaAprob);
+  if (f.verificado && (d.fechaVerif || d.fechaAprob)) set('E32', 'Fecha: ' + (d.fechaVerif || d.fechaAprob));
+  if (f.autorizado && (d.fechaAutor || d.fechaAprob)) set('G32', 'Fecha: ' + (d.fechaAutor || d.fechaAprob));
+  if (f.recibido && d.fechaRecib) set('I32', 'Fecha: ' + d.fechaRecib);
   const strip = s => s.substring(s.indexOf(',') + 1);
   if (d.firma) {
     const id = wb.addImage({ base64: strip(d.firma), extension: 'png' });
@@ -482,6 +616,7 @@ async function buildRequisicion(ExcelJS, templateBuf, d){
   }
   const fi = d.firmasImg || {};
   if (fi.verificado) { const id = wb.addImage({ base64: strip(fi.verificado), extension: 'png' }); ws.addImage(id, { tl: { col: 5.02, row: 29.0 }, ext: { width: 105, height: 31 }, editAs: 'oneCell' }); }
+  if (fi.recibido) { const id = wb.addImage({ base64: strip(fi.recibido), extension: 'png' }); ws.addImage(id, { tl: { col: 9.1, row: 28.85 }, ext: { width: 115, height: 32 }, editAs: 'oneCell' }); }
   if (fi.autorizado) { const id = wb.addImage({ base64: strip(fi.autorizado), extension: 'png' }); ws.addImage(id, { tl: { col: 7.05, row: 28.85 }, ext: { width: 115, height: 32 }, editAs: 'oneCell' }); }
   if (d.logo && d.logo.data) {
     set('B1', null);
@@ -499,36 +634,71 @@ if (typeof module !== 'undefined') module.exports = buildRequisicion;
 (function(){
 const MAX = 13;
 const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
 const LS = {
   get(k, d){ try{ const v = localStorage.getItem('req.'+k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
   set(k, v){ try{ localStorage.setItem('req.'+k, JSON.stringify(v)); return true; }catch(e){ return false; } }
 };
-const LISTS_META = [
-  ['areas','Áreas solicitantes','dl-areas'], ['coord','Coordinaciones','dl-coord'], ['personas','Personas (firmas)','dl-personas'],
-  ['equipos','Equipos','dl-equipos'], ['locaciones','Locaciones','dl-locaciones'], ['und','Unidades','dl-und']
-];
-const DEFAULT_UND = ['und','pza','m','m²','m³','kg','l','sco','gpo','jgo','par','gal','rollo'];
-let lists = Object.assign({areas:[],coord:[],personas:[],equipos:[],locaciones:[],cecos:[],und:DEFAULT_UND.slice()}, LS.get('lists', {}));
-let settings = Object.assign({prefix:'LF-', next:1, obra:'Rafmor, 13 B.P.F del Zulia', logo:null, dosPasos:true}, LS.get('settings', {}));
-if (settings.dosPasos === undefined) settings.dosPasos = true;
-if (settings.obra === 'Obra La Frontera') settings.obra = 'Rafmor, 13 B.P.F del Zulia';
-/* ---------- Supabase: pega aquí la Project URL y la anon key para que todo el equipo quede conectado ---------- */
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 2800); }
+const today = () => { const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+const fmt = iso => { if(!iso) return ''; const [y,m,d] = String(iso).slice(0,10).split('-'); return `${+d}-${+m}-${y}`; };
+const isoLocal = ts => { if (!ts) return ''; const d = new Date(ts); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+
+/* ---------- Supabase ---------- */
 const SB_URL = 'https://rekpmxjpfcrikamujvao.supabase.co';
 const SB_KEY = 'sb_publishable_OpUSrWzMjSYsEHL-8FFhRA_trlvUdo1';
-const sbUrl = () => (SB_URL || settings.sbUrl || '').trim().replace(/\/+$/,'');
-const sbKey = () => (SB_KEY || settings.sbKey || '').trim();
-const online = () => !!(sbUrl() && sbKey() && settings.codigo);
-let history = LS.get('history', []);
-const today = () => { const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
-const ctlFor = n => settings.prefix + String(n).padStart(4,'0');
-const blank = () => ({control: online() ? '' : ctlFor(settings.next), fechaSolicitud: today(), fechaRequerida:'', area:'', coordinacion:'', items:[], notas:'', firmas:{solicitado:'',verificado:'',autorizado:'',recibido:''}, firma:null, firmasImg:{}, aprobar:false, fechaAprob:''});
-let draft = LS.get('draft', null) || blank();
-const fmt = iso => { if(!iso) return ''; const [y,m,d] = iso.split('-'); return `${+d}-${+m}-${y}`; };
-function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 2600); }
-function saveDraft(){ LS.set('draft', draft); }
+const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'rafmor-req-auth' } });
+const ERRS = {
+  sin_sesion:'Tu sesión terminó. Entra de nuevo.', sin_perfil:'No encontramos tu perfil. Contacta al administrador.',
+  cuenta_pendiente:'Tu cuenta todavía no ha sido aprobada.', cuenta_inactiva:'Tu cuenta está desactivada.',
+  sin_permiso:'Tu rol no permite esta acción.', solo_maestro:'Solo el usuario maestro puede hacer esto.',
+  solo_operaciones:'Esta requisición está en verificación: solo el Gerente de Operaciones puede actuar.',
+  solo_gerente_general:'Esta requisición ya está verificada: solo el Gerente General puede actuar.',
+  solo_compras:'Solo Compras firma el recibido.', no_aprobada:'Todavía no está aprobada.', ya_recibida:'Compras ya firmó el recibido.',
+  ya_verificada:'Ya fue verificada.', falta_verificar:'Primero la verifica el Gerente de Operaciones.', misma_persona:'Quien verificó no puede aprobar.',
+  no_pendiente:'Esta requisición ya está cerrada.', no_existe:'No se encontró la requisición.', firma_invalida:'Falta la firma.',
+  sin_motivo:'Escribe el motivo del rechazo.', sin_materiales:'Agrega al menos un material.', max_materiales:'El formato admite máximo 13 materiales.',
+  demasiado_grande:'La requisición es muy pesada. Borra la firma y vuelve a firmar.', datos_invalidos:'Los datos no son válidos.',
+  no_a_ti_mismo:'No puedes desactivarte a ti mismo.', rol_invalido:'Rol no válido.', falta_nombre:'Falta el nombre.'
+};
+function mapErr(e){
+  const m = (e && (e.message || e.error_description || e.msg)) || '';
+  if (/Failed to fetch|NetworkError|Load failed|network/i.test(m)) { const x = new Error('Sin conexión a internet. Revisa la señal e intenta de nuevo.'); x.offline = true; return x; }
+  const x = new Error(ERRS[m] || m || 'Ocurrió un error.'); x.code = m; return x;
+}
+async function rpc(fn, args){
+  let res;
+  try { res = await sb.rpc(fn, args || {}); } catch (e) { throw mapErr(e); }
+  if (res.error) { const er = mapErr(res.error); if (['sin_sesion','cuenta_pendiente','cuenta_inactiva'].includes(er.code)) setTimeout(route, 50); throw er; }
+  return res.data;
+}
 
+/* ---------- Roles ---------- */
+const ROLES = {
+  contratista:{ label:'Contratista', desc:'Carga requisiciones de materiales.' },
+  gerente_operaciones:{ label:'Gerente de Operaciones', desc:'Revisa, ajusta y verifica las requisiciones.' },
+  compras:{ label:'Compras', desc:'Ve todo el proceso y firma el recibido cuando se aprueba.' },
+  costos:{ label:'Costos', desc:'Ve todo el proceso y también hace requisiciones.' },
+  gerente_general:{ label:'Gerente General', desc:'Acceso a toda la plataforma. Aprueba las requisiciones.' }
+};
+let me = null; // perfil activo
+const canCreate = () => me && ['contratista','costos','gerente_general'].includes(me.rol);
+const seesAll = () => me && (me.rol !== 'contratista' || me.es_master);
+const seesUsers = () => me && (me.es_master || me.rol === 'gerente_general');
 
-/* ---------- CECOS Rafmor (13 B.P.F) ---------- */
+/* ---------- listas locales (autocompletar) ---------- */
+const LISTS_META = [['areas','Áreas solicitantes','dl-areas'], ['coord','Coordinaciones','dl-coord'], ['equipos','Equipos','dl-equipos'], ['locaciones','Locaciones','dl-locaciones'], ['und','Unidades','dl-und']];
+const DEFAULT_UND = ['und','pza','m','m²','m³','kg','l','sco','gpo','jgo','par','gal','rollo'];
+let lists = Object.assign({areas:[],coord:[],equipos:[],locaciones:[],und:DEFAULT_UND.slice()}, LS.get('lists', {}));
+let settings = Object.assign({logo:null}, LS.get('settings', {}));
+function renderDatalists(){
+  LISTS_META.forEach(([k,,id]) => { const dl = document.getElementById(id); dl.innerHTML=''; (lists[k]||[]).forEach(v => { const o=document.createElement('option'); o.value=v; dl.appendChild(o); }); });
+  renderUndChips();
+}
+function learn(k, v){ v = (v||'').trim(); if(!v) return; const L = (lists[k]||[]).filter(x => x.toLowerCase() !== v.toLowerCase()); L.unshift(v); lists[k] = L.slice(0,60); }
+
+/* ---------- CECOS ---------- */
 const CECOS = {"bases": [{"n": 1, "nombre": "B.P.F CASTILLETES", "codes": {"MAT": "RAFMOR-BPF-CAST-MAT", "EQU": "RAFMOR-BPF-CAST-EQU", "LAB": "RAFMOR-BPF-CAST-LAB", "ADM": "RAFMOR-BPF-CAST-ADM", "COM": "RAFMOR-BPF-CAST-COM", "SER": "RAFMOR-BPF-CAST-SER", "OTR": "RAFMOR-BPF-CAST-OTR"}}, {"n": 2, "nombre": "B.P.F CERRO EL INDIO", "codes": {"MAT": "RAFMOR-BPF-INDIO-MAT", "EQU": "RAFMOR-BPF-INDIO-EQU", "LAB": "RAFMOR-BPF-INDIO-LAB", "ADM": "RAFMOR-BPF-INDIO-ADM", "COM": "RAFMOR-BPF-INDIO-COM", "SER": "RAFMOR-BPF-INDIO-SER", "OTR": "RAFMOR-BPF-INDIO-OTR"}}, {"n": 3, "nombre": "B.P.F LA ZIPA", "codes": {"MAT": "RAFMOR-BPF-ZIPA-MAT", "EQU": "RAFMOR-BPF-ZIPA-EQU", "LAB": "RAFMOR-BPF-ZIPA-LAB", "ADM": "RAFMOR-BPF-ZIPA-ADM", "COM": "RAFMOR-BPF-ZIPA-COM", "SER": "RAFMOR-BPF-ZIPA-SER", "OTR": "RAFMOR-BPF-ZIPA-OTR"}}, {"n": 4, "nombre": "B.P.F LA YOLANDA", "codes": {"MAT": "RAFMOR-BPF-YOL-MAT", "EQU": "RAFMOR-BPF-YOL-EQU", "LAB": "RAFMOR-BPF-YOL-LAB", "ADM": "RAFMOR-BPF-YOL-ADM", "COM": "RAFMOR-BPF-YOL-COM", "SER": "RAFMOR-BPF-YOL-SER", "OTR": "RAFMOR-BPF-YOL-OTR"}}, {"n": 5, "nombre": "B.P.F EL DILUVIO", "codes": {"MAT": "RAFMOR-BPF-DIL-MAT", "EQU": "RAFMOR-BPF-DIL-EQU", "LAB": "RAFMOR-BPF-DIL-LAB", "ADM": "RAFMOR-BPF-DIL-ADM", "COM": "RAFMOR-BPF-DIL-COM", "SER": "RAFMOR-BPF-DIL-SER", "OTR": "RAFMOR-BPF-DIL-OTR"}}, {"n": 6, "nombre": "B.P.F LA PRIMAVERA", "codes": {"MAT": "RAFMOR-BPF-PRIM-MAT", "EQU": "RAFMOR-BPF-PRIM-EQU", "LAB": "RAFMOR-BPF-PRIM-LAB", "ADM": "RAFMOR-BPF-PRIM-ADM", "COM": "RAFMOR-BPF-PRIM-COM", "SER": "RAFMOR-BPF-PRIM-SER", "OTR": "RAFMOR-BPF-PRIM-OTR"}}, {"n": 7, "nombre": "B.P.F CATATUMBO", "codes": {"MAT": "RAFMOR-BPF-CATA-MAT", "EQU": "RAFMOR-BPF-CATA-EQU", "LAB": "RAFMOR-BPF-CATA-LAB", "ADM": "RAFMOR-BPF-CATA-ADM", "COM": "RAFMOR-BPF-CATA-COM", "SER": "RAFMOR-BPF-CATA-SER", "OTR": "RAFMOR-BPF-CATA-OTR"}}, {"n": 8, "nombre": "B.P.F ENCONTRADOS", "codes": {"MAT": "RAFMOR-BPF-ENCO-MAT", "EQU": "RAFMOR-BPF-ENCO-EQU", "LAB": "RAFMOR-BPF-ENCO-LAB", "ADM": "RAFMOR-BPF-ENCO-ADM", "COM": "RAFMOR-BPF-ENCO-COM", "SER": "RAFMOR-BPF-ENCO-SER", "OTR": "RAFMOR-BPF-ENCO-OTR"}}, {"n": 9, "nombre": "B.P.F SOCUAVO", "codes": {"MAT": "RAFMOR-BPF-SOCU-MAT", "EQU": "RAFMOR-BPF-SOCU-EQU", "LAB": "RAFMOR-BPF-SOCU-LAB", "ADM": "RAFMOR-BPF-SOCU-ADM", "COM": "RAFMOR-BPF-SOCU-COM", "SER": "RAFMOR-BPF-SOCU-SER", "OTR": "RAFMOR-BPF-SOCU-OTR"}}, {"n": 10, "nombre": "B.P.F PALMERAS DIANAS", "codes": {"MAT": "RAFMOR-BPF-PALM-MAT", "EQU": "RAFMOR-BPF-PALM-EQU", "LAB": "RAFMOR-BPF-PALM-LAB", "ADM": "RAFMOR-BPF-PALM-ADM", "COM": "RAFMOR-BPF-PALM-COM", "SER": "RAFMOR-BPF-PALM-SER", "OTR": "RAFMOR-BPF-PALM-OTR"}}, {"n": 11, "nombre": "B.P.F TRES BOCAS", "codes": {"MAT": "RAFMOR-BPF-3BOC-MAT", "EQU": "RAFMOR-BPF-3BOC-EQU", "LAB": "RAFMOR-BPF-3BOC-LAB", "ADM": "RAFMOR-BPF-3BOC-ADM", "COM": "RAFMOR-BPF-3BOC-COM", "SER": "RAFMOR-BPF-3BOC-SER", "OTR": "RAFMOR-BPF-3BOC-OTR"}}, {"n": 12, "nombre": "B.P.F MATA DE COCO", "codes": {"MAT": "RAFMOR-BPF-COCO-MAT", "EQU": "RAFMOR-BPF-COCO-EQU", "LAB": "RAFMOR-BPF-COCO-LAB", "ADM": "RAFMOR-BPF-COCO-ADM", "COM": "RAFMOR-BPF-COCO-COM", "SER": "RAFMOR-BPF-COCO-SER", "OTR": "RAFMOR-BPF-COCO-OTR"}}, {"n": 13, "nombre": "B.P.F CAÑO DEL MEDIO", "codes": {"MAT": "RAFMOR-BPF-CAÑO-MAT", "EQU": "RAFMOR-BPF-CAÑO-EQU", "LAB": "RAFMOR-BPF-CAÑO-LAB", "ADM": "RAFMOR-BPF-CAÑO-ADM", "COM": "RAFMOR-BPF-CAÑO-COM", "SER": "RAFMOR-BPF-CAÑO-SER", "OTR": "RAFMOR-BPF-CAÑO-OTR"}}], "tipos": [["MAT", "MATERIALES"], ["EQU", "EQUIPOS"], ["LAB", "LABOR DIRECTA (MANO DE OBRA SUBCONTRATADA)"], ["ADM", "GASTOS ADMINISTRATIVOS"], ["COM", "COMBUSTIBLE"], ["SER", "SERVICIOS SUBCONTRATADOS"], ["OTR", "GASTOS VARIOS (OTROS)"]]};
 const baseName = n => { const b = CECOS.bases.find(x => x.n === +n); return b ? b.nombre : ''; };
 const cecoFor = (n, t) => { const b = CECOS.bases.find(x => x.n === +n); return b && t ? b.codes[t] : ''; };
@@ -539,45 +709,21 @@ function renderTipos(){
   const box = $('#tipoChips'); box.innerHTML = '';
   CECOS.tipos.forEach(([k]) => { const b = document.createElement('button'); b.type='button'; b.textContent = TIPO_LABEL[k] || k; b.setAttribute('aria-pressed', tipoSel === k); b.onclick = () => { tipoSel = k; renderTipos(); updateCeco(); }; box.appendChild(b); });
 }
-function updateCeco(){
-  const code = cecoFor($('#i-base').value, tipoSel);
-  $('#cecoCode').textContent = code || 'elige puesto y tipo de gasto';
-  if (code) $('#cecoBox').classList.remove('bad');
-}
+function updateCeco(){ const code = cecoFor($('#i-base').value, tipoSel); $('#cecoCode').textContent = code || 'elige puesto y tipo de gasto'; if (code) $('#cecoBox').classList.remove('bad'); }
 
-/* ---------- tabs ---------- */
-document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => {
-  document.querySelectorAll('nav.tabs button').forEach(x => x.setAttribute('aria-selected', x===b));
-  document.querySelectorAll('section.panel').forEach(p => p.classList.toggle('on', p.id === 'p-'+b.dataset.tab));
-  if (b.dataset.tab === 'bandeja') loadBandeja();
-  $('#dock').style.display = b.dataset.tab === 'nueva' ? '' : 'none';
-  if (b.dataset.tab === 'historial') renderHist();
-  if (b.dataset.tab === 'ajustes') renderSettings();
-  window.scrollTo(0,0);
-}));
-
-/* ---------- datalists ---------- */
-function renderDatalists(){
-  LISTS_META.forEach(([k,,id]) => { const dl = document.getElementById(id); dl.innerHTML=''; lists[k].forEach(v => { const o=document.createElement('option'); o.value=v; dl.appendChild(o); }); });
-  renderUndChips();
-}
-function learn(k, v){ v = (v||'').trim(); if(!v) return; const L = lists[k].filter(x => x.toLowerCase() !== v.toLowerCase()); L.unshift(v); lists[k] = L.slice(0,60); }
-
-/* ---------- header form ---------- */
-const bindings = [['control','control'],['fechaSolicitud','fechaSolicitud'],['fechaRequerida','fechaRequerida'],['area','area'],['coordinacion','coordinacion'],['notas','notas']];
-const firmaFields = ['solicitado','verificado','autorizado','recibido'];
+/* ---------- Borrador de requisición ---------- */
+const blank = () => ({ owner: me ? me.id : null, fechaSolicitud: today(), fechaRequerida:'', area: (me && me.area) || '', coordinacion: (me && me.coordinacion) || '', items:[], notas:'', firma:null });
+let draft = LS.get('draft2', null);
+function saveDraft(){ LS.set('draft2', draft); }
+const bindings = [['fechaSolicitud','fechaSolicitud'],['fechaRequerida','fechaRequerida'],['area','area'],['coordinacion','coordinacion'],['notas','notas']];
 function fillForm(){
   bindings.forEach(([id,k]) => $('#'+id).value = draft[k] || '');
-  firmaFields.forEach(k => $('#'+k).value = draft.firmas[k] || '');
-  $('#ctlBadge').textContent = draft.control || (online() ? 'Nueva' : '—');
-  $('#obraName').textContent = settings.obra || '';
-  renderItems(); setAprob(!!draft.aprobar, true); pads.forEach(p => p.load());
+  $('#meName').innerHTML = me ? `<b>${esc(me.nombre)}</b>${me.cargo ? ', ' + esc(me.cargo) : ''}${me.empresa ? '<br><span class="hint">' + esc(me.empresa) + '</span>' : ''}` : '';
+  renderItems(); requestAnimationFrame(() => padSol.load());
 }
-bindings.forEach(([id,k]) => $('#'+id).addEventListener('input', e => { draft[k] = e.target.value; e.target.classList.remove('bad'); if(k==='control') $('#ctlBadge').textContent = draft.control || '—'; saveDraft(); }));
-firmaFields.forEach(k => $('#'+k).addEventListener('input', e => { draft.firmas[k] = e.target.value; e.target.classList.remove('bad'); $('#aprobErr').hidden = true; saveDraft(); updateAprobStatus(); }));
+bindings.forEach(([id,k]) => $('#'+id).addEventListener('input', e => { draft[k] = e.target.value; e.target.classList.remove('bad'); saveDraft(); }));
 
-/* ---------- items ---------- */
-const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* ---------- Materiales ---------- */
 function renderItems(){
   const ul = $('#items'); ul.innerHTML = '';
   draft.items.forEach((it,i) => {
@@ -590,51 +736,48 @@ function renderItems(){
     if (it.espec==='si') tags.push('<span class="tag">Con especificación</span>');
     li.innerHTML = `<div class="num">${i+1}</div>
       <div role="button" tabindex="0" data-edit="${i}" style="cursor:pointer"><div class="qty">${esc(it.cant)} ${esc(it.und)}</div><div class="d">${esc(it.desc)}</div>${meta?`<div class="m">${esc(meta)}</div>`:''}${it.ceco?`<div class="m" style="font-weight:600;color:var(--green)">${esc(it.ceco)}</div>`:''}${tags.length?`<div class="tags">${tags.join('')}</div>`:''}</div>
-      <div class="ia"><button data-edit="${i}" aria-label="Editar material ${i+1}">Editar</button><button data-dup="${i}" aria-label="Duplicar material ${i+1}">Copiar</button></div>`;
+      <div class="ia"><button data-edit="${i}" aria-label="Editar material ${i+1}">Editar</button><button data-dup="${i}" aria-label="Copiar material ${i+1}">Copiar</button></div>`;
     ul.appendChild(li);
   });
   $('#emptyItems').hidden = draft.items.length > 0;
   $('#count').textContent = `${draft.items.length} de ${MAX}`;
   $('#addItem').disabled = draft.items.length >= MAX;
   $('#addItem').textContent = draft.items.length >= MAX ? 'El formato admite 13 materiales' : 'Agregar material';
-  updateDock();
+  $('#gen').textContent = 'Enviar a verificación' + (draft.items.length ? ` (${draft.items.length})` : '');
 }
 $('#items').addEventListener('click', e => {
   const ed = e.target.closest('[data-edit]'), dp = e.target.closest('[data-dup]');
+  itemCtx = null;
   if (dp) { if (draft.items.length >= MAX) return toast('El formato admite 13 materiales'); const i=+dp.dataset.dup; draft.items.splice(i+1,0,Object.assign({},draft.items[i])); saveDraft(); renderItems(); openItem(i+1); return; }
   if (ed) openItem(+ed.dataset.edit);
 });
-$('#items').addEventListener('keydown', e => { if ((e.key==='Enter'||e.key===' ') && e.target.dataset.edit !== undefined) { e.preventDefault(); openItem(+e.target.dataset.edit); } });
+$('#items').addEventListener('keydown', e => { if ((e.key==='Enter'||e.key===' ') && e.target.dataset.edit !== undefined) { e.preventDefault(); itemCtx = null; openItem(+e.target.dataset.edit); } });
 
-let editIdx = -1, cur = null;
+let editIdx = -1, cur = null, itemCtx = null;
+const ictx = () => itemCtx || { items: draft.items, changed(){ saveDraft(); renderItems(); $('#itemsErr').hidden = true; } };
 const dlg = $('#itemDlg');
 function renderUndChips(){
   const box = $('#undChips'); box.innerHTML = '';
-  lists.und.slice(0,10).forEach(u => { const b=document.createElement('button'); b.type='button'; b.textContent=u; b.setAttribute('aria-pressed', cur && cur.und===u); b.onclick=()=>{ $('#i-und').value=u; syncChips(); }; box.appendChild(b); });
+  (lists.und||[]).slice(0,10).forEach(u => { const b=document.createElement('button'); b.type='button'; b.textContent=u; b.setAttribute('aria-pressed', !!(cur && cur.und===u)); b.onclick=()=>{ $('#i-und').value=u; syncChips(); }; box.appendChild(b); });
 }
-function syncChips(){ const v=$('#i-und').value; document.querySelectorAll('#undChips button').forEach(b => b.setAttribute('aria-pressed', b.textContent===v)); }
+function syncChips(){ const v=$('#i-und').value; $$('#undChips button').forEach(b => b.setAttribute('aria-pressed', b.textContent===v)); }
 $('#i-und').addEventListener('input', syncChips);
 CECOS.bases.forEach(b => { const o = document.createElement('option'); o.value = b.n; o.textContent = b.n + '. ' + b.nombre.replace('B.P.F ', ''); $('#i-base').appendChild(o); });
-$('#i-base').addEventListener('change', e => {
-  const loc = $('#i-locacion');
-  if (!loc.value || CECOS.bases.some(b => b.nombre === loc.value)) loc.value = baseName(e.target.value);
-  e.target.classList.remove('bad'); updateCeco();
-});
-function segSet(id, v){ document.querySelectorAll('#'+id+' button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v===v)); }
+$('#i-base').addEventListener('change', e => { const loc = $('#i-locacion'); if (!loc.value || CECOS.bases.some(b => b.nombre === loc.value)) loc.value = baseName(e.target.value); e.target.classList.remove('bad'); updateCeco(); });
+function segSet(id, v){ $$('#'+id+' button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v===v)); }
 function segGet(id){ const b = document.querySelector('#'+id+' button[aria-pressed="true"]'); return b ? b.dataset.v : ''; }
 ['seg-espec','seg-stock'].forEach(id => $('#'+id).addEventListener('click', e => { const b=e.target.closest('button'); if(!b) return; segSet(id, b.getAttribute('aria-pressed')==='true' ? '' : b.dataset.v); }));
 function openItem(i){
   editIdx = i;
-  const last = draft.items[draft.items.length-1] || {};
-  cur = i >= 0 ? Object.assign({}, draft.items[i]) : {desc:'',cant:'',und:'',equipo:last.equipo||'',locacion:last.locacion||'',base:last.base||'',tipo:last.tipo||'MAT',ceco:'',espec:'',stock:''};
+  const L = ictx().items, last = L[L.length-1] || {};
+  cur = i >= 0 ? Object.assign({}, L[i]) : {desc:'',cant:'',und:'',equipo:last.equipo||'',locacion:last.locacion||'',base:last.base||'',tipo:last.tipo||'MAT',ceco:'',espec:'',stock:''};
   if (i >= 0 && !cur.base && cur.ceco) { const f = findCeco(cur.ceco); if (f) { cur.base = f.base; cur.tipo = f.tipo; } }
-  $('#itemTitle').textContent = 'Material ' + ((i>=0?i:draft.items.length)+1);
+  $('#itemTitle').textContent = 'Material ' + ((i>=0?i:L.length)+1);
   ['desc','cant','und','equipo','locacion'].forEach(k => { const el=$('#i-'+k); el.value=cur[k]||''; el.classList.remove('bad'); });
   $('#i-base').value = cur.base ? String(cur.base) : ''; $('#i-base').classList.remove('bad'); tipoSel = cur.tipo || ''; renderTipos(); updateCeco();
   segSet('seg-espec', cur.espec); segSet('seg-stock', cur.stock);
   renderUndChips(); syncChips();
-  $('#itemErr').hidden = true;
-  $('#itemDel').hidden = i < 0;
+  $('#itemErr').hidden = true; $('#itemDel').hidden = i < 0;
   if (!dlg.open) dlg.showModal();
   if (i < 0) $('#i-desc').focus();
 }
@@ -654,25 +797,23 @@ function readItem(){
 ['desc','cant','und'].forEach(k => $('#i-'+k).addEventListener('input', e => e.target.classList.remove('bad')));
 function commitItem(){
   const it = readItem(); if (!it) return false;
-  if (editIdx >= 0) draft.items[editIdx] = it; else draft.items.push(it);
+  const c = ictx();
+  if (editIdx >= 0) c.items[editIdx] = it; else c.items.push(it);
   learn('und', it.und); learn('equipos', it.equipo); if (it.locacion !== baseName(it.base)) learn('locaciones', it.locacion); LS.set('lists', lists); renderDatalists();
-  saveDraft(); renderItems(); $('#itemsErr').hidden = true; return true;
+  c.changed(); return true;
 }
 $('#itemSave').onclick = () => { if (commitItem()) dlg.close(); };
-$('#itemSaveNext').onclick = () => {
-  if (!commitItem()) return;
-  if (draft.items.length >= MAX) { dlg.close(); return toast('Listo: llegaste a los 13 materiales del formato'); }
-  toast('Material guardado'); openItem(-1);
-};
-$('#itemDel').onclick = () => { if (editIdx<0) return; draft.items.splice(editIdx,1); saveDraft(); renderItems(); dlg.close(); toast('Material eliminado'); };
+$('#itemSaveNext').onclick = () => { if (!commitItem()) return; if (ictx().items.length >= MAX) { dlg.close(); return toast('Llegaste a los 13 materiales del formato'); } toast('Material guardado'); openItem(-1); };
+$('#itemDel').onclick = () => { if (editIdx<0) return; const c = ictx(); c.items.splice(editIdx,1); c.changed(); dlg.close(); toast('Material eliminado'); };
 $('#itemClose').onclick = () => dlg.close();
 dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
-$('#addItem').onclick = () => openItem(-1);
+dlg.addEventListener('close', () => { itemCtx = null; });
+$('#addItem').onclick = () => { itemCtx = null; openItem(-1); };
 
-/* ---------- signatures ---------- */
+/* ---------- Firmas ---------- */
 let detSig = null;
-const sigGet = k => k === 'det' ? detSig : k === 'solicitado' ? draft.firma : (draft.firmasImg || {})[k];
-const sigSet = (k, v) => { if (k === 'det') { detSig = v; $('#dErr').hidden = true; return; } if (k === 'solicitado') draft.firma = v; else { draft.firmasImg = draft.firmasImg || {}; draft.firmasImg[k] = v; } saveDraft(); updateAprobStatus(); };
+const sigGet = k => k === 'det' ? detSig : draft.firma;
+const sigSet = (k, v) => { if (k === 'det') { detSig = v; $('#dErr').hidden = true; } else { draft.firma = v; $('#sigErr').hidden = true; saveDraft(); } };
 function makePad(key){
   const cv = document.getElementById('sig-'+key), ctx = cv.getContext('2d'), ph = document.getElementById('sigph-'+key);
   let drawing=false, hasInk=false, lastPt=null;
@@ -682,74 +823,32 @@ function makePad(key){
   const pt = e => { const r = cv.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; };
   cv.addEventListener('pointerdown', e => { drawing=true; cv.setPointerCapture(e.pointerId); lastPt=pt(e); ctx.beginPath(); ctx.arc(lastPt.x,lastPt.y,1.2,0,Math.PI*2); ctx.fill(); hasInk=true; ph.hidden=true; });
   cv.addEventListener('pointermove', e => { if(!drawing) return; const p=pt(e); ctx.beginPath(); ctx.moveTo(lastPt.x,lastPt.y); ctx.lineTo(p.x,p.y); ctx.stroke(); lastPt=p; });
-  const end = () => { if(!drawing) return; drawing=false; sigSet(key, hasInk ? cv.toDataURL('image/png') : null); $('#aprobErr').hidden = true; };
+  const end = () => { if(!drawing) return; drawing=false; sigSet(key, hasInk ? cv.toDataURL('image/png') : null); };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
   return { key, load };
 }
-const pads = ['solicitado','verificado','autorizado'].map(makePad);
-const detPad = makePad('det');
-document.querySelectorAll('[data-clr]').forEach(b => b.addEventListener('click', () => { sigSet(b.dataset.clr, null); (b.dataset.clr === 'det' ? detPad : pads.find(p => p.key === b.dataset.clr)).load(); }));
-let rsT; window.addEventListener('resize', () => { clearTimeout(rsT); rsT=setTimeout(() => pads.forEach(p => p.load()),150); });
+const padSol = makePad('solicitado'), detPad = makePad('det');
+$$('[data-clr]').forEach(b => b.addEventListener('click', () => { sigSet(b.dataset.clr, null); (b.dataset.clr === 'det' ? detPad : padSol).load(); }));
+let rsT; window.addEventListener('resize', () => { clearTimeout(rsT); rsT=setTimeout(() => { padSol.load(); if ($('#detDlg').open && !$('#dForm').hidden) detPad.load(); },150); });
 
-/* ---------- approval ---------- */
-const isApproved = r => !!(r.aprobar && r.firmas && r.firmas.autorizado && r.firmas.autorizado.trim() && r.firmasImg && r.firmasImg.autorizado);
-function updateAprobStatus(){ const ok = isApproved(draft); const s = $('#aprobStatus'); s.textContent = ok ? 'Aprobada' : 'Pendiente'; s.classList.toggle('ok', ok); }
-function setAprob(on, silent){
-  draft.aprobar = on; segSet('seg-aprob', on ? 'si' : 'no');
-  $('#aprobOn').hidden = !on; $('#aprobHintOff').hidden = on; $('#aprobHintOff2').hidden = on;
-  if (on) requestAnimationFrame(() => pads.forEach(p => p.load()));
-  if (!silent) saveDraft();
-  updateAprobStatus(); updateDock();
-}
-function updateDock(){
-  const n = draft.items.length, b = $('#gen');
-  if (online()) b.textContent = (draft.aprobar ? 'Enviar aprobada' : 'Enviar a aprobación') + (n ? ` (${n})` : '');
-  else b.textContent = n ? `Generar Excel (${n})` : 'Generar Excel';
-}
-$('#seg-aprob').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setAprob(b.dataset.v === 'si'); });
-
-/* ---------- generate ---------- */
+/* ---------- Excel ---------- */
 let downloads = null;
 if (window.claude && typeof window.claude.use === 'function') { window.claude.use('downloads').then(d => { downloads = d; }).catch(()=>{}); }
 function b64ToBuf(b64){ const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u.buffer; }
-function validate(){
-  let first = null; const mark = id => { const el=$('#'+id); el.classList.add('bad'); first = first || el; };
-  if (!draft.area.trim()) mark('area');
-  if (!draft.fechaSolicitud) mark('fechaSolicitud');
-  if (!draft.firmas.solicitado.trim()) mark('solicitado');
-  if (draft.aprobar) {
-    const miss = [];
-    const on = online(), dp = settings.dosPasos;
-    if (on) {
-      if (dp && !pins.verificado) { miss.push('PIN de quien verifica'); mark('pin-verificado'); }
-      if (dp && perms.verificado && perms.autorizado && perms.verificado.nombre === perms.autorizado.nombre) { miss.push('una persona distinta para autorizar'); mark('pin-autorizado'); }
-      if (!pins.autorizado || !perms.autorizado || !perms.autorizado.autorizar) { miss.push('PIN válido de quien autoriza'); mark('pin-autorizado'); }
-      if (!(draft.firmasImg||{}).autorizado) { miss.push('firma de quien autoriza'); first = first || $('#sig-autorizado'); }
-      if (pins.verificado && (!perms.verificado || !perms.verificado.verificar)) { miss.push('PIN válido de quien verifica'); mark('pin-verificado'); }
-      if (pins.verificado && !(draft.firmasImg||{}).verificado) { miss.push('firma de quien verifica'); first = first || $('#sig-verificado'); }
-      if (!pins.verificado && (draft.firmasImg||{}).verificado) { miss.push('PIN de quien verifica'); mark('pin-verificado'); }
-    } else {
-    if (dp && !draft.firmas.verificado.trim()) { miss.push('nombre de quien verifica'); mark('verificado'); }
-    if (dp && !(draft.firmasImg||{}).verificado) { miss.push('firma de quien verifica'); first = first || $('#sig-verificado'); }
-    if (dp && draft.firmas.verificado.trim() && draft.firmas.verificado.trim().toLowerCase() === draft.firmas.autorizado.trim().toLowerCase()) { miss.push('una persona distinta para autorizar'); mark('autorizado'); }
-    if (!draft.firmas.autorizado.trim()) { miss.push('nombre de quien autoriza'); mark('autorizado'); }
-    if (!(draft.firmasImg||{}).autorizado) { miss.push('firma de quien autoriza'); first = first || $('#sig-autorizado'); }
-    if (draft.firmas.verificado.trim() && !(draft.firmasImg||{}).verificado) { miss.push('firma de quien verifica'); first = first || $('#sig-verificado'); }
-    if (!draft.firmas.verificado.trim() && (draft.firmasImg||{}).verificado) { miss.push('nombre de quien verifica'); mark('verificado'); }
-    }
-    if (miss.length) { $('#aprobErr').textContent = 'Para aprobar falta: ' + [...new Set(miss)].join(', ') + '.'; $('#aprobErr').hidden = false; }
-  }
-  if (!draft.items.length) { $('#itemsErr').textContent = 'Agrega al menos un material.'; $('#itemsErr').hidden=false; first = first || $('#addItem'); }
-  if (first) { first.scrollIntoView({behavior:'smooth', block:'center'}); toast('Completa los campos marcados en rojo'); return false; }
-  return true;
+function rowToRec(row){
+  const d = row.datos || {}, v = row.verificado || {}, a = row.autorizado || {}, r = row.recibido || {}, f = d.firmas || {};
+  return Object.assign({}, d, { control: row.control, estado: row.estado,
+    firmas: { solicitado: f.solicitado || '', verificado: v.nombre || '', autorizado: a.nombre || '', recibido: r.nombre || '' },
+    firmasImg: { verificado: v.firma || null, autorizado: a.firma || null, recibido: r.firma || null },
+    fechaVerif: isoLocal(v.fecha), fechaAutor: isoLocal(a.fecha), fechaRecib: isoLocal(r.fecha) });
 }
 async function makeFile(rec){
-  if (!window.ExcelJS) throw new Error('No se pudo cargar el generador de Excel. Revisa la conexión a internet y vuelve a abrir la app.');
-  const data = Object.assign({}, rec, { fechaSolicitud: fmt(rec.fechaSolicitud), fechaRequerida: fmt(rec.fechaRequerida), fechaAprob: rec.aprobar ? fmt(rec.fechaAprob || today()) : '', fechaVerif: fmt(rec.fechaVerif || ''), fechaAutor: fmt(rec.fechaAutor || ''), firmasImg: rec.aprobar ? (rec.firmasImg || {}) : {}, firmas: rec.aprobar ? rec.firmas : Object.assign({}, rec.firmas, {verificado:'', autorizado:''}), logo: settings.logo, catalog: CECOS });
+  if (!window.ExcelJS) throw new Error('No se pudo cargar el generador de Excel. Revisa la conexión y vuelve a abrir la app.');
+  const data = Object.assign({}, rec, { fechaSolicitud: fmt(rec.fechaSolicitud), fechaRequerida: fmt(rec.fechaRequerida),
+    fechaVerif: fmt(rec.fechaVerif), fechaAutor: fmt(rec.fechaAutor), fechaRecib: fmt(rec.fechaRecib), logo: settings.logo, catalog: CECOS });
   const buf = await buildRequisicion(window.ExcelJS, b64ToBuf(TEMPLATE_B64), data);
   const safe = s => String(s||'').replace(/[^\w\-]+/g,'_').replace(/^_+|_+$/g,'');
-  const name = `Requisicion_${safe(rec.control)||'sin-numero'}_${rec.fechaSolicitud||today()}.xlsx`;
-  return { name, blob: new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}) };
+  return { name: `Requisicion_${safe(rec.control)||'sin-numero'}_${rec.fechaSolicitud||today()}.xlsx`, blob: new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}) };
 }
 async function deliver(file){
   if (downloads) {
@@ -763,116 +862,343 @@ async function deliver(file){
   const url = URL.createObjectURL(file.blob); const a = document.createElement('a'); a.href=url; a.download=file.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 4000);
   return 'saved';
 }
-$('#gen').onclick = () => online() ? sendOnline() : genLocal();
-async function genLocal(){
-  if (!validate()) return;
-  const btn = $('#gen'); btn.disabled = true; const label = btn.textContent; btn.textContent = 'Generando…';
-  try {
-    if (draft.aprobar && !draft.fechaAprob) { draft.fechaAprob = today(); saveDraft(); }
-    if (!draft.aprobar) { draft.fechaAprob = ''; }
-    const rec = JSON.parse(JSON.stringify(draft));
-    const file = await makeFile(rec);
-    const r = await deliver(file);
-    if (r === 'declined') { toast('Descarga cancelada'); return; }
-    learn('areas', rec.area); learn('coord', rec.coordinacion); firmaFields.forEach(k => learn('personas', rec.firmas[k])); LS.set('lists', lists); renderDatalists();
-    const idx = history.findIndex(h => h.control === rec.control);
-    const entry = Object.assign(rec, { savedAt: new Date().toISOString() });
-    if (idx >= 0) history[idx] = entry; else history.unshift(entry);
-    history = history.slice(0, 60);
-    if (!LS.set('history', history)) { history.forEach((h,i) => { if (i>10) { h.firma = null; h.firmasImg = {}; } }); LS.set('history', history); }
-    const m = /(\d+)\s*$/.exec(rec.control || '');
-    if (m && rec.control.startsWith(settings.prefix) && +m[1] >= settings.next) { settings.next = +m[1] + 1; LS.set('settings', settings); }
-    $('#doneCtl').textContent = rec.control;
-    $('#doneMsg').textContent = (isApproved(rec) ? `Aprobada por ${rec.firmas.autorizado}. ` : 'Pendiente de aprobación. ') + `${rec.items.length} material${rec.items.length===1?'':'es'}. Guardado como ${file.name}`;
-    $('#doneDl').hidden = true; $('#doneDlg').showModal();
-  } catch (err) {
-    toast(err && err.message ? err.message : 'No se pudo generar el archivo');
-  } finally { btn.disabled = false; btn.textContent = label; updateDock(); }
+async function downloadRemote(control, btn){
+  if (btn) btn.disabled = true;
+  try { const row = await rpc('rq_obtener', { p_control: control }); const f = await makeFile(rowToRec(row)); const r = await deliver(f); if (r === 'declined') toast('Descarga cancelada'); }
+  catch (e) { toast(e.message || 'No se pudo generar el archivo'); }
+  finally { if (btn) btn.disabled = false; }
 }
-$('#doneKeep').onclick = () => $('#doneDlg').close();
-$('#doneNew').onclick = () => { $('#doneDlg').close(); draft = blank(); saveDraft(); fillForm(); window.scrollTo(0,0); };
+
+/* ---------- Enviar ---------- */
+let lastSent = null;
+function validate(){
+  let first = null; const mark = id => { const el=$('#'+id); el.classList.add('bad'); first = first || el; };
+  if (!draft.area.trim()) mark('area');
+  if (!draft.fechaSolicitud) mark('fechaSolicitud');
+  if (!draft.items.length) { $('#itemsErr').textContent = 'Agrega al menos un material.'; $('#itemsErr').hidden=false; first = first || $('#addItem'); }
+  if (!draft.firma) { $('#sigErr').textContent = 'Falta tu firma.'; $('#sigErr').hidden = false; first = first || $('#sig-solicitado'); }
+  if (first) { first.scrollIntoView({behavior:'smooth', block:'center'}); toast('Completa lo marcado en rojo'); return false; }
+  return true;
+}
+$('#gen').onclick = async () => {
+  if (!validate()) return;
+  const btn = $('#gen'); btn.disabled = true; btn.textContent = 'Enviando…';
+  const datos = { area: draft.area, coordinacion: draft.coordinacion, fechaSolicitud: draft.fechaSolicitud, fechaRequerida: draft.fechaRequerida, items: draft.items, notas: draft.notas, firma: draft.firma };
+  try {
+    const sent = await rpc('rq_enviar', { p_datos: datos });
+    learn('areas', draft.area); learn('coord', draft.coordinacion); LS.set('lists', lists); renderDatalists();
+    lastSent = sent.control;
+    draft = blank(); saveDraft(); fillForm();
+    $('#doneTop').textContent = 'Requisición enviada'; $('#doneCtl').textContent = sent.control;
+    $('#doneMsg').textContent = 'Le llegó un aviso al Gerente de Operaciones para verificarla. Te avisaremos en cada paso.';
+    $('#doneDl').hidden = false; $('#doneDlg').showModal();
+  } catch (e) {
+    if (e.offline && confirm('No hay conexión, así que no se pudo enviar.\n\n¿Generar el Excel en este teléfono con un número provisional? La requisición sigue guardada aquí para enviarla cuando tengas señal.')) {
+      const t = new Date(), p = n => String(n).padStart(2,'0');
+      const rec = Object.assign({}, datos, { control: `PROV-${String(t.getFullYear()).slice(2)}${p(t.getMonth()+1)}${p(t.getDate())}-${p(t.getHours())}${p(t.getMinutes())}`, firmas: { solicitado: me.nombre } });
+      try { const f = await makeFile(rec); await deliver(f); } catch (er) { toast(er.message); }
+    } else toast(e.message || 'No se pudo enviar');
+  } finally { btn.disabled = false; renderItems(); }
+};
+$('#doneDl').onclick = () => { if (lastSent) downloadRemote(lastSent, $('#doneDl')); };
+$('#doneOk').onclick = () => $('#doneDlg').close();
 $('#resetDraft').onclick = () => { if (!confirm('¿Descartar esta requisición y empezar una nueva?')) return; draft = blank(); saveDraft(); fillForm(); window.scrollTo(0,0); toast('Formulario en blanco'); };
 
-/* ---------- history ---------- */
-function renderHist(){
-  const ul = $('#hist'); ul.innerHTML = '';
-  history.forEach((h,i) => {
-    const li = document.createElement('li');
-    const when = new Date(h.savedAt).toLocaleDateString('es-VE',{day:'2-digit',month:'short',year:'numeric'});
-    const ok = h.remote ? h.estado === 'aprobada' : isApproved(h);
-    li.innerHTML = `<div class="h1"><b>${esc(h.control)}</b><span style="color:var(--muted);font-weight:500">${when}</span></div>
-      <div class="tags" style="margin:4px 0 2px">${estadoTag(h, ok)}</div>
-      <div class="h2">${esc(h.area)}${h.coordinacion?', '+esc(h.coordinacion):''}. ${h.items.length} material${h.items.length===1?'':'es'}. Pidió ${esc(h.firmas.solicitado)}</div>
-      <div class="hb">${h.remote ? `<button class="btn primary" data-open="${esc(h.control)}">Ver estado</button><button class="btn" data-rdl="${esc(h.control)}">Descargar</button>` : `${ok ? '' : `<button class="btn primary" data-aprob="${i}">Aprobar</button>`}<button class="btn" data-dl="${i}">Descargar otra vez</button>`}<button class="btn" data-copy="${i}">Usar como base</button><button class="btn ghost" data-del="${i}">Borrar</button></div>`;
+/* ---------- Listas del servidor ---------- */
+let aFilter = 'por_aprobar', lTimer = null;
+function setCount(id, n){ const el = $('#'+id); el.textContent = n; el.hidden = !n; }
+function estadoTag(r){
+  if (r.estado === 'aprobada') return r.recibido ? `<span class="tag ok">Aprobada por ${esc(r.autorizado)}</span><span class="tag ok">Recibida por compras</span>` : `<span class="tag ok">Aprobada por ${esc(r.autorizado)}</span><span class="tag com">Falta recibido de compras</span>`;
+  if (r.estado === 'rechazada') return `<span class="tag bad">Rechazada${r.rechazo && r.rechazo.motivo ? ': ' + esc(r.rechazo.motivo) : ''}</span>`;
+  if (r.verificado) return `<span class="tag ok">Verificada por ${esc(r.verificado)}</span><span class="tag pend">Falta aprobar</span>`;
+  return '<span class="tag pend">Falta verificar</span>';
+}
+function rowLi(r, primaryLabel, extra){
+  const when = new Date(r.creado).toLocaleDateString('es-VE', { day:'2-digit', month:'short' });
+  const li = document.createElement('li');
+  li.innerHTML = `<div class="h1"><b>${esc(r.control)}</b><span style="color:var(--muted);font-weight:500">${when}</span></div>
+    <div class="tags" style="margin:4px 0 2px">${estadoTag(r)}${r.editada ? '<span class="tag">Editada</span>' : ''}</div>
+    <div class="h2">${esc(r.area || '')}${r.coordinacion ? ', ' + esc(r.coordinacion) : ''}. ${r.n} material${r.n === 1 ? '' : 'es'}. Pidió ${esc(r.solicitante || '')}${r.fechaRequerida ? '. Para el ' + fmt(r.fechaRequerida) : ''}</div>
+    <div class="hb"><button class="btn ${primaryLabel ? 'primary' : ''}" data-open="${esc(r.control)}">${primaryLabel || 'Ver'}</button><button class="btn" data-rdl="${esc(r.control)}">Descargar</button>${extra || ''}</div>`;
+  return li;
+}
+async function loadList(ul, em, args, emptyTxt, labelFn, extraFn){
+  if (!ul.children.length) { em.hidden = false; em.textContent = 'Cargando…'; }
+  try {
+    const rows = await rpc('rq_listar', args);
+    ul.innerHTML = ''; (rows || []).forEach(r => ul.appendChild(rowLi(r, labelFn(r), extraFn ? extraFn(r) : '')));
+    em.hidden = ul.children.length > 0; em.textContent = emptyTxt;
+    return rows || [];
+  } catch (e) { em.hidden = false; em.textContent = e.message; return null; }
+}
+async function loadVerif(){
+  $('#verifHint').textContent = me.rol === 'gerente_operaciones' ? 'Requisiciones enviadas que esperan tu revisión. Puedes ajustarlas, verificarlas o rechazarlas.' : 'Requisiciones enviadas que esperan la verificación del Gerente de Operaciones.';
+  const rows = await loadList($('#lVerif'), $('#eVerif'), { p_estado: 'por_verificar' }, 'No hay requisiciones por verificar.', () => me.rol === 'gerente_operaciones' ? 'Revisar y verificar' : '');
+  if (rows) setCount('cVerif', rows.length);
+  schedule();
+}
+async function loadAprob(){
+  segSet('seg-afil', aFilter);
+  const hints = {
+    por_aprobar: me.rol === 'gerente_general' ? 'Ya verificadas. Puedes ajustarlas, aprobarlas o rechazarlas.' : 'Ya verificadas, esperando la aprobación del Gerente General.',
+    aprobada: me.rol === 'compras' ? 'Aprobadas. Firma el recibido cuando compras las procese.' : 'Aprobadas. Quedan cerradas; Compras firma el recibido.',
+    rechazada: 'Rechazadas, con el motivo.' };
+  $('#aprobHint').textContent = hints[aFilter];
+  const rows = await loadList($('#lAprob'), $('#eAprob'), { p_estado: aFilter },
+    { por_aprobar:'No hay requisiciones esperando aprobación.', aprobada:'Todavía no hay requisiciones aprobadas.', rechazada:'No hay requisiciones rechazadas.' }[aFilter],
+    r => (aFilter === 'por_aprobar' && me.rol === 'gerente_general') ? 'Revisar y aprobar' : (aFilter === 'aprobada' && me.rol === 'compras' && !r.recibido) ? 'Firmar recibido' : '');
+  if (rows && aFilter === 'por_aprobar') setCount('cAprob', rows.length); else refreshCounts();
+  schedule();
+}
+async function loadMias(){
+  await loadList($('#lMias'), $('#eMias'), { p_mias: true }, 'Todavía no has enviado requisiciones.', () => '', r => `<button class="btn" data-copy="${esc(r.control)}">Usar como base</button>`);
+}
+async function refreshCounts(){
+  if (!me) return;
+  try {
+    const tasks = [rpc('rq_avisos', { p_limite: 1 })];
+    if (seesAll()) tasks.push(rpc('rq_listar', { p_estado: 'por_verificar', p_limite: 300 }), rpc('rq_listar', { p_estado: me.rol === 'compras' ? 'por_recibir' : 'por_aprobar', p_limite: 300 }));
+    const [av, v, a] = await Promise.all(tasks);
+    setCount('bellCnt', av ? av.sin_leer : 0);
+    if (v) setCount('cVerif', v.length); if (a) setCount('cAprob', a.length);
+    if (me.es_master) { const us = await rpc('rq_usuarios'); setCount('cUsers', (us || []).filter(u => u.estado === 'pendiente').length); }
+  } catch (e) {}
+}
+function activeTab(){ const b = document.querySelector('#mainTabs button[aria-selected="true"]'); return b ? b.dataset.tab : ''; }
+function reloadActive(){ const t = activeTab(); if (t === 'verif') loadVerif(); else if (t === 'aprob') loadAprob(); else if (t === 'mias') loadMias(); else if (t === 'ajustes' && seesUsers()) loadUsers(); refreshCounts(); }
+function schedule(){ clearTimeout(lTimer); lTimer = setTimeout(() => { if (!document.hidden && !$('#detDlg').open && !$('#itemDlg').open) reloadActive(); else schedule(); }, 40000); }
+$('#seg-afil').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; aFilter = b.dataset.v; $('#lAprob').innerHTML = ''; loadAprob(); });
+$$('[data-refresh]').forEach(b => b.addEventListener('click', () => ({ verif: loadVerif, aprob: loadAprob, mias: loadMias })[b.dataset.refresh]()));
+['#lVerif','#lAprob','#lMias'].forEach(id => $(id).addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.open) openDetail(b.dataset.open);
+  if (b.dataset.rdl) downloadRemote(b.dataset.rdl, b);
+  if (b.dataset.copy) {
+    try { const row = await rpc('rq_obtener', { p_control: b.dataset.copy }); const d = row.datos || {};
+      if (draft.items.length && !confirm('Tienes una requisición sin enviar. ¿Reemplazarla?')) return;
+      draft = Object.assign(blank(), { area: d.area || '', coordinacion: d.coordinacion || '', items: JSON.parse(JSON.stringify(d.items || [])), notas: d.notas || '' }); saveDraft(); fillForm();
+      showTab('nueva'); toast('Copiada. Revisa, firma y envía.'); } catch (er) { toast(er.message); }
+  }
+}));
+
+/* ---------- Detalle ---------- */
+let detRow = null, detAcc = '', editData = null;
+async function openDetail(control){
+  detRow = null; detAcc = ''; detSig = null; editData = null;
+  $('#dTitle').textContent = control; $('#dBody').innerHTML = '<p class="hint">Cargando…</p>'; $('#dBody').hidden = false;
+  $('#dEdit').hidden = true; $('#dAct').hidden = true; $('#dForm').hidden = true; $('#dLock').hidden = true; $('#dDl').hidden = false;
+  if (!$('#detDlg').open) $('#detDlg').showModal();
+  try { detRow = await rpc('rq_obtener', { p_control: control }); renderDetail(); }
+  catch (e) { $('#dBody').innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+}
+function permsFor(r){
+  const out = { edit:false, verificar:false, autorizar:false, recibir:false, rechazar:false, why:'' };
+  if (r.estado === 'rechazada') { out.why = 'Rechazada. Ya no se puede modificar.'; return out; }
+  if (r.estado === 'aprobada') {
+    if (!r.recibido && me.rol === 'compras') { out.recibir = true; return out; }
+    out.why = r.recibido ? 'Aprobada y recibida por compras. Proceso completo.' : 'Aprobada y cerrada. Falta que Compras firme el recibido.'; return out;
+  }
+  if (!r.verificado) {
+    if (me.rol === 'gerente_operaciones') { out.edit = out.verificar = out.rechazar = true; return out; }
+    out.why = 'En verificación. Solo el Gerente de Operaciones puede ajustarla, verificarla o rechazarla.'; return out;
+  }
+  if (me.rol === 'gerente_general') {
+    if (r.verificado.id === me.id) { out.why = 'Tú la verificaste. La debe aprobar otra persona.'; return out; }
+    out.edit = out.autorizar = out.rechazar = true; return out;
+  }
+  out.why = 'Verificada. Solo el Gerente General puede ajustarla, aprobarla o rechazarla.'; return out;
+}
+function renderDetail(){
+  const r = detRow, d = r.datos || {}, f = d.firmas || {}, v = r.verificado, a = r.autorizado, rc = r.recibido, x = r.rechazo;
+  const fdate = ts => fmt(isoLocal(ts));
+  const items = (d.items || []).map((it, i) => `<li class="item" style="grid-template-columns:32px 1fr"><div class="num">${i+1}</div><div><div class="qty">${esc(it.cant)} ${esc(it.und)}</div><div class="d">${esc(it.desc)}</div><div class="m">${esc([it.locacion, it.equipo].filter(Boolean).join(', '))}</div>${it.ceco ? `<div class="m" style="font-weight:600;color:var(--green)">${esc(it.ceco)}</div>` : ''}<div class="tags">${it.stock === 'com' ? '<span class="tag com">A compras</span>' : it.stock === 'si' ? '<span class="tag ok">En almacén</span>' : it.stock === 'no' ? '<span class="tag">Sin stock</span>' : ''}${it.espec === 'si' ? '<span class="tag">Con especificación</span>' : ''}</div></div></li>`).join('');
+  const cambios = (r.cambios || []).map(c => `${esc(c.nombre)} (${esc(c.etapa)}, ${fdate(c.fecha)})`).join('; ');
+  const step = (ok, txt, pend) => `<div class="${ok ? 'ok' : ''}">${ok ? txt : pend}</div>`;
+  $('#dBody').innerHTML = `
+    <div class="appr">
+      ${x ? `<div class="bad">Rechazada por ${esc(x.nombre)} el ${fdate(x.fecha)}: ${esc(x.motivo)}</div>` : ''}
+      ${step(true, `Solicitada por ${esc(f.solicitado)} el ${fmt(d.fechaSolicitud)}`)}
+      ${step(v, v && `Verificada por ${esc(v.nombre)} el ${fdate(v.fecha)}`, 'Falta la verificación del Gerente de Operaciones')}
+      ${step(a, a && `Aprobada por ${esc(a.nombre)} el ${fdate(a.fecha)}`, 'Falta la aprobación del Gerente General')}
+      ${step(rc, rc && `Recibida por ${esc(rc.nombre)} (compras) el ${fdate(rc.fecha)}`, 'Falta el recibido de Compras')}
+    </div>
+    ${cambios ? `<p class="chg">Ajustada por: ${cambios}</p>` : ''}
+    <dl class="dl">
+      <dt>Área</dt><dd>${esc(d.area || '')}</dd>
+      ${d.coordinacion ? `<dt>Coordinación</dt><dd>${esc(d.coordinacion)}</dd>` : ''}
+      ${d.fechaRequerida ? `<dt>Para el</dt><dd>${fmt(d.fechaRequerida)}</dd>` : ''}
+      <dt>Pidió</dt><dd>${esc(f.solicitado || '')}${d.solicitante && d.solicitante.empresa ? ', ' + esc(d.solicitante.empresa) : ''}${d.firma ? `<img class="sigimg" alt="Firma de ${esc(f.solicitado || '')}" src="${d.firma}">` : ''}</dd>
+    </dl>
+    <div class="sec">Materiales</div><ul class="items">${items}</ul>
+    ${d.notas ? `<div class="sec">Notas</div><p style="margin:0 0 8px;white-space:pre-wrap">${esc(d.notas)}</p>` : ''}`;
+  const p = permsFor(r), btns = [];
+  if (p.edit) btns.push('<button class="btn" data-act="editar">Ajustar requisición</button>');
+  if (p.verificar) btns.push('<button class="btn primary" data-act="verificar">Verificar y firmar</button>');
+  if (p.autorizar) btns.push('<button class="btn primary" data-act="autorizar">Aprobar y firmar</button>');
+  if (p.recibir) btns.push('<button class="btn primary" data-act="recibir">Firmar recibido de compras</button>');
+  if (p.rechazar) btns.push('<button class="btn danger" data-act="rechazar">Rechazar</button>');
+  $('#dActBtns').innerHTML = btns.join('');
+  $('#dAct').hidden = !btns.length; $('#dForm').hidden = true; $('#dActBtns').hidden = false;
+  $('#dLock').hidden = !p.why; $('#dLock').textContent = p.why;
+}
+$('#dActBtns').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act;
+  if (act === 'editar') return startEdit();
+  detAcc = act; detSig = null; $('#dMot').value = '';
+  $('#dActBtns').hidden = true; $('#dForm').hidden = false; $('#dErr').hidden = true;
+  $('#dSigWrap').hidden = act === 'rechazar'; $('#dMotWrap').hidden = act !== 'rechazar';
+  $('#dSigLbl').textContent = 'Firma de ' + me.nombre;
+  $('#dOk').textContent = { verificar:'Verificar', autorizar:'Aprobar', recibir:'Firmar recibido', rechazar:'Rechazar' }[act];
+  $('#dOk').classList.toggle('danger', act === 'rechazar'); $('#dOk').classList.toggle('primary', act !== 'rechazar');
+  requestAnimationFrame(() => { detPad.load(); $('#dForm').scrollIntoView({ behavior:'smooth', block:'start' }); });
+});
+$('#dCancel').onclick = () => { detAcc = ''; detSig = null; $('#dForm').hidden = true; $('#dActBtns').hidden = false; };
+$('#dOk').onclick = async () => {
+  const err = m => { $('#dErr').textContent = m; $('#dErr').hidden = false; };
+  if (detAcc !== 'rechazar' && !detSig) return err('Falta tu firma.');
+  if (detAcc === 'rechazar' && !$('#dMot').value.trim()) return err('Escribe el motivo del rechazo.');
+  const b = $('#dOk'); b.disabled = true; const lbl = b.textContent; b.textContent = 'Guardando…';
+  try {
+    detRow = detAcc === 'rechazar'
+      ? await rpc('rq_rechazar', { p_control: detRow.control, p_motivo: $('#dMot').value.trim() })
+      : await rpc('rq_firmar', { p_control: detRow.control, p_accion: detAcc, p_firma: detSig });
+    toast({ verificar:'Verificada. Se avisó al Gerente General', autorizar:'Aprobada. Se avisó a Compras', recibir:'Recibido firmado', rechazar:'Rechazada. Se avisó al solicitante' }[detAcc]);
+    detAcc = ''; detSig = null; renderDetail(); $('#dBody').scrollIntoView({ behavior:'smooth', block:'start' });
+    reloadActive();
+  } catch (e) { err(e.message); }
+  finally { b.disabled = false; b.textContent = lbl; }
+};
+function startEdit(){
+  const d = detRow.datos || {};
+  editData = { area: d.area || '', coordinacion: d.coordinacion || '', fechaRequerida: d.fechaRequerida || '', notas: d.notas || '', items: JSON.parse(JSON.stringify(d.items || [])) };
+  $('#e-area').value = editData.area; $('#e-coord').value = editData.coordinacion; $('#e-freq').value = editData.fechaRequerida; $('#e-notas').value = editData.notas;
+  $('#eErr').hidden = true; renderEditItems();
+  $('#dBody').hidden = true; $('#dAct').hidden = true; $('#dLock').hidden = true; $('#dDl').hidden = true; $('#dEdit').hidden = false;
+  $('#dEdit').scrollIntoView({ block:'start' });
+}
+function renderEditItems(){
+  const ul = $('#eItems'); ul.innerHTML = '';
+  editData.items.forEach((it, i) => {
+    const li = document.createElement('li'); li.className = 'item';
+    li.innerHTML = `<div class="num">${i+1}</div><div role="button" tabindex="0" data-eedit="${i}" style="cursor:pointer"><div class="qty">${esc(it.cant)} ${esc(it.und)}</div><div class="d">${esc(it.desc)}</div><div class="m">${esc(it.locacion || '')}</div>${it.ceco ? `<div class="m" style="font-weight:600;color:var(--green)">${esc(it.ceco)}</div>` : ''}</div><div class="ia"><button data-eedit="${i}">Editar</button></div>`;
     ul.appendChild(li);
   });
-  $('#emptyHist').hidden = history.length > 0;
-  if (online() && !renderHist._busy) {
-    const ctrls = history.filter(x => x.remote).map(x => x.control).slice(0, 60);
-    if (ctrls.length) { renderHist._busy = true;
-      api('req_listar', { p_codigo: settings.codigo, p_controles: ctrls, p_limite: 60 }).then(rows => {
-        let changed = false;
-        (rows || []).forEach(r => { const e = history.find(x => x.control === r.control); if (e && (e.estado !== r.estado || e.autorizadoNombre !== r.autorizado)) { e.estado = r.estado; e.autorizadoNombre = r.autorizado; e.rechazo = r.rechazo; changed = true; } });
-        if (changed) { LS.set('history', history); renderHist(); }
-      }).catch(() => {}).finally(() => { renderHist._busy = false; });
+  $('#eCount').textContent = `${editData.items.length} de ${MAX}`;
+  $('#eAdd').disabled = editData.items.length >= MAX;
+}
+const editCtx = () => ({ items: editData.items, changed(){ renderEditItems(); $('#eErr').hidden = true; } });
+$('#eItems').addEventListener('click', e => { const t = e.target.closest('[data-eedit]'); if (!t) return; itemCtx = editCtx(); openItem(+t.dataset.eedit); });
+$('#eAdd').onclick = () => { itemCtx = editCtx(); openItem(-1); };
+$('#eCancel').onclick = () => { editData = null; $('#dEdit').hidden = true; $('#dBody').hidden = false; $('#dDl').hidden = false; renderDetail(); };
+$('#eSave').onclick = async () => {
+  const err = m => { $('#eErr').textContent = m; $('#eErr').hidden = false; };
+  editData.area = $('#e-area').value.trim(); editData.coordinacion = $('#e-coord').value.trim(); editData.fechaRequerida = $('#e-freq').value; editData.notas = $('#e-notas').value;
+  if (!editData.area) return err('Falta el área solicitante.');
+  if (!editData.items.length) return err('Debe quedar al menos un material.');
+  const b = $('#eSave'); b.disabled = true; b.textContent = 'Guardando…';
+  try {
+    detRow = await rpc('rq_editar', { p_control: detRow.control, p_datos: Object.assign({}, detRow.datos, editData) });
+    editData = null; $('#dEdit').hidden = true; $('#dBody').hidden = false; $('#dDl').hidden = false; renderDetail();
+    toast('Cambios guardados. Se avisó al solicitante'); reloadActive();
+  } catch (e) { err(e.message); }
+  finally { b.disabled = false; b.textContent = 'Guardar cambios'; }
+};
+$('#dDl').onclick = () => { if (detRow) downloadRemote(detRow.control, $('#dDl')); };
+$('#dClose').onclick = () => $('#detDlg').close();
+$('#detDlg').addEventListener('close', () => { detSig = null; editData = null; $('#dEdit').hidden = true; $('#dBody').hidden = false; $('#dDl').hidden = false; });
+
+/* ---------- Avisos ---------- */
+$('#bellBtn').onclick = async () => {
+  $('#avList').innerHTML = '<li class="hint">Cargando…</li>'; $('#avEmpty').hidden = true; $('#avDlg').showModal();
+  try {
+    const r = await rpc('rq_avisos', { p_limite: 50 });
+    const L = (r && r.avisos) || [];
+    $('#avList').innerHTML = L.map(a => `<li class="${a.leida ? '' : 'new'}" ${a.control ? `data-av="${esc(a.control)}" role="button" tabindex="0"` : ''}><b>${esc(a.titulo)}</b><span>${esc(a.mensaje || '')}</span><small>${new Date(a.creado).toLocaleString('es-VE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</small></li>`).join('');
+    $('#avEmpty').hidden = L.length > 0;
+    if (r && r.sin_leer) { await rpc('rq_avisos_leidos'); setCount('bellCnt', 0); }
+  } catch (e) { $('#avList').innerHTML = `<li class="err">${esc(e.message)}</li>`; }
+};
+$('#avClose').onclick = () => $('#avDlg').close();
+$('#avList').addEventListener('click', e => { const li = e.target.closest('[data-av]'); if (!li) return; $('#avDlg').close(); openDetail(li.dataset.av); });
+
+/* ---------- Usuarios (maestro) ---------- */
+let uFilter = 'pendiente', usersCache = [];
+$('#seg-ufil').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; uFilter = b.dataset.v; segSet('seg-ufil', uFilter); renderUsers(); });
+$('#uRefresh').onclick = () => loadUsers();
+async function loadUsers(){
+  $('#usersHint').textContent = me.es_master ? 'Aprueba los registros nuevos y administra los roles. Solo tú ves estos controles.' : 'Lista de usuarios de la plataforma. Solo el usuario maestro puede aprobarlos o cambiarlos.';
+  try { usersCache = await rpc('rq_usuarios') || []; renderUsers(); setCount('cUsers', me.es_master ? usersCache.filter(u => u.estado === 'pendiente').length : 0); }
+  catch (e) { $('#eUsers').hidden = false; $('#eUsers').textContent = e.message; }
+}
+const roleOpts = sel => Object.entries(ROLES).map(([k, r]) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${r.label}</option>`).join('');
+function renderUsers(){
+  segSet('seg-ufil', uFilter);
+  const L = usersCache.filter(u => uFilter === 'pendiente' ? u.estado === 'pendiente' : uFilter === 'activo' ? u.estado === 'activo' : ['rechazado','inactivo'].includes(u.estado));
+  $('#lUsers').innerHTML = L.map(u => {
+    const tag = { pendiente:'<span class="tag pend">Por aprobar</span>', activo:'<span class="tag ok">Activo</span>', rechazado:'<span class="tag bad">Rechazado</span>', inactivo:'<span class="tag bad">Desactivado</span>' }[u.estado];
+    let acts = '';
+    if (me.es_master) {
+      if (u.estado === 'pendiente') acts = `<select class="in sel" data-urol="${u.id}" aria-label="Rol">${roleOpts(u.rol)}</select><button class="btn primary" data-uact="aprobar" data-uid="${u.id}">Aprobar</button><button class="btn ghost danger" data-uact="rechazar" data-uid="${u.id}">Rechazar</button>`;
+      else if (u.estado === 'activo' && u.id !== me.id) acts = `<select class="in sel" data-urol="${u.id}" aria-label="Rol">${roleOpts(u.rol)}</select><button class="btn" data-uact="rol" data-uid="${u.id}">Cambiar rol</button><button class="btn ghost danger" data-uact="desactivar" data-uid="${u.id}">Desactivar</button>`;
+      else if (u.estado !== 'activo') acts = `<button class="btn" data-uact="reactivar" data-uid="${u.id}">Reactivar</button>`;
     }
-  }
+    return `<li><div class="h1"><b>${esc(u.nombre)}</b>${u.es_master ? '<span class="tag com">Maestro</span>' : ''}</div>
+      <div class="tags" style="margin:4px 0 2px"><span class="tag">${esc((ROLES[u.rol] || {}).label || u.rol)}</span>${tag}</div>
+      <div class="h2">${esc(u.email)}${u.empresa ? '. ' + esc(u.empresa) : ''}${u.cargo ? ', ' + esc(u.cargo) : ''}${u.telefono ? '. Tel. ' + esc(u.telefono) : ''}</div>
+      ${acts ? `<div class="hb">${acts}</div>` : ''}</li>`;
+  }).join('');
+  $('#eUsers').hidden = L.length > 0;
+  $('#eUsers').textContent = { pendiente:'No hay registros por aprobar.', activo:'No hay usuarios activos.', otros:'No hay usuarios desactivados.' }[uFilter];
 }
-function estadoTag(h, ok){
-  if (h.remote) {
-    if (h.estado === 'aprobada') return `<span class="tag ok">Aprobada${h.autorizadoNombre ? ' por ' + esc(h.autorizadoNombre) : ''}</span>`;
-    if (h.estado === 'rechazada') return `<span class="tag bad">Rechazada${h.rechazo && h.rechazo.motivo ? ': ' + esc(h.rechazo.motivo) : ''}</span>`;
-    return '<span class="tag pend">Enviada, pendiente de aprobación</span>';
-  }
-  return ok ? `<span class="tag ok">Aprobada por ${esc(h.firmas.autorizado)}</span>` : '<span class="tag pend">Pendiente de aprobación</span>';
-}
-$('#hist').addEventListener('click', async e => {
-  const b = e.target.closest('button'); if (!b) return;
-  if (b.dataset.open) { openDetail(b.dataset.open); return; }
-  if (b.dataset.rdl) { downloadRemote(b.dataset.rdl, b); return; }
-  if (b.dataset.dl !== undefined) { b.disabled = true; try { const f = await makeFile(history[+b.dataset.dl]); const r = await deliver(f); if (r==='declined') toast('Descarga cancelada'); } catch(err){ toast(err.message||'No se pudo generar el archivo'); } b.disabled = false; }
-  if (b.dataset.aprob !== undefined) {
-    const h = JSON.parse(JSON.stringify(history[+b.dataset.aprob]));
-    if (draft.items.length && draft.control !== h.control && !confirm('Tienes una requisición sin terminar en el formulario. ¿Reemplazarla para aprobar ' + h.control + '?')) return;
-    delete h.savedAt; draft = Object.assign(blank(), h, { firmasImg: h.firmasImg || {}, aprobar: true, fechaAprob: '' }); saveDraft();
-    document.querySelector('nav.tabs button[data-tab="nueva"]').click(); fillForm();
-    setTimeout(() => $('#aprobBlock').scrollIntoView({behavior:'smooth', block:'start'}), 80);
-    toast('Firmen verificado y autorizado, y luego generen el Excel');
-    return;
-  }
-  if (b.dataset.copy !== undefined) {
-    const h = JSON.parse(JSON.stringify(history[+b.dataset.copy]));
-    draft = Object.assign(blank(), { area:h.area, coordinacion:h.coordinacion, items:h.items, notas:h.notas, firmas:Object.assign({}, h.firmas, {verificado:'', autorizado:''}) }); saveDraft(); fillForm();
-    document.querySelector('nav.tabs button[data-tab="nueva"]').click(); toast('Copiada. Revisa y genera con el nuevo número.');
-  }
-  if (b.dataset.del !== undefined) { if (!confirm('¿Borrar esta requisición del historial?')) return; history.splice(+b.dataset.del,1); LS.set('history', history); renderHist(); }
+$('#lUsers').addEventListener('click', async e => {
+  const b = e.target.closest('[data-uact]'); if (!b) return;
+  const id = b.dataset.uid, act = b.dataset.uact, sel = document.querySelector(`[data-urol="${id}"]`);
+  const u = usersCache.find(x => x.id === id);
+  if (act === 'rechazar' && !confirm(`¿Rechazar el registro de ${u.nombre}?`)) return;
+  if (act === 'desactivar' && !confirm(`¿Desactivar a ${u.nombre}? Ya no podrá entrar.`)) return;
+  b.disabled = true;
+  try { await rpc('rq_usuario_decidir', { p_id: id, p_accion: act, p_rol: sel ? sel.value : null });
+    toast({ aprobar:'Usuario aprobado. Se le avisó', rechazar:'Registro rechazado', desactivar:'Usuario desactivado', reactivar:'Usuario reactivado', rol:'Rol actualizado' }[act]); loadUsers(); }
+  catch (er) { toast(er.message); b.disabled = false; }
 });
 
-/* ---------- settings ---------- */
+/* ---------- Mi cuenta y ajustes ---------- */
 function renderSettings(){
-  renderConn();
-  $('#prefix').value = settings.prefix; $('#nextNum').value = settings.next; $('#obra').value = settings.obra;
+  $('#usersBlock').hidden = !seesUsers(); if (seesUsers()) loadUsers();
+  $('#myRole').textContent = (ROLES[me.rol] || {}).label + (me.es_master ? ' · Maestro' : '');
+  $('#myEmail').textContent = me.email;
+  [['my-nombre','nombre'],['my-empresa','empresa'],['my-cargo','cargo'],['my-tel','telefono'],['my-area','area'],['my-coord','coordinacion']].forEach(([id,k]) => $('#'+id).value = me[k] || '');
   const lp = $('#logoPrev'); lp.innerHTML = settings.logo ? `<img alt="Logo actual" src="${settings.logo.data}">` : '<span class="hint" style="margin:0">Sin logo. El formato mostrará el texto original.</span>';
   $('#logoDel').hidden = !settings.logo;
   const box = $('#listBlocks'); box.innerHTML = '';
   LISTS_META.forEach(([k,title]) => {
     const d = document.createElement('div'); d.className='block';
-    d.innerHTML = `<h2>${title} <span>${lists[k].length}</span></h2><div class="listed">${lists[k].map((v,i)=>`<span>${esc(v)}<button aria-label="Quitar ${esc(v)}" data-k="${k}" data-i="${i}">×</button></span>`).join('') || '<span class="hint" style="border:0;background:none;padding:0;margin:0">Se llena solo mientras usas la app.</span>'}</div>
+    d.innerHTML = `<h2>${title} <span>${(lists[k]||[]).length}</span></h2><div class="listed">${(lists[k]||[]).map((v,i)=>`<span>${esc(v)}<button aria-label="Quitar ${esc(v)}" data-k="${k}" data-i="${i}">×</button></span>`).join('') || '<span class="hint" style="border:0;background:none;padding:0;margin:0">Se llena solo mientras usas la app.</span>'}</div>
       <div class="addrow"><input class="in" placeholder="Agregar…" data-add="${k}"><button class="btn" data-addbtn="${k}">Agregar</button></div>`;
     box.appendChild(d);
   });
 }
+$('#my-save').onclick = async () => {
+  const b = $('#my-save'); b.disabled = true; $('#my-err').hidden = true;
+  try { const p = await rpc('rq_actualizar_perfil', { p_nombre: $('#my-nombre').value.trim(), p_empresa: $('#my-empresa').value.trim(), p_cargo: $('#my-cargo').value.trim(), p_telefono: $('#my-tel').value.trim(), p_area: $('#my-area').value.trim(), p_coordinacion: $('#my-coord').value.trim() });
+    me = p; setHeader(); toast('Datos guardados'); }
+  catch (e) { $('#my-err').textContent = e.message; $('#my-err').hidden = false; }
+  finally { b.disabled = false; }
+};
+$('#my-pass-btn').onclick = async () => {
+  const p = $('#my-pass').value; if (p.length < 8) return toast('La contraseña debe tener al menos 8 caracteres');
+  const { error } = await sb.auth.updateUser({ password: p }); if (error) return toast(mapErr(error).message);
+  $('#my-pass').value = ''; toast('Contraseña cambiada');
+};
+$('#logout').onclick = async () => { await sb.auth.signOut(); me = null; route(); };
 $('#listBlocks').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  if (b.dataset.k) { lists[b.dataset.k].splice(+b.dataset.i,1); }
+  if (b.dataset.k) lists[b.dataset.k].splice(+b.dataset.i,1);
   else if (b.dataset.addbtn) { const inp = document.querySelector(`[data-add="${b.dataset.addbtn}"]`); const v = inp.value.trim(); if (!v) return; if (!lists[b.dataset.addbtn].includes(v)) lists[b.dataset.addbtn].push(v); }
   else return;
   LS.set('lists', lists); renderDatalists(); renderSettings();
 });
-$('#listBlocks').addEventListener('keydown', e => { if (e.key==='Enter' && e.target.dataset.add) { e.preventDefault(); document.querySelector(`[data-addbtn="${e.target.dataset.add}"]`).click(); } });
-$('#prefix').addEventListener('change', e => { settings.prefix = e.target.value; LS.set('settings', settings); if (!draft.items.length) { draft.control = ctlFor(settings.next); saveDraft(); fillForm(); } });
-$('#nextNum').addEventListener('change', e => { const n = parseInt(e.target.value,10); if (n>0) { settings.next = n; LS.set('settings', settings); if (!draft.items.length) { draft.control = ctlFor(n); saveDraft(); fillForm(); } } });
-$('#obra').addEventListener('input', e => { settings.obra = e.target.value; LS.set('settings', settings); $('#obraName').textContent = settings.obra; });
 $('#logoFile').addEventListener('change', e => {
   const f = e.target.files[0]; if (!f) return;
   const img = new Image(); const url = URL.createObjectURL(f);
@@ -887,283 +1213,135 @@ $('#logoFile').addEventListener('change', e => {
 });
 $('#logoDel').onclick = () => { settings.logo = null; LS.set('settings', settings); renderSettings(); };
 
-
-/* ---------- online (Supabase) ---------- */
-const ERRS = { codigo_invalido:'El código de la obra no es correcto.', pin_invalido:'PIN incorrecto.', sin_permiso:'Ese PIN no tiene permiso para esta acción.',
-  ya_verificada:'Esta requisición ya fue verificada.', ya_autorizada:'Esta requisición ya fue autorizada.', rechazada:'Esta requisición fue rechazada.',
-  no_pendiente:'Solo se pueden rechazar requisiciones pendientes.', no_existe:'No se encontró la requisición.', firma_invalida:'Falta la firma.',
-  sin_motivo:'Escribe el motivo del rechazo.', falta_verificar:'Primero la debe verificar otra persona.', misma_persona:'Quien autoriza debe ser una persona distinta a quien verificó.', sin_materiales:'La requisición no tiene materiales.', demasiado_grande:'La requisición es muy pesada. Borra las firmas y vuelve a firmar.' };
-async function api(fn, args){
-  if (!sbUrl() || !sbKey()) throw new Error('Falta configurar la conexión en Ajustes.');
-  let res;
-  try { res = await fetch(sbUrl() + '/rest/v1/rpc/' + fn, { method:'POST', headers: Object.assign({ 'Content-Type':'application/json', apikey: sbKey() }, /^eyJ/.test(sbKey()) ? { Authorization: 'Bearer ' + sbKey() } : {}), body: JSON.stringify(args) }); }
-  catch (e) { const er = new Error('Sin conexión a internet. Revisa la señal e intenta de nuevo.'); er.offline = true; throw er; }
-  const txt = await res.text(); let body = null; try { body = txt ? JSON.parse(txt) : null; } catch (e) {}
-  if (!res.ok) { const m = body && body.message; const er = new Error(ERRS[m] || m || ('Error del servidor (' + res.status + ')')); er.code = m; throw er; }
-  return body;
+/* ---------- Pestañas ---------- */
+function showTab(t){
+  $$('#mainTabs button').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === t));
+  $$('#mainView section.panel').forEach(p => p.classList.toggle('on', p.id === 'p-'+t));
+  $('#dock').hidden = t !== 'nueva';
+  if (t === 'nueva') fillForm();
+  if (t === 'verif') loadVerif();
+  if (t === 'aprob') loadAprob();
+  if (t === 'mias') loadMias();
+  if (t === 'ajustes') renderSettings();
+  window.scrollTo(0,0);
 }
-const isoLocal = ts => { if (!ts) return ''; const d = new Date(ts); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
-function rowToRec(row){
-  const d = row.datos || {}, v = row.verificado || {}, a = row.autorizado || {}, f = d.firmas || {};
-  return Object.assign({}, d, { control: row.control, estado: row.estado, aprobar: !!(v.firma || a.firma),
-    firmas: { solicitado: f.solicitado || '', recibido: f.recibido || '', verificado: v.nombre || '', autorizado: a.nombre || '' },
-    firmasImg: { verificado: v.firma || null, autorizado: a.firma || null }, fechaVerif: isoLocal(v.fecha), fechaAutor: isoLocal(a.fecha) });
-}
-async function downloadRemote(control, btn){
-  if (btn) btn.disabled = true;
-  try { const row = await api('req_obtener', { p_codigo: settings.codigo, p_control: control }); const f = await makeFile(rowToRec(row)); const r = await deliver(f); if (r === 'declined') toast('Descarga cancelada'); }
-  catch (e) { toast(e.message || 'No se pudo generar el archivo'); }
-  finally { if (btn) btn.disabled = false; }
-}
+$$('#mainTabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+function setHeader(){ $('#hUser').textContent = `${me.nombre}, ${(ROLES[me.rol] || {}).label}${me.es_master ? ' · Maestro' : ''}`; }
 
-/* PIN fields in the new-requisition form */
-const pins = { verificado:'', autorizado:'' }, perms = { verificado:null, autorizado:null };
-['verificado','autorizado'].forEach(k => {
-  const inp = $('#pin-'+k), who = $('#who-'+k);
-  inp.addEventListener('input', async () => {
-    inp.value = inp.value.replace(/\D/g,'').slice(0,6); inp.classList.remove('bad'); $('#aprobErr').hidden = true;
-    pins[k] = inp.value; perms[k] = null; draft.firmas[k] = ''; who.textContent = ''; who.className = 'who onl'; updateAprobStatus();
-    if (inp.value.length !== 6) return;
-    const pin = inp.value; who.textContent = 'Comprobando…';
-    try {
-      const q = await api('req_quien', { p_codigo: settings.codigo, p_pin: pin });
-      if (pins[k] !== pin) return;
-      const can = k === 'verificado' ? q.verificar : q.autorizar;
-      perms[k] = q; draft.firmas[k] = can ? q.nombre : ''; saveDraft(); updateAprobStatus();
-      const other = perms[k === 'verificado' ? 'autorizado' : 'verificado'];
-      const same = settings.dosPasos && other && other.nombre === q.nombre;
-      who.textContent = !can ? q.nombre + ' no tiene permiso para ' + (k === 'verificado' ? 'verificar' : 'autorizar') + '.' : same ? q.nombre + ' ya firma en el otro puesto. Debe ser otra persona.' : '✓ ' + q.nombre;
-      who.className = 'who onl ' + (can && !same ? 'ok' : 'bad');
-    } catch (e) { if (pins[k] !== pin) return; who.textContent = e.message; who.className = 'who onl bad'; }
-  });
-});
-function clearPins(){ ['verificado','autorizado'].forEach(k => { pins[k] = ''; perms[k] = null; $('#pin-'+k).value = ''; $('#who-'+k).textContent = ''; }); }
-
-let lastSent = null;
-async function sendOnline(){
-  if (!validate()) return;
-  const btn = $('#gen'); btn.disabled = true; btn.textContent = 'Enviando…';
+/* ---------- Entrar / registro ---------- */
+function showAuthTab(t){ $$('#authTabs button').forEach(x => x.setAttribute('aria-selected', x.dataset.atab === t)); $$('#authView section.panel').forEach(p => p.classList.toggle('on', p.id === 'a-'+t)); $('#authTabs').hidden = t === 'reset'; window.scrollTo(0,0); }
+$$('#authTabs button').forEach(b => b.addEventListener('click', () => showAuthTab(b.dataset.atab)));
+let regRol = '';
+function renderRoles(){
+  $('#roleCards').innerHTML = Object.entries(ROLES).map(([k, r], i) => `<button type="button" role="radio" aria-checked="${regRol === k}" data-rol="${k}"><b>${i+1}. ${r.label}</b><span>${r.desc}</span></button>`).join('');
+  const isC = regRol === 'contratista', makes = ['contratista','costos','gerente_general'].includes(regRol);
+  $('#rg-empresa-lbl').textContent = isC ? 'Empresa contratista' : 'Empresa';
+  $('#rg-reqblock').hidden = !makes; $('#rg-step4').textContent = makes ? '4.' : '3.';
+}
+$('#roleCards').addEventListener('click', e => { const b = e.target.closest('[data-rol]'); if (!b) return; regRol = b.dataset.rol; renderRoles(); $('#rg-err').hidden = true; });
+$('#rg-btn').onclick = async () => {
+  const err = m => { $('#rg-err').textContent = m; $('#rg-err').hidden = false; $('#rg-err').scrollIntoView({ block:'center' }); };
+  const v = id => $('#'+id).value.trim();
+  if (!regRol) return err('Elige tu rol.');
+  if (!v('rg-nombre')) return err('Escribe tu nombre y apellido.');
+  if (regRol === 'contratista' && !v('rg-empresa')) return err('Escribe el nombre de la empresa contratista.');
+  if (['contratista','costos'].includes(regRol) && !v('rg-area')) return err('Escribe el área solicitante de tus requisiciones.');
+  if (!/^\S+@\S+\.\S+$/.test(v('rg-email'))) return err('Escribe un correo válido.');
+  if ($('#rg-pass').value.length < 8) return err('La contraseña debe tener al menos 8 caracteres.');
+  if ($('#rg-pass').value !== $('#rg-pass2').value) return err('Las contraseñas no coinciden.');
+  const b = $('#rg-btn'); b.disabled = true; b.textContent = 'Registrando…';
   try {
-    const datos = { area: draft.area, coordinacion: draft.coordinacion, fechaSolicitud: draft.fechaSolicitud, fechaRequerida: draft.fechaRequerida,
-      items: draft.items, notas: draft.notas, firmas: { solicitado: draft.firmas.solicitado, recibido: draft.firmas.recibido }, firma: draft.firma };
-    const sent = await api('req_enviar', { p_codigo: settings.codigo, p_datos: datos });
-    const problems = []; let row = null;
-    if (draft.aprobar) {
-      for (const [k, acc] of [['verificado','verificar'], ['autorizado','autorizar']]) {
-        if (pins[k] && (draft.firmasImg || {})[k]) {
-          try { row = await api('req_aprobar', { p_codigo: settings.codigo, p_control: sent.control, p_pin: pins[k], p_accion: acc, p_firma: draft.firmasImg[k] }); }
-          catch (e) { problems.push((k === 'verificado' ? 'Verificación: ' : 'Autorización: ') + e.message); }
-        }
-      }
-    }
-    const estado = row ? row.estado : 'pendiente';
-    learn('areas', draft.area); learn('coord', draft.coordinacion); learn('personas', draft.firmas.solicitado); learn('personas', draft.firmas.recibido); LS.set('lists', lists); renderDatalists();
-    const entry = Object.assign({}, datos, { control: sent.control, remote: true, estado, autorizadoNombre: row && row.autorizado ? row.autorizado.nombre : '', firma: null, savedAt: new Date().toISOString() });
-    history = [entry].concat(history.filter(x => x.control !== sent.control)).slice(0, 60); LS.set('history', history);
-    lastSent = sent.control; clearPins();
-    draft = blank(); saveDraft(); fillForm();
-    $('#doneCtl').textContent = sent.control;
-    $('#doneMsg').textContent = (estado === 'aprobada' ? 'Enviada y aprobada.' : 'Enviada. Quedó en la bandeja esperando aprobación.') + (problems.length ? ' Ojo: ' + problems.join(' ') : '');
-    $('#doneKeep').textContent = 'Cerrar'; $('#doneDl').hidden = false; $('#doneDlg').showModal();
-    refreshCount();
+    const { data, error } = await sb.auth.signUp({ email: v('rg-email').toLowerCase(), password: $('#rg-pass').value,
+      options: { emailRedirectTo: location.origin + location.pathname, data: { nombre: v('rg-nombre'), rol: regRol, empresa: v('rg-empresa'), cargo: v('rg-cargo'), telefono: v('rg-tel'), area: v('rg-area'), coordinacion: v('rg-coord') } } });
+    if (error) throw error;
+    learn('areas', v('rg-area')); learn('coord', v('rg-coord')); LS.set('lists', lists);
+    if (!data.session) { showAuthTab('entrar'); $('#li-email').value = v('rg-email'); $('#li-err').textContent = 'Te enviamos un correo para confirmar tu dirección. Confírmala y luego entra aquí.'; $('#li-err').hidden = false; return; }
+    route();
   } catch (e) {
-    if (e.offline && confirm('No hay conexión, así que no se pudo enviar.\n\n¿Quieres generar el Excel en este teléfono con un número provisional? Lo puedes enviar al sistema más tarde repitiendo la requisición.')) {
-      const t = new Date(); const p = n => String(n).padStart(2,'0');
-      draft.control = `PROV-${String(t.getFullYear()).slice(2)}${p(t.getMonth()+1)}${p(t.getDate())}-${p(t.getHours())}${p(t.getMinutes())}`; saveDraft();
-      if (draft.aprobar) { toast('Sin conexión los PIN no se pueden comprobar: las aprobaciones se firman a mano'); draft.aprobar = false; }
-      btn.disabled = false; await genLocal(); return;
-    }
-    toast(e.message || 'No se pudo enviar');
-  } finally { btn.disabled = false; updateDock(); }
-}
-$('#doneDl').onclick = () => { if (lastSent) downloadRemote(lastSent, $('#doneDl')); };
-$('#doneKeep').addEventListener('click', () => { $('#doneKeep').textContent = 'Seguir editando'; });
-
-/* Bandeja */
-let bFilter = '', bTimer = null;
-function renderBFil(){
-  const opts = settings.dosPasos ? [['por_verificar','Verificar'],['por_autorizar','Autorizar'],['aprobada','Aprobadas'],['rechazada','Rechazadas']] : [['pendiente','Pendientes'],['aprobada','Aprobadas'],['rechazada','Rechazadas']];
-  if (!opts.some(o => o[0] === bFilter)) bFilter = opts[0][0];
-  $('#seg-bfil').innerHTML = opts.map(([v,l]) => `<button type="button" data-v="${v}" aria-pressed="${v === bFilter}">${l}</button>`).join('');
-}
-$('#seg-bfil').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; bFilter = b.dataset.v; segSet('seg-bfil', bFilter); loadBandeja(); });
-$('#bRefresh').onclick = () => loadBandeja();
-async function refreshCount(){
-  if (!online()) return;
-  try { const rows = await api('req_listar', { p_codigo: settings.codigo, p_estado: 'pendiente', p_limite: 200 }); const n = (rows || []).length; $('#bCount').textContent = n; $('#bCount').hidden = !n; } catch (e) {}
-}
-async function loadBandeja(){
-  if (!online()) return;
-  renderBFil();
-  const ul = $('#bList'), em = $('#bEmpty');
-  if (!ul.children.length) { em.hidden = false; em.textContent = 'Cargando…'; }
-  try {
-    const rows = await api('req_listar', { p_codigo: settings.codigo, p_estado: bFilter, p_limite: 100 });
-    ul.innerHTML = '';
-    (rows || []).forEach(r => {
-      const li = document.createElement('li');
-      const when = new Date(r.creado).toLocaleDateString('es-VE', { day:'2-digit', month:'short' });
-      const tag = r.estado === 'aprobada' ? `<span class="tag ok">Aprobada por ${esc(r.autorizado)}</span>` : r.estado === 'rechazada' ? `<span class="tag bad">Rechazada${r.rechazo && r.rechazo.motivo ? ': ' + esc(r.rechazo.motivo) : ''}</span>` : (r.verificado ? `<span class="tag ok">Verificada por ${esc(r.verificado)}</span><span class="tag pend">Falta autorizar</span>` : `<span class="tag pend">${settings.dosPasos ? 'Falta verificar' : 'Por verificar y autorizar'}</span>`);
-      li.innerHTML = `<div class="h1"><b>${esc(r.control)}</b><span style="color:var(--muted);font-weight:500">${when}</span></div>
-        <div class="tags" style="margin:4px 0 2px">${tag}</div>
-        <div class="h2">${esc(r.area || '')}${r.coordinacion ? ', ' + esc(r.coordinacion) : ''}. ${r.n} material${r.n === 1 ? '' : 'es'}. Pidió ${esc(r.solicitante || '')}${r.fechaRequerida ? '. Para el ' + fmt(r.fechaRequerida) : ''}</div>
-        <div class="hb"><button class="btn ${r.estado === 'pendiente' ? 'primary' : ''}" data-open="${esc(r.control)}">${r.estado !== 'pendiente' ? 'Ver' : settings.dosPasos ? (r.verificado ? 'Revisar y autorizar' : 'Revisar y verificar') : 'Revisar y firmar'}</button><button class="btn" data-rdl="${esc(r.control)}">Descargar</button></div>`;
-      ul.appendChild(li);
-    });
-    em.hidden = ul.children.length > 0;
-    em.textContent = { pendiente:'No hay requisiciones esperando aprobación.', por_verificar:'No hay requisiciones por verificar.', por_autorizar:'No hay requisiciones verificadas esperando autorización.', aprobada:'Todavía no hay requisiciones aprobadas.', rechazada:'No hay requisiciones rechazadas.' }[bFilter];
-    if (bFilter === 'pendiente') { $('#bCount').textContent = ul.children.length; $('#bCount').hidden = !ul.children.length; } else refreshCount();
-  } catch (e) { em.hidden = false; em.textContent = e.message; }
-  clearTimeout(bTimer); bTimer = setTimeout(() => { if ($('#p-bandeja').classList.contains('on') && !document.hidden && !$('#detDlg').open) loadBandeja(); }, 30000);
-}
-$('#bList').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.open) openDetail(b.dataset.open); if (b.dataset.rdl) downloadRemote(b.dataset.rdl, b); });
-
-/* Detail + sign */
-let detRow = null, detAcc = '', detWho = null;
-async function openDetail(control){
-  detRow = null; detAcc = ''; detSig = null; detWho = null;
-  $('#dTitle').textContent = control; $('#dBody').innerHTML = '<p class="hint">Cargando…</p>'; $('#dAct').hidden = true; $('#dForm').hidden = true;
-  segSet('seg-dact', ''); if (!$('#detDlg').open) $('#detDlg').showModal();
-  try { detRow = await api('req_obtener', { p_codigo: settings.codigo, p_control: control }); renderDetail(); }
-  catch (e) { $('#dBody').innerHTML = `<p class="err">${esc(e.message)}</p>`; }
-}
-function renderDetail(){
-  const r = detRow, d = r.datos || {}, f = d.firmas || {}, v = r.verificado, a = r.autorizado, x = r.rechazo;
-  const fdate = ts => fmt(isoLocal(ts));
-  const items = (d.items || []).map((it, i) => `<li class="item" style="grid-template-columns:32px 1fr"><div class="num">${i+1}</div><div><div class="qty">${esc(it.cant)} ${esc(it.und)}</div><div class="d">${esc(it.desc)}</div><div class="m">${esc([it.locacion, it.equipo].filter(Boolean).join(', '))}</div>${it.ceco ? `<div class="m" style="font-weight:600;color:var(--green)">${esc(it.ceco)}</div>` : ''}<div class="tags">${it.stock === 'com' ? '<span class="tag com">A compras</span>' : it.stock === 'si' ? '<span class="tag ok">En almacén</span>' : it.stock === 'no' ? '<span class="tag">Sin stock</span>' : ''}${it.espec === 'si' ? '<span class="tag">Con especificación</span>' : ''}</div></div></li>`).join('');
-  $('#dBody').innerHTML = `
-    <div class="appr">
-      ${x ? `<div class="bad">Rechazada por ${esc(x.nombre)} el ${fdate(x.fecha)}: ${esc(x.motivo)}</div>` : ''}
-      <div class="${v ? 'ok' : ''}">${v ? `Verificada por ${esc(v.nombre)} el ${fdate(v.fecha)}` : 'Falta verificar'}</div>
-      <div class="${a ? 'ok' : ''}">${a ? `Autorizada por ${esc(a.nombre)} el ${fdate(a.fecha)}` : (settings.dosPasos && !v ? 'Falta autorizar (después de la verificación, por otra persona)' : settings.dosPasos ? 'Falta autorizar (por una persona distinta a quien verificó)' : 'Falta autorizar')}</div>
-    </div>
-    <dl class="dl">
-      <dt>Área</dt><dd>${esc(d.area || '')}</dd>
-      ${d.coordinacion ? `<dt>Coordinación</dt><dd>${esc(d.coordinacion)}</dd>` : ''}
-      <dt>Solicitud</dt><dd>${fmt(d.fechaSolicitud)}</dd>
-      ${d.fechaRequerida ? `<dt>Para el</dt><dd>${fmt(d.fechaRequerida)}</dd>` : ''}
-      <dt>Pidió</dt><dd>${esc(f.solicitado || '')}${d.firma ? `<img class="sigimg" alt="Firma de ${esc(f.solicitado || '')}" src="${d.firma}">` : ''}</dd>
-    </dl>
-    <div class="sec">Materiales</div><ul class="items">${items}</ul>
-    ${d.notas ? `<div class="sec">Notas</div><p style="margin:0 0 8px;white-space:pre-wrap">${esc(d.notas)}</p>` : ''}`;
-  const canV = !v && !a && r.estado !== 'rechazada', canA = !a && r.estado !== 'rechazada' && (!settings.dosPasos || !!v), canR = r.estado === 'pendiente';
-  document.querySelector('#seg-dact [data-v="verificar"]').hidden = !canV;
-  document.querySelector('#seg-dact [data-v="autorizar"]').hidden = !canA;
-  document.querySelector('#seg-dact [data-v="rechazar"]').hidden = !canR;
-  $('#dAct').hidden = !(canV || canA || canR);
-}
-$('#seg-dact').addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b) return;
-  detAcc = b.dataset.v; segSet('seg-dact', detAcc);
-  $('#dForm').hidden = false; $('#dErr').hidden = true;
-  $('#dSigWrap').hidden = detAcc === 'rechazar'; $('#dMotWrap').hidden = detAcc !== 'rechazar';
-  $('#dOk').textContent = { verificar:'Verificar y firmar', autorizar:'Autorizar y firmar', rechazar:'Rechazar requisición' }[detAcc];
-  $('#dOk').classList.toggle('danger', detAcc === 'rechazar');
-  checkDetWho();
-  requestAnimationFrame(() => { detPad.load(); $('#dForm').scrollIntoView({ behavior:'smooth', block:'start' }); });
-});
-async function checkDetWho(){
-  const pin = $('#dPin').value, w = $('#dWho'); detWho = null; w.textContent = ''; w.className = 'who';
-  if (pin.length !== 6) return;
-  w.textContent = 'Comprobando…';
-  try {
-    const q = await api('req_quien', { p_codigo: settings.codigo, p_pin: pin }); if ($('#dPin').value !== pin) return;
-    detWho = q; const can = detAcc === 'verificar' ? q.verificar : detAcc === 'autorizar' ? q.autorizar : (q.verificar || q.autorizar);
-    const same = settings.dosPasos && detAcc === 'autorizar' && detRow && detRow.verificado && detRow.verificado.nombre === q.nombre;
-    w.textContent = !can ? q.nombre + ' no tiene permiso para esta acción.' : same ? q.nombre + ' verificó esta requisición. La debe autorizar otra persona.' : '✓ ' + q.nombre;
-    w.className = 'who ' + (can && !same ? 'ok' : 'bad');
-  } catch (e) { if ($('#dPin').value !== pin) return; w.textContent = e.message; w.className = 'who bad'; }
-}
-$('#dPin').addEventListener('input', () => { $('#dPin').value = $('#dPin').value.replace(/\D/g,'').slice(0,6); $('#dErr').hidden = true; checkDetWho(); });
-$('#dOk').onclick = async () => {
-  const err = m => { $('#dErr').textContent = m; $('#dErr').hidden = false; };
-  const pin = $('#dPin').value;
-  if (pin.length !== 6) return err('Escribe tu PIN de 6 números.');
-  if (detAcc !== 'rechazar' && !detSig) return err('Falta tu firma.');
-  if (detAcc === 'rechazar' && !$('#dMot').value.trim()) return err('Escribe el motivo del rechazo.');
-  const b = $('#dOk'); b.disabled = true; const lbl = b.textContent; b.textContent = 'Guardando…';
-  try {
-    detRow = detAcc === 'rechazar'
-      ? await api('req_rechazar', { p_codigo: settings.codigo, p_control: detRow.control, p_pin: pin, p_motivo: $('#dMot').value.trim() })
-      : await api('req_aprobar', { p_codigo: settings.codigo, p_control: detRow.control, p_pin: pin, p_accion: detAcc, p_firma: detSig });
-    toast({ verificar:'Requisición verificada', autorizar:'Requisición aprobada', rechazar:'Requisición rechazada' }[detAcc]);
-    $('#dPin').value = ''; $('#dMot').value = ''; detSig = null; detAcc = ''; segSet('seg-dact', ''); $('#dForm').hidden = true; $('#dWho').textContent = '';
-    renderDetail(); $('#dBody').scrollIntoView({ behavior:'smooth', block:'start' });
-    if ($('#p-bandeja').classList.contains('on')) loadBandeja(); else refreshCount();
-    const e = history.find(x => x.control === detRow.control); if (e) { e.estado = detRow.estado; e.autorizadoNombre = detRow.autorizado ? detRow.autorizado.nombre : ''; e.rechazo = detRow.rechazo; LS.set('history', history); }
-  } catch (e) { err(e.message); }
-  finally { b.disabled = false; b.textContent = lbl; }
+    const m = (e && e.message) || '';
+    err(/already registered|already been registered|exists/i.test(m) ? 'Ese correo ya tiene una cuenta. Toca Entrar.' : /password/i.test(m) ? 'La contraseña no es válida. Usa al menos 8 caracteres.' : mapErr(e).message);
+  } finally { b.disabled = false; b.textContent = 'Registrarme'; }
 };
-$('#dDl').onclick = () => { if (detRow) downloadRemote(detRow.control, $('#dDl')); };
-$('#dClose').onclick = () => $('#detDlg').close();
-$('#detDlg').addEventListener('close', () => { $('#dPin').value = ''; detSig = null; if ($('#p-historial').classList.contains('on')) renderHist(); });
-
-/* Connection settings */
-function renderConn(){
-  const embedded = !!(SB_URL && SB_KEY), on = online();
-  $('#connCfg').hidden = embedded || on; $('#connCodeWrap').hidden = on;
-  if (!embedded) { $('#sbUrl').value = settings.sbUrl || ''; $('#sbKey').value = settings.sbKey || ''; }
-  $('#connSt').textContent = on ? 'Conectada' : 'Sin conectar'; $('#connSt').classList.toggle('ok', on);
-  $('#connBtn').hidden = on; $('#connOff').hidden = !on; $('#connErr').hidden = true;
-}
-function applyDp(){
-  document.body.classList.toggle('dospasos', !!settings.dosPasos);
-  segSet('seg-dp', settings.dosPasos ? 'si' : 'no');
-  document.querySelectorAll('#seg-dp button').forEach(b => b.disabled = online());
-  $('#dpHint').textContent = (settings.dosPasos ? 'Primero verifica una persona y después autoriza otra distinta. No se puede autorizar sin verificación.' : 'Se puede autorizar sin verificación previa, y una misma persona puede hacer las dos cosas.')
-    + (online() ? ' Esta regla la define la obra y se cambia desde Supabase.' : '');
-}
-$('#seg-dp').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || online()) return; settings.dosPasos = b.dataset.v === 'si'; LS.set('settings', settings); applyDp(); });
-async function syncDp(){
-  if (!online()) return;
-  try { const r = await api('req_ingresar', { p_codigo: settings.codigo }); if (r && typeof r.dos_pasos === 'boolean' && r.dos_pasos !== settings.dosPasos) { settings.dosPasos = r.dos_pasos; LS.set('settings', settings); applyDp(); } }
-  catch (e) { if (e.code === 'codigo_invalido') { settings.codigo = ''; LS.set('settings', settings); applyOnline(); toast('El código de la obra cambió. Escríbelo de nuevo en Ajustes.'); } }
-}
-function applyOnline(){
-  const on = online();
-  applyDp();
-  document.body.classList.toggle('online', on); $('#tabBandeja').hidden = !on;
-  if (on && !draft.items.length && /^\w*-?\d+$/.test(draft.control || '') ) { draft.control = ''; saveDraft(); }
-  if (!on && !draft.control) { draft.control = ctlFor(settings.next); saveDraft(); }
-  $('#ctlBadge').textContent = draft.control || (on ? 'Nueva' : '—');
-  updateDock(); renderConn(); if (on) { refreshCount(); syncDp(); }
-}
-$('#connBtn').onclick = async () => {
-  const embedded = !!(SB_URL && SB_KEY);
-  if (!embedded) { settings.sbUrl = $('#sbUrl').value.trim(); settings.sbKey = $('#sbKey').value.trim(); }
-  const code = $('#connCode').value.trim(), e = $('#connErr');
-  if (!sbUrl() || !sbKey()) { e.textContent = 'Falta la dirección o la clave de Supabase.'; e.hidden = false; return; }
-  if (!code) { e.textContent = 'Escribe el código de la obra.'; e.hidden = false; return; }
-  const b = $('#connBtn'); b.disabled = true; b.textContent = 'Conectando…';
-  try { const r = await api('req_ingresar', { p_codigo: code }); settings.codigo = code; if (r && r.prefijo) settings.prefix = r.prefijo; if (r && typeof r.dos_pasos === 'boolean') settings.dosPasos = r.dos_pasos; LS.set('settings', settings); $('#connCode').value = ''; applyOnline(); toast('Conectado a la obra'); }
-  catch (err) { e.textContent = err.message; e.hidden = false; LS.set('settings', settings); }
-  finally { b.disabled = false; b.textContent = 'Conectar'; }
+$('#li-btn').onclick = async () => {
+  const err = m => { $('#li-err').textContent = m; $('#li-err').hidden = false; };
+  const email = $('#li-email').value.trim().toLowerCase(), pass = $('#li-pass').value;
+  if (!email || !pass) return err('Escribe tu correo y tu contraseña.');
+  const b = $('#li-btn'); b.disabled = true; b.textContent = 'Entrando…';
+  try { const { error } = await sb.auth.signInWithPassword({ email, password: pass }); if (error) throw error; $('#li-pass').value = ''; $('#li-err').hidden = true; route(); }
+  catch (e) { const m = (e && e.message) || ''; err(/invalid login/i.test(m) ? 'Correo o contraseña incorrectos.' : /not confirmed/i.test(m) ? 'Primero confirma tu correo con el enlace que te enviamos.' : mapErr(e).message); }
+  finally { b.disabled = false; b.textContent = 'Entrar'; }
 };
-$('#connOff').onclick = () => { if (!confirm('¿Desconectar este teléfono de la obra? Tendrás que escribir el código otra vez para volver a enviar.')) return; settings.codigo = ''; LS.set('settings', settings); applyOnline(); document.querySelector('nav.tabs button[data-tab="ajustes"]').click(); };
-document.addEventListener('visibilitychange', () => { if (!document.hidden && online()) refreshCount(); });
+$('#li-pass').addEventListener('keydown', e => { if (e.key === 'Enter') $('#li-btn').click(); });
+$('#li-forgot').onclick = async () => {
+  const email = $('#li-email').value.trim().toLowerCase();
+  if (!email) { $('#li-err').textContent = 'Escribe tu correo arriba y vuelve a tocar "Olvidé mi contraseña".'; $('#li-err').hidden = false; return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+  $('#li-err').textContent = error ? mapErr(error).message : 'Si el correo tiene cuenta, te llegará un enlace para crear una contraseña nueva.'; $('#li-err').hidden = false;
+};
+$('#rs-btn').onclick = async () => {
+  const p = $('#rs-pass').value; const err = m => { $('#rs-err').textContent = m; $('#rs-err').hidden = false; };
+  if (p.length < 8) return err('Mínimo 8 caracteres.'); if (p !== $('#rs-pass2').value) return err('No coinciden.');
+  const { error } = await sb.auth.updateUser({ password: p }); if (error) return err(mapErr(error).message);
+  toast('Contraseña guardada'); recovering = false; route();
+};
+let recovering = false;
+sb.auth.onAuthStateChange((ev) => { if (ev === 'PASSWORD_RECOVERY') { recovering = true; showView('auth'); showAuthTab('reset'); } if (ev === 'SIGNED_OUT') { me = null; showView('auth'); } });
 
-/* ---------- install guide ---------- */
+/* ---------- Enrutador ---------- */
+function showView(v){ $('#authView').hidden = v !== 'auth'; $('#pendView').hidden = v !== 'pend'; $('#mainView').hidden = v !== 'main'; }
+let routing = false;
+async function route(){
+  if (routing || recovering) return; routing = true;
+  try {
+    const { data } = await sb.auth.getSession();
+    if (!data.session) { me = null; showView('auth'); showAuthTab('entrar'); return; }
+    let p;
+    try { p = await sb.rpc('rq_mi_perfil'); } catch (e) { p = { error: e }; }
+    if (p.error) { const er = mapErr(p.error); if (er.offline && me) { showView('main'); return; } showPend('⚠️', 'No pudimos cargar tu cuenta', er.message, null); return; }
+    const perfil = p.data;
+    if (!perfil) { showPend('⚠️', 'Cuenta sin perfil', 'Tu usuario existe pero no tiene perfil. Pide al administrador que lo revise.', null); return; }
+    if (perfil.estado === 'pendiente') { showPend('⏳', 'Tu cuenta está en revisión', 'El administrador debe aprobar tu registro. Te llegará un aviso cuando esté lista.', perfil); return; }
+    if (perfil.estado !== 'activo') { showPend('⛔', perfil.estado === 'rechazado' ? 'Registro no aprobado' : 'Cuenta desactivada', 'Si crees que es un error, comunícate con el administrador.', perfil); return; }
+    const first = !me || me.id !== perfil.id; me = perfil;
+    setHeader(); showView('main');
+    $$('#mainTabs button').forEach(b => { const t = b.dataset.tab; b.hidden = (t === 'nueva' || t === 'mias') ? !canCreate() : (t === 'verif' || t === 'aprob') ? !seesAll() : false; });
+    if (!draft || draft.owner !== me.id) { draft = blank(); saveDraft(); }
+    if (first) showTab(canCreate() && me.rol !== 'gerente_general' ? 'nueva' : me.rol === 'gerente_operaciones' ? 'verif' : seesAll() ? 'aprob' : 'nueva');
+    refreshCounts();
+  } finally { routing = false; }
+}
+function showPend(ico, title, msg, perfil){
+  showView('pend'); $('#pd-ico').textContent = ico; $('#pd-title').textContent = title; $('#pd-msg').textContent = msg;
+  $('#pd-data').innerHTML = perfil ? `<dt>Nombre</dt><dd>${esc(perfil.nombre)}</dd><dt>Rol</dt><dd>${esc((ROLES[perfil.rol] || {}).label || perfil.rol)}</dd><dt>Correo</dt><dd>${esc(perfil.email)}</dd>` : '';
+}
+$('#pd-refresh').onclick = () => route();
+$('#pd-out').onclick = async () => { await sb.auth.signOut(); route(); };
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { if (!$('#pendView').hidden) route(); else if (me) refreshCounts(); } });
+setInterval(() => { if (me && !document.hidden) refreshCounts(); }, 45000);
+
+/* ---------- Guía de instalación ---------- */
 (function(){
   const ua = navigator.userAgent || '';
   const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const isAndroid = /Android/i.test(ua);
   const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
-  const setOS = os => { document.querySelectorAll('#osSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === os)); $('#os-ios').hidden = os !== 'ios'; $('#os-android').hidden = os !== 'android'; };
+  const setOS = os => { $$('#osSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === os)); $('#os-ios').hidden = os !== 'ios'; $('#os-android').hidden = os !== 'android'; };
   $('#osSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setOS(b.dataset.v); });
   $('#notSafari').hidden = !(isIOS && /CriOS|FxiOS|EdgiOS|OPiOS/.test(ua));
   const open = () => { setOS(isAndroid ? 'android' : 'ios'); $('#installDlg').showModal(); };
-  $('#installOpen').onclick = open; $('#installOpen2').onclick = open;
+  $$('[data-install]').forEach(b => b.onclick = open);
   $('#installClose').onclick = () => $('#installDlg').close();
   $('#installDlg').addEventListener('click', e => { if (e.target === $('#installDlg')) $('#installDlg').close(); });
   $('#installX').onclick = () => { $('#installBar').hidden = true; LS.set('installDismissed', true); };
   if (!standalone && (isIOS || isAndroid) && !LS.get('installDismissed', false)) $('#installBar').hidden = false;
 })();
 
-/* ---------- init ---------- */
-if (!draft.firmas) draft.firmas = {solicitado:'',verificado:'',autorizado:'',recibido:''};
-if (!draft.firmasImg) draft.firmasImg = {};
-renderDatalists(); fillForm(); applyOnline();
+/* ---------- Inicio ---------- */
+renderDatalists(); renderRoles();
+if (!draft) draft = blank();
+route();
 })();
+
 </script>
 </body>
 </html>
