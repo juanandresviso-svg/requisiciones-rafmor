@@ -19,6 +19,7 @@
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@4.2.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <style>
 :root{
   --bg:#E9ECE7; --surface:#FFFFFF; --sunk:#F3F5F1; --ink:#1B2220; --muted:#5E6A66; --rule:#CDD3CC;
@@ -303,6 +304,13 @@ dialog.lb{background:#000}
 .histsum b{font-size:16px}
 .histsum.ok{background:var(--green-soft);border-color:transparent;color:var(--green)}
 .histlist{max-height:420px;overflow:auto;border:1px solid var(--rule);border-radius:10px;padding:0 12px;margin-bottom:12px}
+.drvwarn{margin:0 0 10px;padding:10px 12px;border-radius:10px;background:var(--red-soft);color:var(--red);font-size:14px;display:grid;gap:6px}
+.drvwarn .sel{width:100%}
+.drvday{display:flex;justify-content:space-between;gap:8px;font-size:14px;padding:4px 0;border-top:1px dashed var(--rule)}
+.drvday span:first-child{text-transform:capitalize}
+.drvday.done{color:var(--muted)}
+.drvday.done span:first-child{text-decoration:line-through}
+#driveBlock .pick label:last-child{grid-column:auto}
 </style>
 </head>
 <body>
@@ -565,6 +573,19 @@ dialog.lb{background:#000}
       <input class="in" id="uSearch" type="search" placeholder="Buscar por nombre, correo, empresa o rol" style="margin-top:10px" autocomplete="off">
       <ul class="hist" id="lUsers" style="margin-top:8px"></ul>
       <div class="empty" id="eUsers" hidden></div>
+    </div>
+    <div class="block" id="driveBlock" hidden>
+      <h2>Fotos históricas desde Google Drive</h2>
+      <p class="hint" style="margin-top:-6px">Carga los registros fotográficos anteriores. Cada carpeta de fecha queda como un registro de ese día en el Archivo de obra, dentro de su puesto fronterizo. Las carpetas llamadas "Antes" se guardan aparte para las fotos del antes.</p>
+      <ol class="hint" style="margin:0 0 12px;padding-left:18px"><li>En Google Drive, haz clic derecho sobre la carpeta principal y elige <b>Descargar</b>. Drive la entrega como un archivo .zip.</li><li>Elige aquí ese .zip. Mejor desde una computadora, porque son muchos archivos.</li></ol>
+      <div class="pick" style="grid-template-columns:1fr 1fr">
+        <label class="btn dark">Elegir el .zip<input type="file" id="drvZip" accept=".zip,application/zip" hidden></label>
+        <label class="btn">Elegir carpeta<input type="file" id="drvDir" webkitdirectory directory multiple hidden></label>
+      </div>
+      <div id="drvPrev"></div>
+      <p class="err" id="drvErr" hidden></p>
+      <button class="btn primary block100" id="drvBtn" hidden>Importar</button>
+      <p class="hint" id="drvProg" style="text-align:center;margin-top:8px"></p>
     </div>
     <div class="block" id="histBlock" hidden>
       <h2>Requisiciones históricas</h2>
@@ -1554,10 +1575,139 @@ $('#histBtn').onclick = async () => {
   finally { b.disabled = false; }
 };
 
+/* ---------- Fotos históricas desde Google Drive (maestro) ---------- */
+const MES_N = { ENE:1, ENERO:1, FEB:2, FEBRERO:2, MAR:3, MARZO:3, ABR:4, ABRIL:4, MAY:5, MAYO:5, JUN:6, JUNIO:6, JUL:7, JULIO:7, AGO:8, AGOSTO:8,
+  SEP:9, SEPT:9, SET:9, SEPTIEMBRE:9, SETIEMBRE:9, OCT:10, OCTUBRE:10, NOV:11, NOVIEMBRE:11, DIC:12, DICIEMBRE:12 };
+const STOP = new Set(['DE','DEL','EN','LA','EL','LOS','LAS','B.P.F','BPF','B','P','F','PUESTO','BASE']);
+const toks = s => normTxt(s).replace(/[^A-Z0-9 ]/g, ' ').split(' ').filter(t => t && !STOP.has(t));
+function matchBase(name){
+  const t = toks(name); if (!t.length) return null; let best = null, score = 0;
+  CECOS.bases.forEach(b => { const bt = toks(b.nombre); const hit = bt.filter(x => t.includes(x)).length; const sc = hit / Math.max(bt.length, t.length);
+    if (hit && hit === bt.length && sc > score) { score = sc; best = b.n; } });
+  return best;
+}
+function dateFromText(s){
+  const n = normTxt(s);
+  let m = n.match(/(\d{1,2})\s*(?:DE\s+)?([A-Z]{3,10})\.?\s*(?:DE\s+|DEL\s+)?(\d{4})/);
+  if (m && MES_N[m[2]]) return `${m[3]}-${String(MES_N[m[2]]).padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  m = n.match(/(20\d{2})[-_.](\d{2})[-_.](\d{2})/); if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = n.match(/(\d{1,2})[-_.\/](\d{1,2})[-_.\/](20\d{2})/); if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  return '';
+}
+const MEDIA_EXT = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', heic:'image/heic', heif:'image/heif', webp:'image/webp', mp4:'video/mp4', mov:'video/quicktime', webm:'video/webm', '3gp':'video/3gpp' };
+let drv = null; // { grupos:[...], antes:[...], sueltos:[...], carpetas:{} }
+function buildDrive(entries){
+  // entries: [{ path:'Raiz/Socuavo/Septiembre/12 Septiembre 2026/PHOTO.jpg', size, get: async () => Blob }]
+  const grupos = new Map(), antes = [], sueltos = [], sinBase = new Map(); let dup = 0, otros = 0;
+  const seen = new Set();
+  entries.forEach(e => {
+    const parts = e.path.split('/').filter(Boolean); const name = parts[parts.length - 1];
+    if (name.startsWith('.') || parts.includes('__MACOSX')) return;
+    const ext = (name.split('.').pop() || '').toLowerCase(); const mime = MEDIA_EXT[ext];
+    if (!mime) { otros++; return; }
+    const dirs = parts.slice(0, -1);
+    let base = null, baseDir = ''; for (const d of dirs) { const b = matchBase(d); if (b) { base = b; baseDir = d; break; } }
+    const isAntes = dirs.some(d => normTxt(d) === 'ANTES' || normTxt(d).startsWith('ANTES '));
+    let fecha = ''; for (let i = dirs.length - 1; i >= 0 && !fecha; i--) fecha = dateFromText(dirs[i]);
+    if (!fecha) fecha = dateFromText(name);
+    const key = `${base}|${fecha}|${name.replace(/\s*\(\d+\)(?=\.[^.]+$)/, '')}|${e.size}`; if (seen.has(key)) { dup++; return; } seen.add(key);
+    const item = { path: e.path, name, size: e.size, mime, kind: mime.startsWith('video/') ? 'video' : 'foto', get: e.get };
+    if (!base) { const top = dirs[1] || dirs[0] || '(raíz)'; if (!sinBase.has(top)) sinBase.set(top, []); sinBase.get(top).push(item); return; }
+    if (isAntes) { antes.push(Object.assign(item, { base })); return; }
+    if (!fecha) { sueltos.push(Object.assign(item, { base })); return; }
+    const folder = dirs.join('/');
+    const gk = `${base}|${fecha}`;
+    if (!grupos.has(gk)) grupos.set(gk, { base, fecha, carpeta: dirs.slice(dirs.indexOf(baseDir)).join(' / '), origen: 'drive:' + normTxt(baseDir) + '/' + fecha, files: [] });
+    grupos.get(gk).files.push(item);
+  });
+  const G = [...grupos.values()].sort((a, b) => a.base - b.base || a.fecha.localeCompare(b.fecha));
+  G.forEach(g => g.files.sort((a, b) => a.name.localeCompare(b.name)));
+  return { grupos: G, antes, sueltos, sinBase: [...sinBase.entries()], dup, otros };
+}
+async function renderDrivePreview(){
+  const d = drv, box = $('#drvPrev');
+  let hechos = [];
+  try { hechos = await rpc('rq_reportes_origenes', { p_origenes: d.grupos.map(g => g.origen) }) || []; } catch (e) {}
+  d.grupos.forEach(g => g.hecho = hechos.includes(g.origen));
+  const pend = d.grupos.filter(g => !g.hecho), nF = pend.reduce((a, g) => a + g.files.filter(f => f.kind === 'foto').length, 0), nV = pend.reduce((a, g) => a + g.files.filter(f => f.kind === 'video').length, 0);
+  const mb = pend.reduce((a, g) => a + g.files.reduce((x, f) => x + f.size, 0), 0);
+  const byBase = {}; d.grupos.forEach(g => (byBase[g.base] = byBase[g.base] || []).push(g));
+  box.innerHTML = `<div class="histsum"><b>${d.grupos.length} días con fotos en ${Object.keys(byBase).length} puesto${Object.keys(byBase).length === 1 ? '' : 's'}</b>
+      <span>${pend.length ? `Por importar: ${pend.length} día${pend.length === 1 ? '' : 's'}, ${nF} fotos y ${nV} videos (${fileSize(mb)}).` : 'Todo lo de este archivo ya está importado.'}</span>
+      ${d.dup ? `<span>${d.dup} archivo${d.dup === 1 ? '' : 's'} repetido${d.dup === 1 ? '' : 's'} se omite${d.dup === 1 ? '' : 'n'}.</span>` : ''}
+      ${d.antes.length ? `<span>${d.antes.length} foto${d.antes.length === 1 ? '' : 's'} en carpetas "Antes": quedan para las fotos del antes (paso 7).</span>` : ''}
+      ${d.otros ? `<span>${d.otros} archivo${d.otros === 1 ? '' : 's'} que no son fotos ni videos se ignora${d.otros === 1 ? '' : 'n'}.</span>` : ''}</div>
+    ${d.sinBase.map(([dir, fs]) => `<div class="drvwarn">La carpeta <b>${esc(dir)}</b> (${fs.length} archivos) no coincide con ningún puesto. <select class="in sel" data-sinbase="${esc(dir)}"><option value="">Asignar puesto…</option>${CECOS.bases.map(b => `<option value="${b.n}">${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</option>`).join('')}</select></div>`).join('')}
+    ${d.sueltos.length ? `<div class="drvwarn">${d.sueltos.length} archivo${d.sueltos.length === 1 ? '' : 's'} sin fecha en el nombre de la carpeta ni del archivo; no se importa${d.sueltos.length === 1 ? '' : 'n'}.</div>` : ''}
+    <ul class="hist histlist">${Object.entries(byBase).map(([b, gs]) => `<li><div class="h1"><b>${esc(baseName(+b))}</b><span style="color:var(--muted);font-weight:500">${gs.length} día${gs.length === 1 ? '' : 's'}</span></div>
+      ${gs.map(g => { const f = g.files.filter(x => x.kind === 'foto').length, v = g.files.length - f; return `<div class="drvday ${g.hecho ? 'done' : ''}" data-g="${esc(g.origen)}"><span>${dayLabel(g.fecha)}</span><span>${f} foto${f === 1 ? '' : 's'}${v ? ` · ${v} video${v === 1 ? '' : 's'}` : ''}${g.hecho ? ' · ya importado' : ''}</span></div>`; }).join('')}</li>`).join('')}</ul>`;
+  $('#drvBtn').hidden = !pend.length; $('#drvBtn').textContent = `Importar ${pend.length} día${pend.length === 1 ? '' : 's'} (${nF} fotos, ${nV} videos)`;
+}
+$('#drvPrev').addEventListener('change', e => {
+  const s = e.target.closest('[data-sinbase]'); if (!s || !s.value || !drv) return;
+  const i = drv.sinBase.findIndex(([d]) => d === s.dataset.sinbase); if (i < 0) return;
+  const [dir, files] = drv.sinBase.splice(i, 1)[0]; const base = +s.value;
+  files.forEach(it => { const fecha = dateFromText(it.path.split('/').slice(0, -1).reverse().find(p => dateFromText(p)) || '') || dateFromText(it.name);
+    if (!fecha) { drv.sueltos.push(Object.assign(it, { base })); return; }
+    const gk = 'drive:' + normTxt(dir) + '/' + fecha; let g = drv.grupos.find(x => x.origen === gk);
+    if (!g) { g = { base, fecha, carpeta: dir, origen: gk, files: [] }; drv.grupos.push(g); } g.files.push(it); });
+  drv.grupos.sort((a, b) => a.base - b.base || a.fecha.localeCompare(b.fecha)); renderDrivePreview();
+});
+async function loadDriveEntries(entries){
+  $('#drvErr').hidden = true; $('#drvBtn').hidden = true; $('#drvProg').textContent = '';
+  drv = buildDrive(entries);
+  if (!drv.grupos.length && !drv.sinBase.length) { $('#drvPrev').innerHTML = ''; $('#drvErr').textContent = 'No encontré carpetas con fotos organizadas por puesto y fecha.'; $('#drvErr').hidden = false; return; }
+  await renderDrivePreview();
+}
+$('#drvZip').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  $('#drvPrev').innerHTML = '<p class="hint">Abriendo ' + esc(f.name) + ' (' + fileSize(f.size) + ')…</p>';
+  try {
+    if (!window.JSZip) throw new Error('No se pudo cargar el lector de .zip.');
+    const zip = await JSZip.loadAsync(f);
+    const entries = []; zip.forEach((p, z) => { if (!z.dir) entries.push({ path: p, size: (z._data && z._data.uncompressedSize) || 0, get: () => z.async('blob') }); });
+    await loadDriveEntries(entries);
+  } catch (er) { $('#drvPrev').innerHTML = ''; $('#drvErr').textContent = er.message || 'No se pudo abrir el .zip'; $('#drvErr').hidden = false; }
+});
+$('#drvDir').addEventListener('change', async e => {
+  const fs = [...e.target.files]; e.target.value = ''; if (!fs.length) return;
+  await loadDriveEntries(fs.map(f => ({ path: f.webkitRelativePath || f.name, size: f.size, get: async () => f })));
+});
+$('#drvBtn').onclick = async () => {
+  if (!drv) return;
+  const pend = drv.grupos.filter(g => !g.hecho);
+  if (!confirm(`¿Importar ${pend.length} días de fotos al Archivo de obra? Deja la app abierta hasta que termine.`)) return;
+  const b = $('#drvBtn'); b.disabled = true; let ok = 0, fallos = [];
+  const total = pend.reduce((a, g) => a + g.files.length, 0); let done = 0;
+  for (const g of pend) {
+    try {
+      g.id = g.id || uuid();
+      for (let i = 0; i < g.files.length; i++) {
+        const f = g.files[i]; done++;
+        $('#drvProg').textContent = `${baseName(g.base).replace('B.P.F ', '')} · ${fmt(g.fecha)}: ${f.kind} ${i + 1} de ${g.files.length} (total ${done} de ${total})`;
+        if (f.up) continue;
+        let blob = await f.get(), mime = f.mime;
+        if (f.kind === 'foto') { const r = await prepImage({ file: new File([blob], f.name, { type: mime }), mime }); blob = r.blob; mime = r.mime; }
+        if (f.kind === 'video' && blob.size > MAX_VIDEO) throw new Error(`${f.name} pesa ${fileSize(blob.size)}; el máximo es 50 MB`);
+        const path = `${me.id}/${g.fecha}/${g.id}/${String(i + 1).padStart(3, '0')}-${f.kind}.${EXT[mime] || 'bin'}`;
+        const { error } = await sb.storage.from(BUCKET).upload(path, await blob.arrayBuffer(), { contentType: mime, upsert: false, cacheControl: '31536000' });
+        if (error && !/exists|Duplicate/i.test(error.message || '')) throw mapErr(error);
+        f.up = { path, tipo: f.kind, mime, size: blob.size, nombre: f.name };
+      }
+      await rpc('rq_reporte_historico', { p_id: g.id, p_puesto: g.base, p_fecha: g.fecha, p_archivos: g.files.map(f => f.up), p_origen: g.origen, p_descripcion: null });
+      g.hecho = true; ok++;
+    } catch (e) { fallos.push(`${baseName(g.base).replace('B.P.F ', '')} ${fmt(g.fecha)}: ${e.message}`); }
+  }
+  b.disabled = false;
+  $('#drvProg').textContent = `Listo: ${ok} día${ok === 1 ? '' : 's'} importado${ok === 1 ? '' : 's'}.` + (fallos.length ? ' Con problemas: ' + fallos.join('; ') + '. Toca Importar de nuevo para reintentar.' : '');
+  await renderDrivePreview();
+  toast(fallos.length ? 'Importación con problemas' : 'Fotos importadas al Archivo de obra');
+};
+
 /* ---------- Mi cuenta y ajustes ---------- */
 function renderSettings(){
   $('#usersBlock').hidden = !seesUsers(); if (seesUsers()) loadUsers();
-  $('#histBlock').hidden = !me.es_master;
+  $('#histBlock').hidden = !me.es_master; $('#driveBlock').hidden = !me.es_master;
   $('#myRole').textContent = roleText(me) + (me.es_master ? ' · Maestro' : '');
   $('#myEmail').textContent = me.email;
   [['my-nombre','nombre'],['my-empresa','empresa'],['my-cargo','cargo'],['my-tel','telefono'],['my-area','area'],['my-coord','coordinacion']].forEach(([id,k]) => $('#'+id).value = me[k] || '');
@@ -1829,7 +1979,7 @@ async function renderArchiveList(){
     const extra = (r.archivos || []).length - shown.length - (videos.length ? 1 : 0);
     const el = document.createElement('article'); el.className = 'rep'; el.dataset.rep = r.id; el.tabIndex = 0;
     el.innerHTML = `<div class="rh"><span>${esc(r.puesto_nombre.replace('B.P.F ', 'B.P.F '))}</span><span style="color:var(--muted);font-weight:500">${(r.archivos || []).length} archivo${(r.archivos || []).length === 1 ? '' : 's'}</span></div>
-      <div class="rm">${esc(r.autor_nombre)}${r.empresa ? ' · ' + esc(r.empresa) : ''}${r.frente ? ' · ' + esc(r.frente) : ''}${r.avance != null ? ' · <b style="color:var(--green)">Avance ' + r.avance + '%</b>' : ''}</div>
+      ${r.historico ? '<div class="tags" style="margin:2px 0"><span class="tag hist">Histórico</span></div>' : ''}<div class="rm">${esc(r.autor_nombre)}${r.empresa ? ' · ' + esc(r.empresa) : ''}${r.frente ? ' · ' + esc(r.frente) : ''}${r.avance != null ? ' · <b style="color:var(--green)">Avance ' + r.avance + '%</b>' : ''}</div>
       <p class="rd">${esc(r.descripcion)}</p>
       <div class="thumbs">${shown.map(a => `<div class="t"><img loading="lazy" alt="" src="${url(a.path)}"></div>`).join('')}${videos.length ? `<div class="t">▶ ${videos.length}</div>` : ''}${extra > 0 ? `<div class="t">+${extra}</div>` : ''}</div>`;
     box.appendChild(el);
@@ -2035,6 +2185,7 @@ async function openReport(id, row){
         ${r.clima ? `<dt>Clima</dt><dd>${esc(r.clima)}</dd>` : ''}
         <dt>Registrado</dt><dd>${new Date(r.creado).toLocaleString('es-VE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</dd>
       </dl>
+      ${r.historico ? `<p class="lock" style="margin:0 0 10px">Registro histórico cargado desde Google Drive${r.origen ? ' (' + esc(r.origen.replace(/^drive:/, '')) + ')' : ''}.</p>` : ''}
       <div class="sec">Avance del día</div><p style="margin:0 0 10px;white-space:pre-wrap">${esc(r.descripcion)}</p>
       ${(r.fases || []).length ? `<div class="sec">Avance por fase ${r.avance != null ? '· general ' + r.avance + '%' : ''}</div><table class="ftab">${r.fases.map(f => `<tr><td>${esc(f.fase)}${f.obs ? `<small>${esc(f.obs)}</small>` : ''}</td><td class="p">${f.pct != null ? f.pct + '%' : '—'}</td></tr>`).join('')}</table>` : ''}
       ${r.observaciones ? `<div class="sec">Observaciones</div><p style="margin:0 0 10px;white-space:pre-wrap">${esc(r.observaciones)}</p>` : ''}
