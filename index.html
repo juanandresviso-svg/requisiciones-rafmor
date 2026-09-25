@@ -287,6 +287,17 @@ dialog.lb{background:#000}
 .wdays li.has{color:var(--ink)}
 .wdays li.has b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:4px;background:var(--green);margin-right:6px;vertical-align:1px}
 .wdays li span{font-size:14px}
+.ustats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.ustats div{background:var(--sunk);border:1px solid var(--rule);border-radius:10px;padding:8px 6px;text-align:center}
+.ustats b{display:block;font:700 22px/1 "Barlow Condensed",sans-serif}
+.ustats span{display:block;font-size:12px;color:var(--muted);margin-top:3px}
+.ustats p{grid-column:1/-1;margin:2px 0 0;font-size:13px;color:var(--muted)}
+.ucon{font-size:14px;margin:4px 0 2px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.ucon::before{content:"";width:9px;height:9px;border-radius:5px;background:var(--muted);flex:0 0 auto;margin-right:2px}
+.ucon.hoy::before{background:#2E9E5B}.ucon.semana::before{background:var(--amber)}.ucon.nunca::before{background:var(--red)}
+.ucon.hoy b{color:var(--green)}
+.umeta{font-size:12.5px;color:var(--muted);line-height:1.45;margin-bottom:6px}
+.ucon .uf{color:var(--muted);font-size:13px}
 </style>
 </head>
 <body>
@@ -544,7 +555,9 @@ dialog.lb{background:#000}
     <div class="block" id="usersBlock" hidden>
       <h2>Usuarios <button class="btn ghost" id="uRefresh" style="min-height:36px;padding:0 8px;font-size:15px">Actualizar</button></h2>
       <p class="hint" id="usersHint" style="margin-top:-6px"></p>
-      <div class="seg" id="seg-ufil"><button type="button" data-v="pendiente" aria-pressed="true">Por aprobar</button><button type="button" data-v="activo" aria-pressed="false">Activos</button><button type="button" data-v="otros" aria-pressed="false">Inactivos</button></div>
+      <div class="ustats" id="uStats"></div>
+      <div class="seg" id="seg-ufil"><button type="button" data-v="pendiente" aria-pressed="true">Por aprobar</button><button type="button" data-v="activo" aria-pressed="false">Activos</button><button type="button" data-v="otros" aria-pressed="false">Inactivos</button><button type="button" data-v="todos" aria-pressed="false">Todos</button></div>
+      <input class="in" id="uSearch" type="search" placeholder="Buscar por nombre, correo, empresa o rol" style="margin-top:10px" autocomplete="off">
       <ul class="hist" id="lUsers" style="margin-top:8px"></ul>
       <div class="empty" id="eUsers" hidden></div>
     </div>
@@ -1390,15 +1403,29 @@ let uFilter = 'pendiente', usersCache = [];
 $('#seg-ufil').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; uFilter = b.dataset.v; segSet('seg-ufil', uFilter); renderUsers(); });
 $('#uRefresh').onclick = () => loadUsers();
 async function loadUsers(){
-  $('#usersHint').textContent = me.es_master ? 'Aprueba los registros nuevos y administra los roles. Solo tú ves estos controles.' : 'Lista de usuarios de la plataforma. Solo el usuario maestro puede aprobarlos o cambiarlos.';
+  $('#usersHint').textContent = me.es_master ? 'Aprueba los registros nuevos, administra los roles y revisa cuándo se conectó cada usuario por última vez. Solo tú ves estos datos.' : 'Lista de usuarios de la plataforma. Solo el usuario maestro puede aprobarlos o cambiarlos.';
   try { usersCache = await rpc('rq_usuarios') || []; renderUsers(); setCount('cUsers', me.es_master ? usersCache.filter(u => u.estado === 'pendiente').length : 0); }
   catch (e) { $('#eUsers').hidden = false; $('#eUsers').textContent = e.message; }
 }
 const roleOpts = sel => Object.entries(ROLES).map(([k, r]) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${r.label}</option>`).join('');
 const baseOpts = (id, sel, show) => `<select class="in sel" data-ubase="${id}" aria-label="Base" ${show ? '' : 'hidden'}><option value="">Base…</option>${CECOS.bases.map(b => `<option value="${b.n}" ${+sel === b.n ? 'selected' : ''}>${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</option>`).join('')}</select>`;
+const hace = ts => { if (!ts) return 'Nunca'; const s = (Date.now() - new Date(ts).getTime()) / 1000;
+  if (s < 90) return 'Ahora mismo'; if (s < 3600) return 'Hace ' + Math.round(s/60) + ' min'; if (s < 86400) return 'Hace ' + Math.round(s/3600) + ' h';
+  const d = Math.round(s/86400); return d === 1 ? 'Ayer' : d < 30 ? 'Hace ' + d + ' días' : 'Hace ' + Math.round(d/30) + ' mes' + (Math.round(d/30) === 1 ? '' : 'es'); };
+const fechaHora = ts => ts ? new Date(ts).toLocaleString('es-VE', { timeZone:'America/Caracas', day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+const conClass = ts => { if (!ts) return 'nunca'; const h = (Date.now() - new Date(ts).getTime()) / 3600000; return h < 24 ? 'hoy' : h < 168 ? 'semana' : 'vieja'; };
+$('#uSearch').addEventListener('input', () => renderUsers());
 function renderUsers(){
   segSet('seg-ufil', uFilter);
-  const L = usersCache.filter(u => uFilter === 'pendiente' ? u.estado === 'pendiente' : uFilter === 'activo' ? u.estado === 'activo' : ['rechazado','inactivo'].includes(u.estado));
+  if (me.es_master) {
+    const act = usersCache.filter(u => u.estado === 'activo');
+    const hoy = act.filter(u => conClass(u.ultima_conexion) === 'hoy').length, sem = act.filter(u => ['hoy','semana'].includes(conClass(u.ultima_conexion))).length;
+    const nunca = act.filter(u => !u.ultima_conexion).length, pend = usersCache.filter(u => u.estado === 'pendiente').length;
+    $('#uStats').innerHTML = `<div><b>${usersCache.length}</b><span>registrados</span></div><div><b>${hoy}</b><span>activos hoy</span></div><div><b>${sem}</b><span>esta semana</span></div><div><b>${pend}</b><span>por aprobar</span></div>` + (nunca ? `<p>${nunca} usuario${nunca === 1 ? '' : 's'} aprobado${nunca === 1 ? '' : 's'} nunca ha${nunca === 1 ? '' : 'n'} entrado.</p>` : '');
+  } else $('#uStats').innerHTML = '';
+  const q = ($('#uSearch').value || '').trim().toLowerCase();
+  const L = usersCache.filter(u => uFilter === 'todos' ? true : uFilter === 'pendiente' ? u.estado === 'pendiente' : uFilter === 'activo' ? u.estado === 'activo' : ['rechazado','inactivo'].includes(u.estado))
+    .filter(u => !q || [u.nombre, u.email, u.empresa, u.cargo, roleText(u)].join(' ').toLowerCase().includes(q));
   $('#lUsers').innerHTML = L.map(u => {
     const tag = { pendiente:'<span class="tag pend">Por aprobar</span>', activo:'<span class="tag ok">Activo</span>', rechazado:'<span class="tag bad">Rechazado</span>', inactivo:'<span class="tag bad">Desactivado</span>' }[u.estado];
     let acts = '';
@@ -1410,10 +1437,12 @@ function renderUsers(){
     return `<li><div class="h1"><b>${esc(u.nombre)}</b>${u.es_master ? '<span class="tag com">Maestro</span>' : ''}</div>
       <div class="tags" style="margin:4px 0 2px"><span class="tag">${esc(roleText(u))}</span>${tag}</div>
       <div class="h2">${esc(u.email)}${u.empresa ? '. ' + esc(u.empresa) : ''}${u.cargo ? ', ' + esc(u.cargo) : ''}${u.telefono ? '. Tel. ' + esc(u.telefono) : ''}</div>
+      ${me.es_master ? `<div class="ucon ${conClass(u.ultima_conexion)}"><b>Última conexión: ${hace(u.ultima_conexion)}</b>${u.ultima_conexion ? `<span class="uf">(${fechaHora(u.ultima_conexion)})</span>` : ''}</div>
+      <div class="umeta">Último inicio de sesión: ${fechaHora(u.ultimo_ingreso)} · Registrado: ${fechaHora(u.creado)}${u.aprobado_por ? ' · Aprobado por ' + esc(u.aprobado_por) : ''}<br>Requisiciones: ${u.requisiciones || 0} · Reportes diarios: ${u.reportes || 0} · Firmas: ${u.firmas || 0}</div>` : ''}
       ${acts ? `<div class="hb">${acts}</div>` : ''}</li>`;
   }).join('');
   $('#eUsers').hidden = L.length > 0;
-  $('#eUsers').textContent = { pendiente:'No hay registros por aprobar.', activo:'No hay usuarios activos.', otros:'No hay usuarios desactivados.' }[uFilter];
+  $('#eUsers').textContent = q ? 'Ningún usuario coincide con la búsqueda.' : { pendiente:'No hay registros por aprobar.', activo:'No hay usuarios activos.', otros:'No hay usuarios desactivados.', todos:'No hay usuarios.' }[uFilter];
 }
 $('#lUsers').addEventListener('change', e => { const s = e.target.closest('[data-urol]'); if (!s) return; const bs = document.querySelector(`[data-ubase="${s.dataset.urol}"]`); if (bs) bs.hidden = s.value !== 'comandante_base'; });
 $('#lUsers').addEventListener('click', async e => {
