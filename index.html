@@ -381,6 +381,11 @@ header.top{padding-top:0}
 #authView .brandbar,#pendView .brandbar{margin-bottom:0}
 #authTabs{margin-top:14px}
 @media (max-width:370px){nav.tabs{gap:2px}nav.tabs button{padding:10px 3px 12px;font-size:14px}}
+.pushbar{background:#2E5E4F}
+.keyrow{display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center;padding:8px;border:1px solid var(--rule);border-radius:8px;background:var(--sunk);margin-bottom:6px}
+.keyrow span{grid-column:1/-1;font-size:12px;font-weight:700;color:var(--muted)}
+.keyrow code{font-size:12px;word-break:break-all;line-height:1.35}
+.keyrow .btn{min-height:36px;padding:0 10px}
 </style>
 </head>
 <body>
@@ -490,6 +495,11 @@ header.top{padding-top:0}
   </header>
 
   <div class="updbar" id="updBar" hidden role="status"><span><b>Hay una versión nueva</b>de Puestos Fronterizos.</span><button class="btn primary" id="updBtn">Actualizar</button></div>
+  <div class="install pushbar" id="pushBar" hidden style="margin-top:16px">
+    <p><b>Activa las notificaciones</b><span id="pushBarTxt">Te avisamos en el teléfono de lo que te toca.</span></p>
+    <button class="btn" id="pushBarBtn">Activar</button>
+    <button class="x" id="pushBarX" aria-label="Ocultar aviso">×</button>
+  </div>
   <div class="install" id="installBar" hidden style="margin-top:16px">
     <p><b>Instálala en tu teléfono</b>Tenla como un ícono en la pantalla de inicio.</p>
     <button class="btn" data-install>Ver cómo</button>
@@ -742,6 +752,17 @@ header.top{padding-top:0}
         <button class="btn block100" id="my-pass-btn">Cambiar contraseña</button>
       </details>
       <button class="btn ghost block100 danger" id="logout" style="border:0;margin-top:8px">Cerrar sesión</button>
+    </div>
+    <div class="block" id="pushBlock">
+      <h2>Notificaciones en este teléfono <span class="st" id="pushSt"></span></h2>
+      <p class="hint" id="pushTxt" style="margin-top:-6px"></p>
+      <div class="addrow"><button class="btn dark" id="pushBtn" style="flex:1">Activar notificaciones</button><button class="btn" id="pushTest" hidden>Probar</button></div>
+    </div>
+    <div class="block" id="pushCfgBlock" hidden>
+      <h2>Configurar notificaciones push</h2>
+      <p class="hint" style="margin-top:-6px">Solo una vez. Genera las claves aquí (se crean en tu teléfono, no se envían a ningún lado) y cópialas en Supabase siguiendo la guía.</p>
+      <button class="btn block100" id="pushGen">Generar claves</button>
+      <div id="pushKeys"></div>
     </div>
     <div class="block"><h2>Novedades <span class="st" id="appVer"></span></h2><button class="btn block100" id="verNovedades">Ver las novedades de la app</button></div>
     <div class="block"><h2>Instalar en el teléfono</h2><button class="btn block100" data-install>Ver instrucciones para Android y iPhone</button></div>
@@ -2171,6 +2192,7 @@ $('#lbDel').onclick = async () => {
 
 /* ---------- Mi cuenta y ajustes ---------- */
 function renderSettings(){
+  pintarPush();
   $('#usersBlock').hidden = !seesUsers(); if (seesUsers()) loadUsers();
   $('#histBlock').hidden = !me.es_master; $('#driveBlock').hidden = !me.es_master; $('#antesBlock').hidden = !canAntes();
   $('#myRole').textContent = roleText(me) + (me.es_master ? ' · Maestro' : '');
@@ -2785,8 +2807,16 @@ $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mo
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.6.2';
+const APP_VERSION = '4.7.0';
 const NOVEDADES = [
+  { v: '4.7.0', fecha: '2026-09-26', titulo: 'Notificaciones en el teléfono', items: [
+    { r: ['gerente_general','compras','costos','master'], t: 'Ahora puedes recibir una notificación en el teléfono cada vez que se hace una requisición. Actívala en el aviso de arriba o en Ajustes → Notificaciones en este teléfono.' },
+    { r: ['gerente_operaciones'], t: 'Ahora puedes recibir notificaciones en el teléfono: cada requisición nueva, cada reporte nuevo y un recordatorio a las 6:00 pm si no has hecho tu reporte del día. Actívalas en Ajustes → Notificaciones en este teléfono.' },
+    { r: ['gerente_general','master'], t: 'También te llega una notificación cada vez que se registra un reporte.' },
+    { r: ['contratista'], t: 'Activa las notificaciones para recibir a las 6:00 pm el recordatorio de tu reporte de avance diario (Ajustes → Notificaciones en este teléfono).' },
+    { r: ['contratista','gerente_operaciones'], t: 'El recordatorio del reporte diario ahora llega a las 6:00 pm.' },
+    { r: ['master'], t: 'Para activarlas en toda la plataforma, configura las claves en Ajustes → Configurar notificaciones push y sigue la guía.' }
+  ] },
   { v: '4.6.2', fecha: '2026-09-26', titulo: 'Novedades', items: [
     { r: ['*'], t: 'Nueva imagen: el encabezado de la app ahora lleva el logo de Rafmor sobre el nombre Puestos Fronterizos.' }
   ] },
@@ -2857,6 +2887,94 @@ async function buscarActualizacion(){
 $('#updBtn').onclick = () => { const u = location.href.split('#')[0].split('?')[0]; location.replace(u + '?v=' + Date.now()); };
 setInterval(buscarActualizacion, 5 * 60 * 1000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) buscarActualizacion(); });
+
+/* ---------- Notificaciones push al teléfono ---------- */
+Object.assign(ERRS, { sin_suscripcion:'Este teléfono todavía no tiene las notificaciones activadas.' });
+const PUSH_ROLES = ['gerente_general','gerente_operaciones','compras','costos','contratista'];
+const PUSH_QUE = { gerente_general:'nuevas requisiciones y nuevos reportes', gerente_operaciones:'nuevas requisiciones, nuevos reportes y el recordatorio de las 6:00 pm', compras:'cada requisición nueva', costos:'cada requisición nueva', contratista:'el recordatorio de las 6:00 pm para hacer tu reporte diario' };
+let swReg = null;
+const pushSoportado = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const esIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const esInstalada = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+async function registrarSW(){ if (!('serviceWorker' in navigator) || swReg) return swReg; try { swReg = await navigator.serviceWorker.register('sw.js'); await navigator.serviceWorker.ready; } catch (e) { swReg = null; } return swReg; }
+const b64uToU8 = s => { const p = '='.repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(b, c => c.charCodeAt(0)); };
+async function estadoPush(){
+  if (!pushSoportado()) return esIOS() && !esInstalada() ? 'instalar' : 'no';
+  if (!me || !me.vapid_public) return 'sincfg';
+  if (Notification.permission === 'denied') return 'bloqueado';
+  const r = await registrarSW(); if (!r) return 'no';
+  const sub = await r.pushManager.getSubscription();
+  return sub && Notification.permission === 'granted' ? 'activo' : 'inactivo';
+}
+async function activarPush(){
+  const r = await registrarSW(); if (!r) throw new Error('Este navegador no permite notificaciones.');
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') throw new Error(perm === 'denied' ? 'Bloqueaste las notificaciones. Actívalas en los ajustes del teléfono para esta app.' : 'No se dio el permiso.');
+  let sub = await r.pushManager.getSubscription();
+  if (!sub) sub = await r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToU8(me.vapid_public) });
+  const j = sub.toJSON();
+  await rpc('rq_push_guardar', { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_ua: navigator.userAgent.slice(0, 200) });
+}
+async function desactivarPush(){
+  const r = await registrarSW(); const sub = r && await r.pushManager.getSubscription();
+  if (sub) { try { await rpc('rq_push_borrar', { p_endpoint: sub.endpoint }); } catch (e) {} await sub.unsubscribe(); }
+}
+async function pintarPush(){
+  const st = await estadoPush(); const btn = $('#pushBtn'), test = $('#pushTest');
+  const txt = { activo:'Las notificaciones están activas en este teléfono.', inactivo:'Recibe en este teléfono los avisos importantes, aunque la app esté cerrada.', bloqueado:'Las notificaciones están bloqueadas para esta app. Actívalas en los ajustes del teléfono (Notificaciones) y vuelve aquí.',
+    sincfg:'El administrador todavía no activó las notificaciones al teléfono.', instalar:'En iPhone, primero agrega la app a la pantalla de inicio (Compartir → Agregar a pantalla de inicio) y ábrela desde ese ícono. Después actívalas aquí.', no:'Este navegador no permite notificaciones. Usa Chrome en Android o la app instalada en iPhone.' }[st];
+  const que = PUSH_QUE[me.rol] || (me.es_master ? PUSH_QUE.gerente_general : '');
+  $('#pushTxt').textContent = txt + (que && ['activo','inactivo'].includes(st) ? ` Te llegan: ${que}.` : '');
+  $('#pushSt').textContent = st === 'activo' ? 'Activas' : st === 'bloqueado' ? 'Bloqueadas' : 'Apagadas'; $('#pushSt').classList.toggle('ok', st === 'activo');
+  btn.hidden = !['activo','inactivo'].includes(st); btn.textContent = st === 'activo' ? 'Desactivar en este teléfono' : 'Activar notificaciones';
+  btn.classList.toggle('dark', st !== 'activo'); test.hidden = st !== 'activo';
+  $('#pushCfgBlock').hidden = !me.es_master;
+  const quiere = me.es_master || PUSH_ROLES.includes(me.rol);
+  $('#pushBar').hidden = !(quiere && (st === 'inactivo' || st === 'instalar') && !LS.get('pushBarOculta:' + me.id, false));
+  if (!$('#pushBar').hidden) { $('#pushBarTxt').textContent = st === 'instalar' ? 'En iPhone, primero agrega la app a la pantalla de inicio.' : `Te avisamos en el teléfono de ${que || 'lo importante'}.`; $('#pushBarBtn').textContent = st === 'instalar' ? 'Ver cómo' : 'Activar'; }
+  return st;
+}
+$('#pushBtn').onclick = async () => {
+  const b = $('#pushBtn'); b.disabled = true;
+  try { if ((await estadoPush()) === 'activo') { await desactivarPush(); toast('Notificaciones desactivadas en este teléfono'); } else { await activarPush(); toast('Notificaciones activadas'); } }
+  catch (e) { toast(e.message || 'No se pudo cambiar'); }
+  finally { b.disabled = false; pintarPush(); }
+};
+$('#pushTest').onclick = async () => { try { const n = await rpc('rq_push_prueba'); toast(`Enviada a ${n} teléfono${n === 1 ? '' : 's'}. Debería llegar en unos segundos.`); } catch (e) { toast(e.message); } };
+$('#pushBarBtn').onclick = async () => {
+  if ((await estadoPush()) === 'instalar') { $$('[data-install]')[0].click(); return; }
+  try { await activarPush(); toast('Notificaciones activadas'); } catch (e) { toast(e.message); } pintarPush();
+};
+$('#pushBarX').onclick = () => { LS.set('pushBarOculta:' + me.id, true); $('#pushBar').hidden = true; };
+// Clave VAPID generada en el propio teléfono del maestro.
+$('#pushGen').onclick = async () => {
+  try {
+    const kp = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']);
+    const b64u = u8 => btoa(String.fromCharCode(...u8)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const pub = b64u(new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey)));
+    const priv = (await crypto.subtle.exportKey('jwk', kp.privateKey)).d;
+    const secret = b64u(crypto.getRandomValues(new Uint8Array(24)));
+    const fila = (n, v) => `<div class="keyrow"><span>${n}</span><code>${esc(v)}</code><button class="btn" data-copy="${esc(v)}">Copiar</button></div>`;
+    $('#pushKeys').innerHTML = `<p class="hint" style="margin:10px 0 6px"><b>1.</b> En Supabase, Edge Functions → Secrets, crea estos tres secretos:</p>
+      ${fila('VAPID_PUBLIC_KEY', pub)}${fila('VAPID_PRIVATE_KEY', priv)}${fila('PUSH_SECRET', secret)}
+      <p class="hint" style="margin:10px 0 6px"><b>2.</b> En el SQL Editor corre:</p>${fila('SQL', `select public.rq_admin_push('${pub}', '${secret}');`)}
+      <p class="hint" style="margin:10px 0 0">La clave privada no se guarda en ningún lado: cópiala ahora. Si la pierdes, genera claves nuevas y repite los dos pasos (cada usuario tendrá que activar las notificaciones otra vez).</p>`;
+  } catch (e) { toast('Este navegador no puede generar las claves: ' + e.message); }
+};
+$('#pushKeys').addEventListener('click', async e => { const b = e.target.closest('[data-copy]'); if (!b) return; try { await navigator.clipboard.writeText(b.dataset.copy); toast('Copiado'); } catch (er) { toast('No se pudo copiar; selecciona el texto'); } });
+// Abrir lo que corresponde al tocar una notificación.
+function abrirDestino(d){
+  if (!d || !me) return;
+  if (d === 'recordatorio') { if (canReport()) setMod('rep', 'rnuevo'); return; }
+  if (d.startsWith('rep:')) { setMod('rep', canReport() ? 'rnuevo' : soloSemanal() ? 'rsem' : 'rarch'); openReport(d.slice(4)); return; }
+  openDetail(d);
+}
+if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.abrir !== undefined) abrirDestino(e.data.abrir); });
+function revisarAbrirURL(){
+  const q = new URLSearchParams(location.search); const d = q.get('abrir'); if (!d) return;
+  q.delete('abrir'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash);
+  setTimeout(() => abrirDestino(d), 400);
+}
 
 /* ---------- Pestañas ---------- */
 function showTab(t){
@@ -2972,6 +3090,7 @@ async function route(){
     if (first) setMod(curMod); else applyTabVisibility();
     refreshCounts();
     if (first) setTimeout(revisarNovedades, 600);
+    if (first) { pintarPush(); revisarAbrirURL(); }
     setTimeout(buscarActualizacion, 3000);
   } finally { routing = false; }
 }
