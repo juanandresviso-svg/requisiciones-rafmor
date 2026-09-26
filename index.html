@@ -358,6 +358,8 @@ dialog.lb{background:#000}
 .rcargo{font-weight:600;color:var(--ink)}
 #w-ver button{line-height:1.15;padding:6px 4px}
 #w-ver button small{font-weight:500;font-size:12px;opacity:.8}
+nav.tabs{gap:4px}
+nav.tabs button{padding:10px 6px 12px}
 </style>
 </head>
 <body>
@@ -458,9 +460,10 @@ dialog.lb{background:#000}
       <button role="tab" aria-selected="false" data-tab="verif" data-mod="req" hidden>Por verificar<span class="cnt" id="cVerif" hidden></span></button>
       <button role="tab" aria-selected="false" data-tab="aprob" data-mod="req" hidden>Aprobadas<span class="cnt" id="cAprob" hidden></span></button>
       <button role="tab" aria-selected="false" data-tab="mias" data-mod="req" hidden>Mías</button>
-      <button role="tab" aria-selected="false" data-tab="rnuevo" data-mod="rep" hidden>Nuevo reporte</button>
+      <button role="tab" aria-selected="false" data-tab="rnuevo" data-mod="rep" hidden>Nuevo</button>
       <button role="tab" aria-selected="false" data-tab="rarch" data-mod="rep" hidden>Diario</button>
       <button role="tab" aria-selected="false" data-tab="rsem" data-mod="rep" hidden>Semanal</button>
+      <button role="tab" aria-selected="false" data-tab="rpf" data-mod="rep" hidden>Archivo</button>
       <button role="tab" aria-selected="false" data-tab="ajustes" data-mod="both" class="gear" aria-label="Ajustes y cuenta" title="Ajustes y cuenta"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.7h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span class="cnt" id="cUsers" hidden></span></button>
     </nav>
   </header>
@@ -601,29 +604,30 @@ dialog.lb{background:#000}
   <section class="panel" id="p-rarch">
     <div class="block">
       <h2 id="archTitle">Diario <button class="btn ghost" id="archRefresh" style="min-height:36px;padding:0 8px;font-size:15px">Actualizar</button></h2>
-      <div id="archHome">
-        <div class="archbtns"><button class="btn dark" id="a-avanceBtn">Descargar avance</button><button class="btn" id="a-archBtn">Archivo de puestos fronterizos</button></div>
-        <div class="sec" style="margin-top:16px">Últimos reportes</div>
-        <p class="hint" style="margin:-4px 0 6px">Reportes de hoy y de ayer.</p>
-        <div id="recList"></div>
-        <div class="empty" id="recEmpty" hidden></div>
+      <button class="btn dark block100" id="a-avanceBtn">Descargar avance del día (Excel)</button>
+      <div class="sec" style="margin-top:16px">Últimos reportes</div>
+      <p class="hint" style="margin:-4px 0 6px">Reportes de hoy y de ayer.</p>
+      <div id="recList"></div>
+      <div class="empty" id="recEmpty" hidden></div>
+    </div>
+  </section>
+
+  <!-- ARCHIVO DE PUESTOS FRONTERIZOS -->
+  <section class="panel" id="p-rpf">
+    <div class="block">
+      <h2 id="pfTitle">Archivo de puestos fronterizos <button class="btn ghost" id="pfRefresh" style="min-height:36px;padding:0 8px;font-size:15px">Actualizar</button></h2>
+      <div class="row2">
+        <label class="f"><span>Mes</span><input class="in" type="month" id="a-mes"></label>
+        <label class="f" id="a-autorWrap"><span>Contratista</span><select class="in" id="a-autor"><option value="">Todos</option></select></label>
       </div>
-      <div id="archView" hidden>
-        <button class="btn ghost" id="archHomeBack" style="padding-left:0">← Últimos reportes</button>
-        <div class="sec" style="margin-top:2px">Archivo de puestos fronterizos</div>
-        <div class="row2">
-          <label class="f"><span>Mes</span><input class="in" type="month" id="a-mes"></label>
-          <label class="f" id="a-autorWrap"><span>Contratista</span><select class="in" id="a-autor"><option value="">Todos</option></select></label>
-        </div>
-        <div id="archRoot"><div class="folders" id="archFolders"></div></div>
-        <div id="archPuesto" hidden>
-          <button class="btn ghost" id="archBack" style="padding-left:0">← Todos los puestos</button>
-          <div class="sec" id="archPuestoTitle" style="margin-top:4px"></div>
-          <div id="archAntes"></div>
-        </div>
-        <div id="archList"></div>
-        <div class="empty" id="archEmpty" hidden></div>
+      <div id="archRoot"><div class="folders" id="archFolders"></div></div>
+      <div id="archPuesto" hidden>
+        <button class="btn ghost" id="archBack" style="padding-left:0">← Todos los puestos</button>
+        <div class="sec" id="archPuestoTitle" style="margin-top:4px"></div>
+        <div id="archAntes"></div>
       </div>
+      <div id="archList"></div>
+      <div class="empty" id="archEmpty" hidden></div>
     </div>
   </section>
 
@@ -659,7 +663,7 @@ dialog.lb{background:#000}
     </div>
     <div class="block" id="antesBlock" hidden>
       <h2>Fotos del antes</h2>
-      <p class="hint" style="margin-top:-6px">Fotos de cada puesto fronterizo antes de la intervención. Quedan al inicio de la carpeta de cada puesto en Diario → Archivo de puestos fronterizos y en el PDF semanal de esa base.</p>
+      <p class="hint" style="margin-top:-6px">Fotos de cada puesto fronterizo antes de la intervención. Quedan al inicio de la carpeta de cada puesto en Reportes → Archivo y en el PDF semanal de esa base.</p>
       <div class="sec" style="margin-top:4px">Desde la computadora</div>
       <p class="hint" style="margin:0 0 8px">Elige la carpeta que contiene las carpetas de los puestos (por ejemplo "Antes", con "Socuavo", "Caño en Medio"…) o la carpeta de un solo puesto. La app reconoce el puesto por el nombre de la carpeta, y si dentro hay carpetas "Aéreas" (o "Dron") y "Terrestres", separa las fotos solas. Las fotos de dron DJI se reconocen como aéreas.</p>
       <div class="pick" style="grid-template-columns:1fr 1fr">
@@ -679,7 +683,7 @@ dialog.lb{background:#000}
     </div>
     <div class="block" id="driveBlock" hidden>
       <h2>Fotos históricas desde Google Drive</h2>
-      <p class="hint" style="margin-top:-6px">Carga los registros fotográficos anteriores. Cada carpeta de fecha queda como un registro de ese día en Diario → Archivo de puestos fronterizos, dentro de su puesto fronterizo. Las carpetas llamadas "Antes" se guardan aparte para las fotos del antes.</p>
+      <p class="hint" style="margin-top:-6px">Carga los registros fotográficos anteriores. Cada carpeta de fecha queda como un registro de ese día en Reportes → Archivo, dentro de su puesto, dentro de su puesto fronterizo. Las carpetas llamadas "Antes" se guardan aparte para las fotos del antes.</p>
       <ol class="hint" style="margin:0 0 12px;padding-left:18px"><li>En Google Drive, haz clic derecho sobre la carpeta principal y elige <b>Descargar</b>. Drive la entrega como un archivo .zip.</li><li>Elige aquí ese .zip. Mejor desde una computadora, porque son muchos archivos.</li></ol>
       <div class="pick" style="grid-template-columns:1fr 1fr">
         <label class="btn dark">Elegir el .zip<input type="file" id="drvZip" accept=".zip,application/zip" hidden></label>
@@ -2378,16 +2382,16 @@ async function downloadFile(path, name){
 }
 
 /* ---------- Diario: últimos reportes y archivo de puestos fronterizos ---------- */
-let archPuesto = null, archRows = [], recRows = [], archModo = 'home';
+let archPuesto = null, archRows = [], recRows = [];
 const monthRange = m => { const [y, mo] = m.split('-').map(Number); const last = new Date(y, mo, 0).getDate(); return [`${m}-01`, `${m}-${String(last).padStart(2,'0')}`]; };
 $('#a-mes').addEventListener('change', () => loadArchive());
 $('#a-autor').addEventListener('change', () => renderArchiveList());
-$('#archRefresh').onclick = () => archModo === 'home' ? loadRecientes() : loadArchive();
+$('#archRefresh').onclick = () => loadRecientes();
+$('#pfRefresh').onclick = () => loadArchive();
 $('#archBack').onclick = () => { archPuesto = null; loadArchive(); };
-$('#a-archBtn').onclick = () => { archModo = 'arch'; archPuesto = null; $('#archHome').hidden = true; $('#archView').hidden = false; loadArchive(); window.scrollTo(0, 0); };
-$('#archHomeBack').onclick = () => { archModo = 'home'; $('#archView').hidden = true; $('#archHome').hidden = false; loadRecientes(); window.scrollTo(0, 0); };
 $('#archFolders').addEventListener('click', e => { const b = e.target.closest('[data-pu]'); if (!b) return; archPuesto = +b.dataset.pu; loadArchive(); });
-function abrirDiario(){ archModo = 'home'; archPuesto = null; $('#archView').hidden = true; $('#archHome').hidden = false; loadRecientes(); }
+function abrirDiario(){ loadRecientes(); }
+function abrirArchivo(){ archPuesto = null; $('#pfTitle').firstChild.textContent = (me.rol === 'contratista' && !me.es_master) ? 'Mi archivo de puestos ' : 'Archivo de puestos fronterizos '; loadArchive(); }
 // Tarjeta de reporte: en lugar de miniaturas, un enlace "Ver imágenes".
 function repCard(r){
   const fotos = (r.archivos || []).filter(a => a.tipo === 'foto'), videos = (r.archivos || []).filter(a => a.tipo === 'video');
@@ -2754,8 +2758,11 @@ $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mo
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.5.0';
+const APP_VERSION = '4.6.0';
 const NOVEDADES = [
+  { v: '4.6.0', fecha: '2026-09-25', titulo: 'Novedades', items: [
+    { r: ['contratista','gerente_operaciones','compras','costos','gerente_general','master'], t: 'El Archivo de puestos fronterizos ahora es su propia pestaña, "Archivo", al lado de Semanal. Diario queda con los últimos reportes y el botón para descargar el avance del día.' }
+  ] },
   { v: '4.5.0', fecha: '2026-09-25', titulo: 'Novedades', items: [
     { r: ['contratista','gerente_operaciones','compras','costos','gerente_general','master'], t: 'En Diario, cada reporte muestra el nombre y el cargo de quien lo hizo.' },
     { r: ['contratista','gerente_operaciones','compras','costos','gerente_general','master'], t: 'En la lista de requisiciones, al lado del número aparece la base de protección fronteriza (o "Varias bases" / "Proyecto general").' },
@@ -2826,6 +2833,7 @@ function showTab(t){
   if (t === 'nueva') fillForm();
   if (t === 'rnuevo') fillRep();
   if (t === 'rarch') abrirDiario();
+  if (t === 'rpf') abrirArchivo();
   if (t === 'rsem') loadWeek();
   if (t === 'verif') loadVerif();
   if (t === 'aprob') loadAprob();
@@ -2839,7 +2847,7 @@ function tabAllowed(t){
   if (t === 'verif' || t === 'aprob') return seesAll();
   if (t === 'rnuevo') return canReport();
   if (t === 'rsem') return canWeekly();
-  if (t === 'rarch') return !soloSemanal();
+  if (t === 'rarch' || t === 'rpf') return !soloSemanal();
   return true;
 }
 function applyTabVisibility(){ $$('#mainTabs button').forEach(b => { b.hidden = !((b.dataset.mod === curMod || b.dataset.mod === 'both') && tabAllowed(b.dataset.tab)); }); }
