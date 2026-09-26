@@ -386,6 +386,21 @@ header.top{padding-top:0}
 .keyrow span{grid-column:1/-1;font-size:12px;font-weight:700;color:var(--muted)}
 .keyrow code{font-size:12px;word-break:break-all;line-height:1.35}
 .keyrow .btn{min-height:36px;padding:0 10px}
+details.acc{padding:0}
+details.acc > summary{list-style:none;cursor:pointer;position:relative;padding:14px 44px 14px 16px;min-height:52px;display:flex;align-items:center}
+details.acc > summary h2{margin:0;flex:1;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+details.acc > summary::after{content:"";position:absolute;right:18px;top:50%;width:9px;height:9px;border-right:2.5px solid var(--muted);border-bottom:2.5px solid var(--muted);transform:translateY(-70%) rotate(45deg);transition:transform .15s}
+details.acc[open] > summary::after{transform:translateY(-30%) rotate(-135deg)}
+details.acc[open] > summary{border-bottom:1px solid var(--rule)}
+.accb{padding:14px 16px 16px}
+.accb > .hint:first-child{margin-top:0!important}
+.accbtn{float:right;margin:-6px -6px 4px 8px}
+#anuRoles button{min-height:36px}
+.anuitem + .anuitem{border-top:1px dashed var(--rule);margin-top:10px;padding-top:6px}
+details.acc > summary h2{font:600 19px/1.15 "Barlow Condensed",sans-serif}
+details.acc > summary h2 .st{font:700 12.5px/1 Barlow,sans-serif;padding:5px 9px;border-radius:6px;background:var(--sunk);border:1px solid var(--rule);color:var(--muted);white-space:nowrap}
+details.acc > summary h2 .st.ok{background:var(--green-soft);border-color:transparent;color:var(--green)}
+details.acc > summary h2 > span:not(.st){font:500 14px Barlow,sans-serif;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -683,6 +698,33 @@ header.top{padding-top:0}
 
   <!-- AJUSTES -->
   <section class="panel" id="p-ajustes">
+    <div class="block" id="pushBlock">
+      <h2>Notificaciones en este teléfono <span class="st" id="pushSt"></span></h2>
+      <p class="hint" id="pushTxt" style="margin-top:-6px"></p>
+      <div class="addrow"><button class="btn dark" id="pushBtn" style="flex:1">Activar notificaciones</button><button class="btn" id="pushTest" hidden>Probar</button></div>
+    </div>
+    <div class="block">
+      <h2>Mi cuenta <span class="st ok" id="myRole"></span></h2>
+      <p class="hint" id="myEmail" style="margin-top:-6px"></p>
+      <label class="f"><span>Nombre y apellido</span><input class="in" id="my-nombre"></label>
+      <label class="f"><span>Empresa</span><input class="in" id="my-empresa"></label>
+      <div class="row2">
+        <label class="f"><span>Cargo</span><input class="in" id="my-cargo"></label>
+        <label class="f"><span>Teléfono</span><input class="in" id="my-tel" type="tel"></label>
+      </div>
+      <label class="f"><span>Área solicitante</span><input class="in" id="my-area" list="dl-areas"></label>
+      <label class="f"><span>Coordinación</span><input class="in" id="my-coord" list="dl-coord"></label>
+      <p class="err" id="my-err" hidden></p>
+      <button class="btn dark block100" id="my-save">Guardar mis datos</button>
+      <details class="more" style="margin-top:12px">
+        <summary>Cambiar contraseña</summary>
+        <label class="f"><span>Contraseña nueva (mínimo 8 caracteres)</span><input class="in" id="my-pass" type="password" autocomplete="new-password"></label>
+        <button class="btn block100" id="my-pass-btn">Cambiar contraseña</button>
+      </details>
+      <button class="btn ghost block100 danger" id="logout" style="border:0;margin-top:8px">Cerrar sesión</button>
+    </div>
+    <div class="block"><h2>Novedades <span class="st" id="appVer"></span></h2><button class="btn block100" id="verNovedades">Ver las novedades de la app</button></div>
+    <div class="block"><h2>Instalar en el teléfono</h2><button class="btn block100" data-install>Ver instrucciones para Android y iPhone</button></div>
     <div class="block" id="usersBlock" hidden>
       <h2>Usuarios <button class="btn ghost" id="uRefresh" style="min-height:36px;padding:0 8px;font-size:15px">Actualizar</button></h2>
       <p class="hint" id="usersHint" style="margin-top:-6px"></p>
@@ -691,6 +733,32 @@ header.top{padding-top:0}
       <input class="in" id="uSearch" type="search" placeholder="Buscar por nombre, correo, empresa o rol" style="margin-top:10px" autocomplete="off">
       <ul class="hist" id="lUsers" style="margin-top:8px"></ul>
       <div class="empty" id="eUsers" hidden></div>
+    </div>
+    <div class="block" id="anuBlock" hidden>
+      <h2>Enviar aviso a los usuarios</h2>
+      <p class="hint" style="margin-top:-6px">Llega a la campana, como ventana al abrir la app, por correo (si está configurado) y al teléfono de quien tenga las notificaciones activas.</p>
+      <button class="btn block100" id="anuPlantilla">Usar plantilla: pedir que activen las notificaciones</button>
+      <label class="f" style="margin-top:12px"><span>Título</span><input class="in" id="anuTit" maxlength="120"></label>
+      <label class="f"><span>Mensaje</span><textarea class="in" id="anuMsg" maxlength="1000"></textarea></label>
+      <label class="chk" style="margin-bottom:10px"><input type="checkbox" id="anuPush"><span>Incluir botón "Activar notificaciones"</span></label>
+      <span class="lbl">Para quién</span>
+      <div class="chips" id="anuRoles" style="margin-bottom:12px"></div>
+      <p class="err" id="anuErr" hidden></p>
+      <button class="btn primary block100" id="anuEnviar">Enviar aviso</button>
+    </div>
+    <div class="block" id="pushCfgBlock" hidden>
+      <h2>Configurar notificaciones push</h2>
+      <p class="hint" style="margin-top:-6px">Solo una vez. Genera las claves aquí (se crean en tu teléfono, no se envían a ningún lado) y cópialas en Supabase siguiendo la guía.</p>
+      <button class="btn block100" id="pushGen">Generar claves</button>
+      <div id="pushKeys"></div>
+    </div>
+    <div class="block" id="histBlock" hidden>
+      <h2>Requisiciones históricas</h2>
+      <p class="hint" style="margin-top:-6px">Sube el Excel con requisiciones ya aprobadas y ejecutadas, una hoja por requisición en el formato de administración. Quedan en la plataforma como aprobadas y recibidas, marcadas como históricas, para tener la base de datos completa.</p>
+      <label class="btn block100">Elegir archivo Excel<input type="file" id="histFile" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></label>
+      <div id="histPrev"></div>
+      <p class="err" id="histErr" hidden></p>
+      <button class="btn primary block100" id="histBtn" hidden>Importar</button>
     </div>
     <div class="block" id="antesBlock" hidden>
       <h2>Fotos del antes</h2>
@@ -725,47 +793,6 @@ header.top{padding-top:0}
       <button class="btn primary block100" id="drvBtn" hidden>Importar</button>
       <p class="hint" id="drvProg" style="text-align:center;margin-top:8px"></p>
     </div>
-    <div class="block" id="histBlock" hidden>
-      <h2>Requisiciones históricas</h2>
-      <p class="hint" style="margin-top:-6px">Sube el Excel con requisiciones ya aprobadas y ejecutadas, una hoja por requisición en el formato de administración. Quedan en la plataforma como aprobadas y recibidas, marcadas como históricas, para tener la base de datos completa.</p>
-      <label class="btn block100">Elegir archivo Excel<input type="file" id="histFile" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></label>
-      <div id="histPrev"></div>
-      <p class="err" id="histErr" hidden></p>
-      <button class="btn primary block100" id="histBtn" hidden>Importar</button>
-    </div>
-    <div class="block">
-      <h2>Mi cuenta <span class="st ok" id="myRole"></span></h2>
-      <p class="hint" id="myEmail" style="margin-top:-6px"></p>
-      <label class="f"><span>Nombre y apellido</span><input class="in" id="my-nombre"></label>
-      <label class="f"><span>Empresa</span><input class="in" id="my-empresa"></label>
-      <div class="row2">
-        <label class="f"><span>Cargo</span><input class="in" id="my-cargo"></label>
-        <label class="f"><span>Teléfono</span><input class="in" id="my-tel" type="tel"></label>
-      </div>
-      <label class="f"><span>Área solicitante</span><input class="in" id="my-area" list="dl-areas"></label>
-      <label class="f"><span>Coordinación</span><input class="in" id="my-coord" list="dl-coord"></label>
-      <p class="err" id="my-err" hidden></p>
-      <button class="btn dark block100" id="my-save">Guardar mis datos</button>
-      <details class="more" style="margin-top:12px">
-        <summary>Cambiar contraseña</summary>
-        <label class="f"><span>Contraseña nueva (mínimo 8 caracteres)</span><input class="in" id="my-pass" type="password" autocomplete="new-password"></label>
-        <button class="btn block100" id="my-pass-btn">Cambiar contraseña</button>
-      </details>
-      <button class="btn ghost block100 danger" id="logout" style="border:0;margin-top:8px">Cerrar sesión</button>
-    </div>
-    <div class="block" id="pushBlock">
-      <h2>Notificaciones en este teléfono <span class="st" id="pushSt"></span></h2>
-      <p class="hint" id="pushTxt" style="margin-top:-6px"></p>
-      <div class="addrow"><button class="btn dark" id="pushBtn" style="flex:1">Activar notificaciones</button><button class="btn" id="pushTest" hidden>Probar</button></div>
-    </div>
-    <div class="block" id="pushCfgBlock" hidden>
-      <h2>Configurar notificaciones push</h2>
-      <p class="hint" style="margin-top:-6px">Solo una vez. Genera las claves aquí (se crean en tu teléfono, no se envían a ningún lado) y cópialas en Supabase siguiendo la guía.</p>
-      <button class="btn block100" id="pushGen">Generar claves</button>
-      <div id="pushKeys"></div>
-    </div>
-    <div class="block"><h2>Novedades <span class="st" id="appVer"></span></h2><button class="btn block100" id="verNovedades">Ver las novedades de la app</button></div>
-    <div class="block"><h2>Instalar en el teléfono</h2><button class="btn block100" data-install>Ver instrucciones para Android y iPhone</button></div>
     <div class="block">
       <h2>Logo de la empresa</h2>
       <p class="hint" style="margin-top:-6px">Va en la esquina superior izquierda del Excel. Por defecto es el de Constructora Rafmor; si eliges otro, se guarda solo en este teléfono.</p>
@@ -776,6 +803,7 @@ header.top{padding-top:0}
       </div>
     </div>
     <div id="listBlocks"></div>
+  
   </section>
 </div>
 
@@ -925,6 +953,15 @@ header.top{padding-top:0}
     <label class="f"><span>Día</span><input class="in" type="date" id="a-xdate"></label>
     <div class="chips" id="xlsQuick" style="margin:-4px 0 12px"><button type="button" data-d="0">Hoy</button><button type="button" data-d="1">Ayer</button></div>
     <button class="btn primary block100" id="a-xbtn">Descargar Excel</button>
+  </div>
+</dialog>
+
+<!-- Aviso del administrador -->
+<dialog id="anuDlg">
+  <div class="sheet"><div class="grab"></div>
+    <div class="novhead"><span class="novbadge" style="background:#2E5E4F;color:#fff">Aviso</span></div>
+    <div id="anuBody"></div>
+    <div class="acts" style="position:static;margin-top:14px"><button class="btn" id="anuOk">Entendido</button><button class="btn primary" id="anuAccion" hidden>Activar notificaciones</button></div>
   </div>
 </dialog>
 
@@ -1765,7 +1802,7 @@ $('#bellBtn').onclick = async () => {
   try {
     const r = await rpc('rq_avisos', { p_limite: 50 });
     const L = (r && r.avisos) || [];
-    $('#avList').innerHTML = L.map(a => `<li class="${a.leida ? '' : 'new'}" ${a.control || a.tipo === 'recordatorio' || a.tipo === 'semanal' ? `data-av="${esc(a.control || '')}" data-tipo="${esc(a.tipo)}" role="button" tabindex="0"` : ''}><b>${esc(a.titulo)}</b><span>${esc(a.mensaje || '')}</span><small>${new Date(a.creado).toLocaleString('es-VE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</small></li>`).join('');
+    $('#avList').innerHTML = L.map(a => `<li class="${a.leida ? '' : 'new'}" ${a.control || a.tipo === 'recordatorio' || a.tipo === 'semanal' || a.tipo === 'anuncio' ? `data-av="${esc(a.control || '')}" data-tipo="${esc(a.tipo)}" role="button" tabindex="0"` : ''}><b>${esc(a.titulo)}</b><span>${esc(a.mensaje || '')}</span><small>${new Date(a.creado).toLocaleString('es-VE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</small></li>`).join('');
     $('#avEmpty').hidden = L.length > 0;
     if (r && r.sin_leer) { await rpc('rq_avisos_leidos'); setCount('bellCnt', 0); }
   } catch (e) { $('#avList').innerHTML = `<li class="err">${esc(e.message)}</li>`; }
@@ -1777,16 +1814,20 @@ $('#avList').addEventListener('click', e => {
   if (li.dataset.tipo === 'recordatorio') { if (canReport()) setMod('rep', 'rnuevo'); return; }
   if (li.dataset.tipo === 'semanal') { if (canWeekly()) { wStart = addDays(weekStart(today()), -7); setMod('rep', 'rsem'); } return; }
   if (c.startsWith('rep:')) { openReport(c.slice(4)); return; }
+  if (c === 'accion:push') { abrirAjuste('pushBlock'); return; }
+  if (!c) return;
   openDetail(c);
 });
 
 /* ---------- Usuarios (maestro) ---------- */
-let uFilter = 'pendiente', usersCache = [];
+let uFilter = 'pendiente', usersCache = [], autoAbrirUsuarios = false;
 $('#seg-ufil').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; uFilter = b.dataset.v; segSet('seg-ufil', uFilter); renderUsers(); });
 $('#uRefresh').onclick = () => loadUsers();
 async function loadUsers(){
   $('#usersHint').textContent = me.es_master ? 'Aprueba los registros nuevos, administra los roles y revisa cuándo se conectó cada usuario por última vez. Solo tú ves estos datos.' : 'Lista de usuarios de la plataforma. Solo el usuario maestro puede aprobarlos o cambiarlos.';
-  try { usersCache = await rpc('rq_usuarios') || []; renderUsers(); setCount('cUsers', me.es_master ? usersCache.filter(u => u.estado === 'pendiente').length : 0); }
+  try { usersCache = await rpc('rq_usuarios') || []; renderUsers(); const np = me.es_master ? usersCache.filter(u => u.estado === 'pendiente').length : 0; setCount('cUsers', np);
+    const sc = $('#uSumCnt'); if (sc) { sc.textContent = np + ' por aprobar'; sc.hidden = !np; }
+    if (np && autoAbrirUsuarios) $('#usersBlock').open = true; autoAbrirUsuarios = false; }
   catch (e) { $('#eUsers').hidden = false; $('#eUsers').textContent = e.message; }
 }
 const roleOpts = sel => Object.entries(ROLES).map(([k, r]) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${r.label}</option>`).join('');
@@ -2193,6 +2234,7 @@ $('#lbDel').onclick = async () => {
 /* ---------- Mi cuenta y ajustes ---------- */
 function renderSettings(){
   pintarPush();
+  $('#anuBlock').hidden = !me.es_master; if (me.es_master) pintarAnuRoles();
   $('#usersBlock').hidden = !seesUsers(); if (seesUsers()) loadUsers();
   $('#histBlock').hidden = !me.es_master; $('#driveBlock').hidden = !me.es_master; $('#antesBlock').hidden = !canAntes();
   $('#myRole').textContent = roleText(me) + (me.es_master ? ' · Maestro' : '');
@@ -2200,11 +2242,11 @@ function renderSettings(){
   [['my-nombre','nombre'],['my-empresa','empresa'],['my-cargo','cargo'],['my-tel','telefono'],['my-area','area'],['my-coord','coordinacion']].forEach(([id,k]) => $('#'+id).value = me[k] || '');
   const lp = $('#logoPrev'); lp.innerHTML = `<img alt="Logo actual" src="${logoNow().data}"><span class="hint" style="margin:0">${settings.logo ? 'Logo personalizado en este teléfono.' : 'Logo de Constructora Rafmor.'}</span>`;
   $('#logoDel').hidden = !settings.logo;
-  const box = $('#listBlocks'); box.innerHTML = '';
+  const box = $('#listBlocks'); const abiertas = new Set([...box.querySelectorAll('details[open]')].map(x => x.dataset.k)); box.innerHTML = '';
   LISTS_META.forEach(([k,title]) => {
-    const d = document.createElement('div'); d.className='block';
-    d.innerHTML = `<h2>${title} <span>${(lists[k]||[]).length}</span></h2><div class="listed">${(lists[k]||[]).map((v,i)=>`<span>${esc(v)}<button aria-label="Quitar ${esc(v)}" data-k="${k}" data-i="${i}">×</button></span>`).join('') || '<span class="hint" style="border:0;background:none;padding:0;margin:0">Se llena solo mientras usas la app.</span>'}</div>
-      <div class="addrow"><input class="in" placeholder="Agregar…" data-add="${k}"><button class="btn" data-addbtn="${k}">Agregar</button></div>`;
+    const d = document.createElement('details'); d.className='block acc'; d.dataset.k = k; if (abiertas.has(k)) d.open = true;
+    d.innerHTML = `<summary><h2>Lista: ${title} <span>${(lists[k]||[]).length}</span></h2></summary><div class="accb"><div class="listed">${(lists[k]||[]).map((v,i)=>`<span>${esc(v)}<button aria-label="Quitar ${esc(v)}" data-k="${k}" data-i="${i}">×</button></span>`).join('') || '<span class="hint" style="border:0;background:none;padding:0;margin:0">Se llena solo mientras usas la app.</span>'}</div>
+      <div class="addrow"><input class="in" placeholder="Agregar…" data-add="${k}"><button class="btn" data-addbtn="${k}">Agregar</button></div></div>`;
     box.appendChild(d);
   });
 }
@@ -2807,8 +2849,12 @@ $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mo
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.7.0';
+const APP_VERSION = '4.8.0';
 const NOVEDADES = [
+  { v: '4.8.0', fecha: '2026-09-26', titulo: 'Novedades', items: [
+    { r: ['*'], t: 'Ajustes ahora está ordenado en secciones plegables: toca el título de cada una para abrirla.' },
+    { r: ['master'], t: 'Nueva sección "Enviar aviso a los usuarios" en Ajustes, con una plantilla para pedir que activen las notificaciones.' }
+  ] },
   { v: '4.7.0', fecha: '2026-09-26', titulo: 'Notificaciones en el teléfono', items: [
     { r: ['gerente_general','compras','costos','master'], t: 'Ahora puedes recibir una notificación en el teléfono cada vez que se hace una requisición. Actívala en el aviso de arriba o en Ajustes → Notificaciones en este teléfono.' },
     { r: ['gerente_operaciones'], t: 'Ahora puedes recibir notificaciones en el teléfono: cada requisición nueva, cada reporte nuevo y un recordatorio a las 6:00 pm si no has hecho tu reporte del día. Actívalas en Ajustes → Notificaciones en este teléfono.' },
@@ -2931,7 +2977,7 @@ async function pintarPush(){
   $('#pushCfgBlock').hidden = !me.es_master;
   const quiere = me.es_master || PUSH_ROLES.includes(me.rol);
   $('#pushBar').hidden = !(quiere && (st === 'inactivo' || st === 'instalar') && !LS.get('pushBarOculta:' + me.id, false));
-  if (!$('#pushBar').hidden) { $('#pushBarTxt').textContent = st === 'instalar' ? 'En iPhone, primero agrega la app a la pantalla de inicio.' : `Te avisamos en el teléfono de ${que || 'lo importante'}.`; $('#pushBarBtn').textContent = st === 'instalar' ? 'Ver cómo' : 'Activar'; }
+  if (!$('#pushBar').hidden) { $('#pushBarTxt').textContent = st === 'instalar' ? 'En iPhone, primero agrega la app a la pantalla de inicio.' : `Recibe en el teléfono: ${que || 'los avisos importantes'}.`; $('#pushBarBtn').textContent = st === 'instalar' ? 'Ver cómo' : 'Activar'; }
   return st;
 }
 $('#pushBtn').onclick = async () => {
@@ -2966,6 +3012,7 @@ $('#pushKeys').addEventListener('click', async e => { const b = e.target.closest
 function abrirDestino(d){
   if (!d || !me) return;
   if (d === 'recordatorio') { if (canReport()) setMod('rep', 'rnuevo'); return; }
+  if (d === 'accion:push') { abrirAjuste('pushBlock'); return; }
   if (d.startsWith('rep:')) { setMod('rep', canReport() ? 'rnuevo' : soloSemanal() ? 'rsem' : 'rarch'); openReport(d.slice(4)); return; }
   openDetail(d);
 }
@@ -2975,6 +3022,63 @@ function revisarAbrirURL(){
   q.delete('abrir'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash);
   setTimeout(() => abrirDestino(d), 400);
 }
+
+/* ---------- Ajustes plegables ---------- */
+(function acordeonAjustes(){
+  $$('#p-ajustes > .block').forEach(bl => {
+    const det = document.createElement('details'); det.className = 'block acc'; if (bl.id) det.id = bl.id; if (bl.hidden) det.hidden = true;
+    const h2 = bl.querySelector(':scope > h2'); const sum = document.createElement('summary'); const body = document.createElement('div'); body.className = 'accb';
+    if (h2) { h2.querySelectorAll('button').forEach(btn => { btn.classList.add('accbtn'); body.appendChild(btn); }); sum.appendChild(h2); }
+    [...bl.childNodes].forEach(n => body.appendChild(n));
+    det.appendChild(sum); det.appendChild(body); bl.replaceWith(det);
+  });
+  const us = $('#usersBlock summary h2'); if (us) us.insertAdjacentHTML('beforeend', ' <span class="st" id="uSumCnt" hidden></span>');
+})();
+function abrirAjuste(id){ showTab('ajustes'); const d = document.getElementById(id); if (d && !d.hidden) { d.open = true; setTimeout(() => d.scrollIntoView({ behavior:'smooth', block:'start' }), 150); } }
+
+/* ---------- Avisos del administrador ---------- */
+const ANU_ROLES = ['contratista','gerente_operaciones','compras','costos','gerente_general','comandante_base','reporte_general'];
+let anuSel = new Set(ANU_ROLES), anuMostrando = false, anuUltimo = 0;
+function pintarAnuRoles(){ $('#anuRoles').innerHTML = `<button type="button" data-ar="*" aria-pressed="${anuSel.size === ANU_ROLES.length}">Todos</button>` + ANU_ROLES.map(r => `<button type="button" data-ar="${r}" aria-pressed="${anuSel.has(r)}">${ROLES[r].label}</button>`).join(''); }
+$('#anuRoles').addEventListener('click', e => { const b = e.target.closest('[data-ar]'); if (!b) return; const r = b.dataset.ar;
+  if (r === '*') anuSel = anuSel.size === ANU_ROLES.length ? new Set() : new Set(ANU_ROLES); else (anuSel.has(r) ? anuSel.delete(r) : anuSel.add(r)); pintarAnuRoles(); });
+$('#anuPlantilla').onclick = () => {
+  $('#anuTit').value = 'Activa las notificaciones de Puestos Fronterizos';
+  $('#anuMsg').value = 'Para enterarte a tiempo de las requisiciones, los reportes y el recordatorio de las 6:00 pm, activa las notificaciones en tu teléfono tocando "Activar notificaciones". En iPhone, primero agrega la app a la pantalla de inicio y ábrela desde el ícono.';
+  $('#anuPush').checked = true; anuSel = new Set(['contratista','gerente_operaciones','compras','costos','gerente_general']); pintarAnuRoles();
+};
+$('#anuEnviar').onclick = async () => {
+  const err = m => { $('#anuErr').textContent = m; $('#anuErr').hidden = false; };
+  const t = $('#anuTit').value.trim(), m = $('#anuMsg').value.trim(); $('#anuErr').hidden = true;
+  if (!t || !m) return err('Escribe el título y el mensaje.'); if (!anuSel.size) return err('Elige al menos un rol.');
+  const roles = anuSel.size === ANU_ROLES.length ? null : [...anuSel];
+  if (!confirm(`¿Enviar este aviso a ${roles ? roles.map(r => ROLES[r].label).join(', ') : 'todos los usuarios'}?`)) return;
+  const b = $('#anuEnviar'); b.disabled = true;
+  try { const n = await rpc('rq_admin_anuncio', { p_titulo: t, p_mensaje: m, p_roles: roles, p_accion: $('#anuPush').checked ? 'push' : null });
+    toast(`Aviso enviado a ${n} usuario${n === 1 ? '' : 's'}`); $('#anuTit').value = ''; $('#anuMsg').value = ''; $('#anuPush').checked = false; }
+  catch (e) { err(e.message); } finally { b.disabled = false; }
+};
+async function revisarAnuncios(){
+  if (!me || anuMostrando || Date.now() - anuUltimo < 60000) return;
+  if ($('#novDlg').open) { $('#novDlg').addEventListener('close', () => setTimeout(revisarAnuncios, 300), { once: true }); return; }
+  anuUltimo = Date.now();
+  let L = [];
+  try { const r = await rpc('rq_avisos', { p_limite: 30 }); L = ((r && r.avisos) || []).filter(a => a.tipo === 'anuncio' && !a.leida).reverse(); } catch (e) { return; }
+  if (!L.length) return;
+  anuMostrando = true;
+  const conPush = L.some(a => a.control === 'accion:push'); const st = conPush ? await estadoPush() : '';
+  $('#anuBody').innerHTML = L.map(a => `<div class="anuitem"><h3 style="margin:6px 0 4px">${esc(a.titulo)}</h3><p style="margin:0 0 6px;white-space:pre-wrap">${esc(a.mensaje || '')}</p><small class="hint">${fechaHora(a.creado)}</small></div>`).join('');
+  $('#anuAccion').hidden = !(conPush && ['inactivo','instalar'].includes(st));
+  $('#anuAccion').textContent = st === 'instalar' ? 'Ver cómo instalar la app' : 'Activar notificaciones';
+  const cerrar = async () => { for (const a of L) { try { await rpc('rq_aviso_leido', { p_id: a.id }); } catch (e) {} } $('#anuDlg').close(); anuMostrando = false; refreshCounts(); };
+  $('#anuOk').onclick = cerrar;
+  $('#anuAccion').onclick = async () => {
+    if (st === 'instalar') { await cerrar(); $$('[data-install]')[0].click(); return; }
+    try { await activarPush(); toast('Notificaciones activadas'); } catch (e) { toast(e.message); } await cerrar(); pintarPush();
+  };
+  $('#anuDlg').showModal();
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && me && !$('#mainView').hidden) revisarAnuncios(); });
 
 /* ---------- Pestañas ---------- */
 function showTab(t){
@@ -2989,7 +3093,7 @@ function showTab(t){
   if (t === 'verif') loadVerif();
   if (t === 'aprob') loadAprob();
   if (t === 'mias') loadMias();
-  if (t === 'ajustes') renderSettings();
+  if (t === 'ajustes') { autoAbrirUsuarios = true; renderSettings(); }
   window.scrollTo(0,0);
 }
 $$('#mainTabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
@@ -3090,7 +3194,7 @@ async function route(){
     if (first) setMod(curMod); else applyTabVisibility();
     refreshCounts();
     if (first) setTimeout(revisarNovedades, 600);
-    if (first) { pintarPush(); revisarAbrirURL(); }
+    if (first) { pintarPush(); revisarAbrirURL(); setTimeout(revisarAnuncios, 1500); }
     setTimeout(buscarActualizacion, 3000);
   } finally { routing = false; }
 }
