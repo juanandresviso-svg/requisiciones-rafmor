@@ -360,6 +360,17 @@ dialog.lb{background:#000}
 #w-ver button small{font-weight:500;font-size:12px;opacity:.8}
 nav.tabs{gap:4px}
 nav.tabs button{padding:10px 6px 12px}
+details.antes{padding:0;overflow:hidden}
+details.antes > summary{list-style:none;cursor:pointer;padding:12px 40px 12px 12px;margin:0;position:relative;display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;min-height:48px}
+details > summary::-webkit-details-marker{display:none}
+details.antes > summary::after,details.antsec > summary::after{content:"";position:absolute;right:14px;top:50%;width:9px;height:9px;border-right:2.5px solid var(--muted);border-bottom:2.5px solid var(--muted);transform:translateY(-70%) rotate(45deg);transition:transform .15s}
+details.antes[open] > summary::after,details.antsec[open] > summary::after{transform:translateY(-30%) rotate(-135deg)}
+.antesin{padding:0 12px 12px}
+details.antsec{margin-top:8px;border:1px solid var(--rule);border-radius:10px;background:var(--surface)}
+details.antsec > summary{list-style:none;cursor:pointer;position:relative;margin:0;padding:10px 36px 10px 10px;min-height:44px;border-left:4px solid var(--muted);border-radius:10px}
+details.antsec > summary.aerea{border-left-color:#3B6EA8}details.antsec > summary.terrestre{border-left-color:#8A6A2E}
+details.antsec .thumbs{padding:0 10px 10px}
+@media (prefers-reduced-motion:reduce){details > summary::after{transition:none}}
 </style>
 </head>
 <body>
@@ -2113,12 +2124,18 @@ async function renderArchAntes(puesto){
   const box = $('#archAntes'); box.innerHTML = '';
   try { antesRows = await rpc('rq_antes_listar', { p_puesto: puesto }) || []; } catch (e) { antesRows = []; }
   if (!antesRows.length) { box.innerHTML = canAntes() ? '<p class="hint" style="margin:0 0 10px">Todavía no hay fotos del antes de este puesto. Se cargan en Ajustes → Fotos del antes.</p>' : ''; return; }
-  const url = await signed(antesRows.filter(a => a.tipo === 'foto').map(a => a.path));
+  const n = c => antesRows.filter(a => (a.categoria || null) === c).length;
+  // Las imágenes se cargan solo al abrir cada sección (ahorra datos).
   const sec = (cat, titulo) => { const L = antesRows.map((a, i) => [a, i]).filter(([a]) => (a.categoria || null) === cat); if (!L.length) return '';
-    return `<div class="antsec"><div class="antsh ${cat || 'sin'}"><b>${titulo}</b><span>${L.length} foto${L.length === 1 ? '' : 's'}</span></div>
-      <div class="thumbs">${L.map(([a, i]) => a.tipo === 'foto' ? `<div class="t" data-antes="${i}"><img loading="lazy" alt="${titulo} ${i+1}" src="${url(a.path)}"></div>` : `<div class="t" data-antesv="${i}">▶</div>`).join('')}</div></div>`; };
-  box.innerHTML = `<div class="antes"><div class="antesh"><b>Antes de la intervención</b><span>${antesRows.length} foto${antesRows.length === 1 ? '' : 's'}</span></div>
-    ${sec('aerea', 'Fotos aéreas')}${sec('terrestre', 'Fotos terrestres')}${sec(null, 'Sin clasificar')}</div>`;
+    return `<details class="antsec" data-cat="${cat || 'sin'}"><summary class="antsh ${cat || 'sin'}"><b>${titulo}</b><span>${L.length} foto${L.length === 1 ? '' : 's'}</span></summary>
+      <div class="thumbs">${L.map(([a, i]) => a.tipo === 'foto' ? `<div class="t" data-antes="${i}"><img loading="lazy" alt="${titulo} ${i+1}" data-path="${esc(a.path)}"></div>` : `<div class="t" data-antesv="${i}">▶</div>`).join('')}</div></details>`; };
+  const resumen = [n('aerea') ? `${n('aerea')} aérea${n('aerea') === 1 ? '' : 's'}` : '', n('terrestre') ? `${n('terrestre')} terrestre${n('terrestre') === 1 ? '' : 's'}` : '', n(null) ? `${n(null)} sin clasificar` : ''].filter(Boolean).join(' · ');
+  box.innerHTML = `<details class="antes" id="antesBox"><summary class="antesh"><b>Antes de la intervención</b><span>${resumen}</span></summary>
+    <div class="antesin">${sec('aerea', 'Fotos aéreas')}${sec('terrestre', 'Fotos terrestres')}${sec(null, 'Sin clasificar')}</div></details>`;
+  box.querySelectorAll('details.antsec').forEach(d => d.addEventListener('toggle', async () => {
+    if (!d.open) return; const imgs = [...d.querySelectorAll('img[data-path]:not([src])')]; if (!imgs.length) return;
+    const url = await signed(imgs.map(im => im.dataset.path)); imgs.forEach(im => { im.src = url(im.dataset.path); });
+  }));
 }
 $('#archAntes').addEventListener('click', async e => {
   const t = e.target.closest('[data-antes]'); const v = e.target.closest('[data-antesv]');
@@ -2758,8 +2775,11 @@ $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mo
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.6.0';
+const APP_VERSION = '4.6.1';
 const NOVEDADES = [
+  { v: '4.6.1', fecha: '2026-09-26', titulo: 'Novedades', items: [
+    { r: ['contratista','gerente_operaciones','compras','costos','gerente_general','master'], t: 'En Archivo, dentro de cada base, "Antes de la intervención" aparece plegado: tócalo para abrirlo y luego abre "Fotos aéreas" o "Fotos terrestres". Las fotos se cargan solo al abrir cada sección.' }
+  ] },
   { v: '4.6.0', fecha: '2026-09-25', titulo: 'Novedades', items: [
     { r: ['contratista','gerente_operaciones','compras','costos','gerente_general','master'], t: 'El Archivo de puestos fronterizos ahora es su propia pestaña, "Archivo", al lado de Semanal. Diario queda con los últimos reportes y el botón para descargar el avance del día.' }
   ] },
