@@ -401,6 +401,8 @@ details.acc > summary h2{font:600 19px/1.15 "Barlow Condensed",sans-serif}
 details.acc > summary h2 .st{font:700 12.5px/1 Barlow,sans-serif;padding:5px 9px;border-radius:6px;background:var(--sunk);border:1px solid var(--rule);color:var(--muted);white-space:nowrap}
 details.acc > summary h2 .st.ok{background:var(--green-soft);border-color:transparent;color:var(--green)}
 details.acc > summary h2 > span:not(.st){font:500 14px Barlow,sans-serif;color:var(--muted)}
+details.fixfecha{margin-top:14px;padding:10px 12px;border:1.5px dashed var(--rule);border-radius:10px;background:var(--sunk)}
+details.fixfecha > summary{cursor:pointer;font-weight:600;color:var(--ink);min-height:32px;display:flex;align-items:center}
 </style>
 </head>
 <body>
@@ -2820,6 +2822,28 @@ async function openReport(id, row){
       <div class="gal">${files.map((a, i) => a.tipo === 'video'
         ? `<div class="g v"><video controls playsinline preload="metadata" src="${url(a.path)}"></video><a href="#" data-dlp="${esc(a.path)}" data-dln="${esc(a.nombre || '')}">Descargar</a></div>`
         : `<div class="g"><img loading="lazy" alt="Foto ${i+1}" src="${url(a.path)}" data-lb="${lbItems.findIndex(x => x.path === a.path)}"><a href="#" data-dlp="${esc(a.path)}" data-dln="${esc(a.nombre || '')}">Descargar</a></div>`).join('')}</div>`;
+    const hist = (r.cambios || []).filter(c => c.tipo === 'fecha');
+    if (hist.length) $('#rpBody').insertAdjacentHTML('afterbegin', `<p class="chg">${hist.map(c => `Fecha corregida por ${esc(c.por)}: de ${fmt(c.de)} a ${fmt(c.a)}${c.motivo ? ' (' + esc(c.motivo) + ')' : ''}.`).join('<br>')}</p>`);
+    if (me.es_master) {
+      $('#rpBody').insertAdjacentHTML('beforeend', `<details class="fixfecha"><summary>Corregir la fecha del reporte</summary>
+        <div class="row2" style="margin-top:10px"><label class="f"><span>Fecha correcta</span><input class="in" type="date" id="fxFecha" max="${today()}" value="${r.fecha}"></label>
+        <label class="f"><span>Motivo (opcional)</span><input class="in" id="fxMotivo" maxlength="300" placeholder="Ej. lo cargó al día siguiente"></label></div>
+        <button class="btn dark block100" id="fxBtn">Guardar fecha</button></details>`);
+      $('#fxBtn').onclick = async () => {
+        const f = $('#fxFecha').value; if (!f) return toast('Elige la fecha');
+        if (f === r.fecha) return toast('Es la misma fecha');
+        if (f > today()) return toast('La fecha no puede ser futura');
+        if (!confirm(`¿Cambiar la fecha del reporte del ${fmt(r.fecha)} al ${fmt(f)}? Se le avisará a ${r.autor_nombre}.`)) return;
+        const b = $('#fxBtn'); b.disabled = true;
+        try {
+          const nr = await rpc('rq_reporte_cambiar_fecha', { p_id: r.id, p_fecha: f, p_motivo: $('#fxMotivo').value.trim() || null });
+          toast('Fecha corregida'); openReport(nr.id, nr);
+          if ($('#p-rarch').classList.contains('on')) loadRecientes();
+          if ($('#p-rpf').classList.contains('on')) loadArchive();
+          if ($('#p-rsem').classList.contains('on')) loadWeek();
+        } catch (e) { toast(e.message); b.disabled = false; }
+      };
+    }
   } catch (e) { $('#rpBody').innerHTML = `<p class="err">${esc(e.message)}</p>`; }
 }
 $('#rpBody').addEventListener('click', e => {
@@ -2849,8 +2873,12 @@ $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mo
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.8.0';
+const APP_VERSION = '4.8.1';
 const NOVEDADES = [
+  { v: '4.8.1', fecha: '2026-09-26', titulo: 'Novedades', items: [
+    { r: ['master'], t: 'Puedes corregir la fecha de un reporte: ábrelo y toca "Corregir la fecha del reporte". Queda registrado y se le avisa al autor.' },
+    { r: ['contratista','gerente_operaciones','gerente_general'], t: 'Si te equivocas con la fecha de un reporte, el administrador puede corregirla. Te llegará un aviso cuando lo haga.' }
+  ] },
   { v: '4.8.0', fecha: '2026-09-26', titulo: 'Novedades', items: [
     { r: ['*'], t: 'Ajustes ahora está ordenado en secciones plegables: toca el título de cada una para abrirla.' },
     { r: ['master'], t: 'Nueva sección "Enviar aviso a los usuarios" en Ajustes, con una plantilla para pedir que activen las notificaciones.' }
