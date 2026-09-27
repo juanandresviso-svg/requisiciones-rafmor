@@ -740,7 +740,7 @@ body.simulando .brandbar{border-bottom-color:#8E6BC7}
   <section class="panel" id="p-rsem">
     <div class="block">
       <h2>Reporte semanal</h2>
-      <p class="hint" style="margin-top:-6px">PDF con los reportes y las fotos de la semana, desglosado día por día, con el resumen de avance de cada base.</p>
+      <p class="hint" style="margin-top:-6px">PDF con los reportes y las fotos de la semana, desglosado día por día, con el resumen de avance de cada base. Las estadísticas se descargan aparte, en el módulo Estadísticas.</p>
       <div class="weeknav"><button class="btn" id="w-prev" aria-label="Semana anterior">‹</button><b id="w-label"></b><button class="btn" id="w-next" aria-label="Semana siguiente">›</button></div>
       <div id="w-verWrap" hidden>
         <span class="lbl">Versión del reporte</span>
@@ -2794,9 +2794,6 @@ async function buildWeeklyPdf(rows, ws, puesto, prog, opts){
   const nGen = rows.filter(r => r.puesto == null).length;
   if (nGen) { need(8); font(9, 'bold'); color(C.dark); doc.text(pdfTxt(`Reportes de temas generales del proyecto: ${nGen}`), M + 2, y + 5); y += 7; }
   y += 6;
-  // Días de la semana
-  need(10); font(11, 'bold'); color(C.olive); doc.text('REPORTES POR DÍA', M, y); y += 5;
-  [...Array(7)].map((_, i) => addDays(ws, i)).forEach(d => { const n = rows.filter(r => r.fecha === d).length; need(6); font(9, n ? 'bold' : 'normal'); color(n ? C.dark : C.grey); doc.text(pdfTxt(`${DIAS_C[isoParts(d).wd]} ${fmt(d)}`), M + 2, y + 4); doc.text(n ? `${n} reporte${n === 1 ? '' : 's'}` : 'Sin reportes', M + 60, y + 4); y += 6; });
 
   // ----- Antes de la intervención (solo cuando el PDF es de una base) -----
   if (puesto) {
@@ -2959,8 +2956,11 @@ $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mo
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.12.0';
+const APP_VERSION = '4.13.1';
 const NOVEDADES = [
+  { v: '4.13.1', fecha: '2026-09-27', titulo: 'Novedades', items: [
+    { r: ['gerente_general','gerente_operaciones','compras','costos','master','reporte_general','comandante_base'], t: 'El PDF semanal trae los reportes de cada día con sus fotos, ahora sin el índice de reportes por día en la portada. Las estadísticas se descargan aparte, desde el módulo Estadísticas.' }
+  ] },
   { v: '4.12.0', fecha: '2026-09-27', titulo: 'Estadísticas de avance', items: [
     { r: ['gerente_general','gerente_operaciones','compras','costos','master','reporte_general'], t: 'Nuevo módulo "Estadísticas": avance general de la obra, avance por base, evolución semana a semana, reportes por día, avance por fase, alertas y reportes por persona. Toca una base para ver su detalle, y descarga todo en PDF.' },
     { r: ['comandante_base'], t: 'Nuevo módulo "Estadísticas" con el avance de tu base: avance por fase, evolución frente al promedio de la obra, días con reporte y clima.' }
