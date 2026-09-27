@@ -419,6 +419,44 @@ body.simulando .brandbar{border-bottom-color:#8E6BC7}
 .docs .dn small{display:block;color:var(--muted);font-size:12px}
 .docs .btn{min-height:38px;padding:0 10px;text-decoration:none}
 .docs a.btn{color:var(--ink)}
+.mods{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+.mods button{font-size:15px}
+.estper{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.estper button{min-height:40px;padding:0 13px;border-radius:20px;border:1.5px solid var(--rule);background:var(--surface);font:600 14px Barlow,sans-serif;color:var(--ink);cursor:pointer}
+.estper button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.estkpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.estkpis.tres{grid-template-columns:repeat(3,minmax(0,1fr))}
+.estbig{grid-column:1/-1;background:#1B2220;color:#fff;border-radius:14px;padding:14px;display:grid;gap:6px}
+.estk{font-size:13px;color:#C9D2CD;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+.estbn{display:flex;align-items:flex-end;gap:10px}.estbn b{font:700 54px/.9 "Barlow Condensed",sans-serif}.estbn span{font-size:14px;color:#9FE0C3;font-weight:600;padding-bottom:6px}
+.estbig small{font-size:12.5px;color:#C9D2CD}
+.estbar{display:block;height:10px;border-radius:5px;background:rgba(255,255,255,.14);overflow:hidden}.estbar i{display:block;height:100%;background:#F2A900}
+.estbar.sm{background:#EEF0EA}
+.estk2{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:12px;display:grid;gap:2px}
+.estk2 b{font:700 30px/1 "Barlow Condensed",sans-serif}.estk2 b small{font-size:18px;color:var(--muted)}.estk2 span{font-size:13px;color:var(--muted);line-height:1.25}
+.estcard{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:16px;margin-bottom:14px;display:grid;gap:10px}
+.estcard h2{margin:0;font:700 22px/1.1 "Barlow Condensed",sans-serif}
+.esth{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.esth span{font-size:13px;color:var(--muted)}
+.estbase{display:grid;gap:5px;border:0;background:none;padding:4px 0;text-align:left;cursor:pointer;min-height:44px;font:inherit;color:inherit}
+.ebn{display:flex;justify-content:space-between;font-size:14.5px}.ebn em{font-style:normal;font-weight:700}
+.estsvg{width:100%;height:auto;display:block}
+.estdias{display:flex;align-items:flex-end;gap:4px;height:130px;border-bottom:1px solid var(--rule);padding-bottom:2px}
+.estdias div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;height:100%}
+.estdias span{font-size:11px;font-weight:600;color:var(--muted)}.estdias i{display:block;width:100%;border-radius:4px 4px 0 0;min-height:2px}
+.estdl{display:flex;gap:4px}.estdl span{flex:1;text-align:center;font-size:11px;color:var(--muted)}
+.estley{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}.estley span{display:flex;align-items:center;gap:6px}.estley i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.estfase{display:grid;grid-template-columns:120px minmax(0,1fr) 46px;gap:8px;align-items:center;font-size:14px}.estfase b{text-align:right}
+.estfase.c4{grid-template-columns:112px minmax(0,1fr) 44px 38px}.estfase em{font-style:normal;text-align:right;font-size:12.5px;font-weight:600}
+.estal{padding:10px 12px;border-radius:10px;font-size:14px;line-height:1.35}.estal.roja{background:#FBE9E4;color:#7A2413}.estal.amar{background:#FFF4D6;color:#6B4A00}
+.estpers{display:grid;grid-template-columns:minmax(0,1fr) 62px 80px;gap:8px;font-size:14px;padding:6px 0;border-bottom:1px dashed #DDE2DA;align-items:center}
+.estpers span:nth-child(n+2){text-align:right}.estpers small{display:block;font-size:12.5px;color:var(--muted)}
+.estpers.hdr{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--rule)}
+.estring{grid-template-columns:auto 1fr;align-items:center;gap:16px}.estring h2{font-size:24px}.estring .up{margin:4px 0;color:var(--green);font-weight:600;font-size:14px}
+.estcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;text-align:center}
+.estcal b{font-size:11px;color:var(--muted);font-weight:600}
+.estcal span{height:36px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+.estcal span.si{background:#2E5E4F;color:#fff}.estcal span.no{background:#F6D3C6;color:#7A2413}.estcal span.fut{background:#F2F4EF;color:#9AA59E}
+.estclima{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.estclima div{background:#F2F4EF;border-radius:10px;padding:10px;display:grid}.estclima b{font-size:20px}.estclima span{font-size:12.5px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -514,7 +552,7 @@ body.simulando .brandbar{border-bottom-color:#8E6BC7}
       <button class="bell" id="bellBtn" aria-label="Avisos"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1z"/></svg><span class="cnt" id="bellCnt" hidden></span></button>
     </div>
     <div class="simbar" id="simBar" hidden role="status"><span><b>Modo prueba</b><span id="simTxt"></span></span><button class="btn" id="simSalir">Volver a maestro</button></div>
-    <div class="mods" id="mods" role="group" aria-label="Módulo"><button type="button" data-mod="req" aria-pressed="true">Requisiciones</button><button type="button" data-mod="rep" aria-pressed="false">Reportes<span class="dot" id="repDot" hidden></span></button></div>
+    <div class="mods" id="mods" role="group" aria-label="Módulo"><button type="button" data-mod="req" aria-pressed="true">Requisiciones</button><button type="button" data-mod="rep" aria-pressed="false">Reportes<span class="dot" id="repDot" hidden></span></button><button type="button" data-mod="est" aria-pressed="false" hidden>Estadísticas</button></div>
     <nav class="tabs" role="tablist" id="mainTabs">
       <button role="tab" aria-selected="false" data-tab="nueva" data-mod="req" hidden>Nueva</button>
       <button role="tab" aria-selected="false" data-tab="verif" data-mod="req" hidden>Por verificar<span class="cnt" id="cVerif" hidden></span></button>
@@ -524,6 +562,7 @@ body.simulando .brandbar{border-bottom-color:#8E6BC7}
       <button role="tab" aria-selected="false" data-tab="rarch" data-mod="rep" hidden>Diario</button>
       <button role="tab" aria-selected="false" data-tab="rsem" data-mod="rep" hidden>Semanal</button>
       <button role="tab" aria-selected="false" data-tab="rpf" data-mod="rep" hidden>Archivo</button>
+      <button role="tab" aria-selected="false" data-tab="est" data-mod="est" hidden>Estadísticas</button>
       <button role="tab" aria-selected="false" data-tab="ajustes" data-mod="both" class="gear" aria-label="Ajustes y cuenta" title="Ajustes y cuenta"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.7h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span class="cnt" id="cUsers" hidden></span></button>
     </nav>
   </header>
@@ -714,6 +753,12 @@ body.simulando .brandbar{border-bottom-color:#8E6BC7}
       <button class="btn primary block100" id="w-btn">Generar PDF semanal</button>
       <p class="hint" id="w-prog" style="text-align:center;margin-top:8px"></p>
     </div>
+  </section>
+
+  <!-- ESTADÍSTICAS -->
+  <section class="panel" id="p-est">
+    <div class="estper" id="estPer" role="group" aria-label="Período"><button type="button" data-p="semana">Esta semana</button><button type="button" data-p="mes">Este mes</button><button type="button" data-p="todo">Toda la obra</button></div>
+    <div id="estBox"><p class="hint">Cargando…</p></div>
   </section>
 
   <!-- AJUSTES -->
@@ -2898,20 +2943,28 @@ $('#lbClose').onclick = () => $('#lbDlg').close();
 /* ---------- Módulos ---------- */
 let curMod = LS.get('mod', 'req');
 function setMod(m, tab){
-  if (soloSemanal()) { m = 'rep'; tab = 'rsem'; }
-  $('#mods').hidden = soloSemanal();
+  if (m === 'est' && !canStats()) m = 'req';
+  if (soloSemanal() && m === 'req') { m = 'rep'; tab = 'rsem'; }
+  if (soloSemanal() && m === 'rep') tab = 'rsem';
+  $('#mods').hidden = soloSemanal() && !canStats();
+  $('#mods [data-mod="req"]').hidden = soloSemanal();
+  $('#mods [data-mod="est"]').hidden = !canStats();
   curMod = m; LS.set('mod', m);
   $$('#mods button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mod === m));
   applyTabVisibility();
-  const first = tab || (m === 'rep' ? (soloSemanal() ? 'rsem' : canReport() ? 'rnuevo' : 'rarch') : defaultReqTab());
+  const first = tab || (m === 'est' ? 'est' : m === 'rep' ? (soloSemanal() ? 'rsem' : canReport() ? 'rnuevo' : 'rarch') : defaultReqTab());
   showTab(first);
 }
 $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mod]'); if (b) setMod(b.dataset.mod); });
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.11.0';
+const APP_VERSION = '4.12.0';
 const NOVEDADES = [
+  { v: '4.12.0', fecha: '2026-09-27', titulo: 'Estadísticas de avance', items: [
+    { r: ['gerente_general','gerente_operaciones','compras','costos','master','reporte_general'], t: 'Nuevo módulo "Estadísticas": avance general de la obra, avance por base, evolución semana a semana, reportes por día, avance por fase, alertas y reportes por persona. Toca una base para ver su detalle, y descarga todo en PDF.' },
+    { r: ['comandante_base'], t: 'Nuevo módulo "Estadísticas" con el avance de tu base: avance por fase, evolución frente al promedio de la obra, días con reporte y clima.' }
+  ] },
   { v: '4.11.0', fecha: '2026-09-27', titulo: 'Novedades', items: [
     { r: ['contratista','logistica','gerente_operaciones','gerente_general','master'], t: 'Ahora puedes adjuntar PDF a tus reportes (planos, actas, informes): en Nuevo reporte toca "Adjuntar PDF". Máximo 20 MB por archivo.' },
     { r: ['gerente_operaciones','compras','costos','gerente_general','master','contratista','logistica'], t: 'Los reportes con PDF muestran el enlace "Ver PDF" en Diario y Archivo.' }
@@ -3178,6 +3231,149 @@ async function revisarAnuncios(){
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && me && !$('#mainView').hidden) revisarAnuncios(); });
 
+/* ---------- Estadísticas de avance ---------- */
+const canStats = () => me && (me.es_master || ['gerente_general','gerente_operaciones','compras','costos','reporte_general','comandante_base'].includes(me.rol));
+let est = { periodo: 'mes', vista: 'obra', puesto: null, datos: null };
+const pct = v => v == null ? '—' : (Math.round(v * 10) / 10) + '%';
+const colAv = v => v == null ? '#B3261E' : v >= 40 ? '#2E5E4F' : v >= 20 ? '#4B7A6A' : '#D96C24';
+function rangoEst(){ const t = today(); if (est.periodo === 'semana') return [weekStart(t), t]; if (est.periodo === 'mes') return [t.slice(0, 8) + '01', t]; return [null, t]; }
+const perTxt = () => est.periodo === 'semana' ? 'esta semana' : est.periodo === 'mes' ? 'este mes' : 'en toda la obra';
+$('#estPer').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (!b) return; est.periodo = b.dataset.p; loadEst(); });
+function lineSVG(series, opts){
+  // series: [{ vals:[…8 números o null], color, dash }], etiquetas S1..S8
+  const W = 340, H = 170, x0 = 34, x1 = W - 8, y0 = 14, y1 = H - 30;
+  const all = series.flatMap(s => s.vals).filter(v => v != null); const top = Math.max(10, Math.ceil(Math.max(...all, 0) / 10) * 10 + 10);
+  const X = i => x0 + (x1 - x0) * i / 7, Y = v => y1 - (y1 - y0) * v / top;
+  const grid = [0, .33, .66, 1].map(f => { const v = Math.round(top * f); return `<line x1="${x0}" y1="${Y(v)}" x2="${x1}" y2="${Y(v)}" stroke="#E3E7E0"/><text x="0" y="${Y(v) + 4}" font-size="11" fill="#5E6A66">${v}%</text>`; }).join('');
+  const labs = (opts.labels || []).map((l, i) => `<text x="${X(i) - 8}" y="${H - 10}" font-size="11" fill="#5E6A66">${l}</text>`).join('');
+  const lines = series.map(s => { const pts = s.vals.map((v, i) => v == null ? null : `${X(i)},${Y(v)}`).filter(Boolean);
+    if (!pts.length) return ''; const last = s.vals.map((v, i) => [v, i]).filter(([v]) => v != null).pop();
+    return `<polyline points="${pts.join(' ')}" fill="none" stroke="${s.color}" stroke-width="${s.dash ? 2 : 2.5}" ${s.dash ? 'stroke-dasharray="5 4"' : ''} stroke-linejoin="round"/>` +
+      (s.dash ? '' : `<circle cx="${X(last[1])}" cy="${Y(last[0])}" r="5" fill="#F2A900" stroke="${s.color}" stroke-width="2"/><text x="${Math.min(X(last[1]) - 40, W - 60)}" y="${Y(last[0]) - 10}" font-size="13" font-weight="700" fill="#1B2220">${pct(last[0])}</text>`); }).join('');
+  return `<svg class="estsvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.aria || 'Evolución del avance')}" font-family="Barlow, sans-serif">${grid}${labs}${lines}</svg>`;
+}
+const semLabels = ev => ev.map(e => { const [, m, d] = String(e.corte).split('-').map(Number); return `${d}/${m}`; });
+async function loadEst(){
+  if (!canStats()) return;
+  $$('#estPer button').forEach(b => b.setAttribute('aria-pressed', b.dataset.p === est.periodo));
+  const box = $('#estBox'); box.innerHTML = '<p class="hint" style="padding:8px 2px">Cargando estadísticas…</p>';
+  const [desde, hasta] = rangoEst();
+  const soloBase = me.rol === 'comandante_base' && !me.es_master;
+  try {
+    if (soloBase || est.vista === 'base') {
+      const d = await rpc('rq_estadisticas_base', { p_puesto: soloBase ? me.base : est.puesto, p_desde: desde, p_hasta: hasta });
+      est.datos = d; pintarBase(d, soloBase);
+    } else { const d = await rpc('rq_estadisticas', { p_desde: desde, p_hasta: hasta }); est.datos = d; pintarObra(d); }
+  } catch (e) { box.innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+}
+function pintarObra(d){
+  const box = $('#estBox');
+  const bases = (d.bases || []).slice().sort((a, b) => (b.avance ?? -1) - (a.avance ?? -1));
+  const conDatos = bases.filter(b => b.avance != null).length;
+  const delta = d.avance != null && d.avance_ini != null ? Math.round((d.avance - d.avance_ini) * 10) / 10 : null;
+  const dias = d.dias || []; const maxB = 13;
+  const alertas = [];
+  (d.bases || []).forEach(b => {
+    if (!b.reportes) alertas.push({ t: 'roja', m: `<b>${esc(b.nombre.replace('B.P.F ', ''))}</b> no tiene reportes ${perTxt()}.` });
+    else if (b.dias_sin >= 3) alertas.push({ t: 'amar', m: `<b>${esc(b.nombre.replace('B.P.F ', ''))}</b> lleva ${b.dias_sin} días sin reporte.` });
+    else if (b.avance != null && b.avance_ini != null && b.avance <= b.avance_ini && est.periodo !== 'todo') alertas.push({ t: 'amar', m: `<b>${esc(b.nombre.replace('B.P.F ', ''))}</b> no avanzó ${perTxt()} (${pct(b.avance)}).` });
+  });
+  const personas = (d.personas || []).filter(p => p.reportes > 0 || p.dias_sin <= 30);
+  box.innerHTML = `
+    <div class="estkpis">
+      <div class="estbig"><span class="estk">Avance general de la obra</span>
+        <div class="estbn"><b>${pct(d.avance)}</b>${delta != null && est.periodo !== 'todo' ? `<span>${delta >= 0 ? '+' : ''}${delta} pts ${perTxt()}</span>` : ''}</div>
+        <div class="estbar"><i style="width:${Math.min(100, d.avance || 0)}%"></i></div>
+        <small>Promedio del último avance reportado en ${conDatos} de 13 bases</small></div>
+      <div class="estk2"><b>${d.reportes}</b><span>reportes ${perTxt()}</span></div>
+      <div class="estk2"><b>${d.bases_hoy} <small>/ 13</small></b><span>bases reportaron hoy</span></div>
+      <div class="estk2"><b>${d.archivos}</b><span>fotos, videos y PDF</span></div>
+      <div class="estk2"><b>${d.personal ?? '—'}</b><span>personas en obra por reporte (prom.)</span></div>
+    </div>
+    <section class="estcard"><div class="esth"><h2>Avance por base</h2><span>Toca una base</span></div>
+      ${bases.map(b => `<button type="button" class="estbase" data-eb="${b.n}"><span class="ebn"><b>${esc(b.nombre.replace('B.P.F ', ''))}</b><em style="color:${colAv(b.avance)}">${b.avance == null ? 'Sin reportes' : pct(b.avance)}</em></span><span class="estbar sm"><i style="width:${Math.min(100, b.avance || 0)}%;background:${colAv(b.avance)}"></i></span></button>`).join('')}
+    </section>
+    <section class="estcard"><h2>Evolución del avance</h2><p class="hint" style="margin:-4px 0 6px">Avance general, semana a semana</p>
+      ${lineSVG([{ vals: (d.evolucion || []).map(e => e.avance), color: '#1B2220' }], { labels: semLabels(d.evolucion || []), aria: 'Avance general semana a semana' })}</section>
+    <section class="estcard"><div class="esth"><h2>Reportes por día</h2><span>Últimos 14 días</span></div>
+      <div class="estdias">${dias.map(x => `<div><span>${x.bases}</span><i style="height:${Math.round(x.bases / maxB * 100)}%;background:${x.bases < 8 ? '#D96C24' : '#2E5E4F'}"></i></div>`).join('')}</div>
+      <div class="estdl">${dias.map(x => `<span>${+String(x.fecha).slice(8)}</span>`).join('')}</div>
+      <div class="estley"><span><i style="background:#2E5E4F"></i>Bases con reporte (de 13)</span><span><i style="background:#D96C24"></i>Menos de 8</span></div></section>
+    <section class="estcard"><h2>Avance promedio por fase</h2>
+      ${(d.fases || []).map(f => `<div class="estfase"><span>${esc(f.fase)}</span><span class="estbar sm"><i style="width:${Math.min(100, f.promedio || 0)}%;background:#4B5320"></i></span><b>${pct(f.promedio)}</b></div>`).join('')}</section>
+    <section class="estcard"><h2>Alertas</h2>${alertas.length ? alertas.map(a => `<div class="estal ${a.t}">${a.m}</div>`).join('') : '<p class="hint" style="margin:0">Sin alertas: todas las bases reportan y avanzan.</p>'}</section>
+    ${personas.length ? `<section class="estcard"><h2>Reportes por persona</h2>
+      <div class="estpers hdr"><span>Quién</span><span>Reportes</span><span>Sin reportar</span></div>
+      ${personas.map(p => `<div class="estpers"><span><b>${esc(p.nombre)}</b><small>${esc([p.cargo || (ROLES[p.rol] || {}).label, p.empresa].filter(Boolean).join(' · '))}</small></span><span><b>${p.reportes}</b></span><span style="color:${p.dias_sin >= 3 ? '#B3261E' : p.dias_sin >= 2 ? '#8A5A00' : '#2E5E4F'}">${p.dias_sin === 0 ? 'Hoy' : p.dias_sin + ' día' + (p.dias_sin === 1 ? '' : 's')}</span></div>`).join('')}</section>` : ''}
+    ${d.generales ? `<p class="hint">Además hay ${d.generales} reporte${d.generales === 1 ? '' : 's'} de temas generales del proyecto ${perTxt()} (no cuentan en el avance por base).</p>` : ''}
+    <button class="btn primary block100" id="estPdf">Descargar estadísticas (PDF)</button>`;
+  $$('#estBox [data-eb]').forEach(b => b.onclick = () => { est.vista = 'base'; est.puesto = +b.dataset.eb; loadEst(); window.scrollTo(0, 0); });
+  $('#estPdf').onclick = () => pdfEstadisticas(d);
+}
+function pintarBase(d, soloBase){
+  const box = $('#estBox'); const av = d.avance;
+  const delta = av != null && d.avance_ini != null ? Math.round((av - d.avance_ini) * 10) / 10 : null;
+  const C = 2 * Math.PI * 48, dash = (Math.min(100, av || 0) / 100) * C;
+  const hasta = d.hasta; const [y, m] = hasta.split('-').map(Number); const dim = new Date(y, m, 0).getDate(); const first = (new Date(y, m - 1, 1).getDay() + 6) % 7;
+  const con = new Set((d.dias_con_reporte || []).map(String)); const hoyD = +hasta.slice(8);
+  const cal = Array(first).fill('<span></span>').concat([...Array(dim)].map((_, i) => { const dd = i + 1, iso = `${y}-${String(m).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+    const cls = dd > hoyD ? 'fut' : con.has(iso) ? 'si' : 'no'; return `<span class="${cls}">${dd}</span>`; })).join('');
+  const nCon = [...con].length;
+  const clima = d.clima || {};
+  box.innerHTML = `
+    ${soloBase ? '' : '<button class="btn ghost" id="estVolver" style="padding-left:0">← Todas las bases</button>'}
+    <section class="estcard estring">
+      <svg width="116" height="116" viewBox="0 0 116 116" role="img" aria-label="Avance ${pct(av)}"><circle cx="58" cy="58" r="48" fill="none" stroke="#EEF0EA" stroke-width="12"/><circle cx="58" cy="58" r="48" fill="none" stroke="${colAv(av)}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${dash} ${C}" transform="rotate(-90 58 58)"/><text x="58" y="65" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="28" fill="#1B2220">${pct(av)}</text></svg>
+      <div><h2>${esc(d.nombre)}</h2>
+        <p class="up">${delta != null && est.periodo !== 'todo' ? `${delta >= 0 ? '+' : ''}${delta} pts ${perTxt()}` : ''}${d.posicion && d.total_bases > 1 ? `${delta != null && est.periodo !== 'todo' ? ' · ' : ''}${d.posicion}.º de ${d.total_bases}` : ''}</p>
+        <p class="hint" style="margin:0">${d.ultimo ? `Último reporte: ${fmt(d.ultimo.fecha)}<br>${esc(d.ultimo.autor)}${d.ultimo.empresa ? ' · ' + esc(d.ultimo.empresa) : ''}` : 'Sin reportes todavía'}</p></div>
+    </section>
+    <div class="estkpis tres">
+      <div class="estk2"><b>${d.reportes}</b><span>reportes ${perTxt()}</span></div>
+      <div class="estk2"><b>${d.archivos}</b><span>fotos, videos y PDF</span></div>
+      <div class="estk2"><b>${d.personal ?? '—'}</b><span>personas (prom.)</span></div>
+    </div>
+    <section class="estcard"><div class="esth"><h2>Avance por fase</h2><span>vs. hace 7 días</span></div>
+      ${(d.fases || []).map(f => { const dl = f.pct != null && f.antes != null ? Math.round((f.pct - f.antes) * 10) / 10 : null;
+        return `<div class="estfase c4"><span>${esc(f.fase)}</span><span class="estbar sm"><i style="width:${Math.min(100, f.pct || 0)}%;background:#4B5320"></i></span><b>${pct(f.pct)}</b><em style="color:${dl ? '#2E5E4F' : '#8A938D'}">${dl ? (dl > 0 ? '+' : '') + dl : '—'}</em></div>`; }).join('') || '<p class="hint">Sin avance por fases todavía.</p>'}</section>
+    <section class="estcard"><h2>Evolución</h2>
+      ${lineSVG([{ vals: (d.evolucion || []).map(e => e.obra), color: '#9AA59E', dash: true }, { vals: (d.evolucion || []).map(e => e.avance), color: '#2E5E4F' }], { labels: semLabels(d.evolucion || []), aria: 'Avance de la base frente al promedio de la obra' })}
+      <div class="estley"><span><i style="background:#2E5E4F"></i>${esc(d.nombre.replace('B.P.F ', ''))}</span><span><i style="background:#9AA59E"></i>Promedio de la obra</span></div></section>
+    <section class="estcard"><div class="esth"><h2>Días con reporte</h2><span>${MESES[m - 1]} · ${nCon} de ${hoyD}</span></div>
+      <div class="estcal"><b>L</b><b>M</b><b>M</b><b>J</b><b>V</b><b>S</b><b>D</b>${cal}</div>
+      <div class="estley"><span><i style="background:#2E5E4F"></i>Con reporte</span><span><i style="background:#F6D3C6"></i>Sin reporte</span></div></section>
+    <section class="estcard"><h2>Clima</h2><div class="estclima">
+      <div><b>${clima.Soleado || 0}</b><span>soleados</span></div><div><b>${clima.Nublado || 0}</b><span>nublados</span></div><div><b>${clima.Lluvia || 0}</b><span>con lluvia</span></div></div></section>
+    ${soloBase ? '' : `<button class="btn block100" id="estVerRep">Ver los reportes de ${esc(d.nombre.replace('B.P.F ', ''))}</button>`}`;
+  if (!soloBase) {
+    $('#estVolver').onclick = () => { est.vista = 'obra'; loadEst(); window.scrollTo(0, 0); };
+    $('#estVerRep').onclick = () => { setMod('rep', 'rpf'); archPuesto = d.puesto; loadArchive(); };
+  }
+}
+async function pdfEstadisticas(d){
+  if (!window.jspdf) return toast('No se pudo cargar el generador de PDF');
+  const { jsPDF } = window.jspdf; const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const W = 210, M = 14; let y = 0;
+  doc.setFillColor(26,26,26); doc.rect(0, 0, W, 30, 'F'); doc.setFillColor(217,108,36); doc.rect(0, 30, W, 1.4, 'F');
+  doc.setTextColor(245,239,224); doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.text('ESTADÍSTICAS DE AVANCE DE OBRA', M, 14);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.text(pdfTxt(`Puestos Fronterizos · Constructora Rafmor · ${est.periodo === 'todo' ? 'Toda la obra' : 'Del ' + fmt(d.desde) + ' al ' + fmt(d.hasta)}`), M, 22);
+  y = 42; doc.setTextColor(27,34,32);
+  const kp = [['Avance general', pct(d.avance)], ['Reportes', String(d.reportes)], ['Bases con reporte hoy', `${d.bases_hoy} / 13`], ['Archivos', String(d.archivos)]];
+  kp.forEach(([l, v], i) => { const x = M + i * 46; doc.setFillColor(242,244,234); doc.roundedRect(x, y, 43, 20, 2, 2, 'F'); doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.text(pdfTxt(v), x + 3, y + 10); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.text(pdfTxt(l), x + 3, y + 16); });
+  y += 30; doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.text('Avance por base', M, y); y += 5;
+  const bases = (d.bases || []).slice().sort((a, b) => (b.avance ?? -1) - (a.avance ?? -1));
+  bases.forEach(b => { doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text(pdfTxt(b.nombre), M, y + 4); doc.setFillColor(238,240,234); doc.rect(M + 58, y + 1, 90, 4, 'F');
+    const c = b.avance == null ? [179,38,30] : b.avance >= 40 ? [46,94,79] : b.avance >= 20 ? [75,122,106] : [217,108,36]; doc.setFillColor(...c); doc.rect(M + 58, y + 1, 90 * Math.min(100, b.avance || 0) / 100, 4, 'F');
+    doc.setFont('helvetica','bold'); doc.text(pdfTxt(b.avance == null ? 'Sin reportes' : pct(b.avance)), M + 152, y + 4.5); doc.setFont('helvetica','normal'); doc.text(pdfTxt(`${b.reportes} rep.`), M + 172, y + 4.5); y += 6.5; });
+  y += 4; doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.text('Avance promedio por fase', M, y); y += 5;
+  (d.fases || []).forEach(f => { doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text(pdfTxt(f.fase), M, y + 4); doc.setFillColor(238,240,234); doc.rect(M + 58, y + 1, 90, 4, 'F'); doc.setFillColor(75,83,32); doc.rect(M + 58, y + 1, 90 * Math.min(100, f.promedio || 0) / 100, 4, 'F'); doc.setFont('helvetica','bold'); doc.text(pdfTxt(pct(f.promedio)), M + 152, y + 4.5); y += 6.5; });
+  const per = (d.personas || []).filter(p => p.reportes > 0);
+  if (per.length) { if (y > 230) { doc.addPage(); y = 20; } y += 4; doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.text('Reportes por persona', M, y); y += 5;
+    per.forEach(p => { if (y > 280) { doc.addPage(); y = 20; } doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text(pdfTxt(`${p.nombre}${p.cargo ? ' (' + p.cargo + ')' : ''}`), M, y + 4); doc.text(pdfTxt(`${p.reportes} reportes`), M + 120, y + 4); doc.text(pdfTxt(p.dias_sin === 0 ? 'reportó hoy' : `${p.dias_sin} días sin reportar`), M + 150, y + 4); y += 6; }); }
+  const blob = doc.output('blob');
+  const r = await deliver({ name: `Estadisticas_avance_${d.hasta}.pdf`, blob }); if (r === 'declined') toast('Descarga cancelada');
+}
+
 /* ---------- Pestañas ---------- */
 function showTab(t){
   $$('#mainTabs button').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === t));
@@ -3187,6 +3383,7 @@ function showTab(t){
   if (t === 'rnuevo') fillRep();
   if (t === 'rarch') abrirDiario();
   if (t === 'rpf') abrirArchivo();
+  if (t === 'est') { est.vista = 'obra'; loadEst(); }
   if (t === 'rsem') loadWeek();
   if (t === 'verif') loadVerif();
   if (t === 'aprob') loadAprob();
@@ -3200,6 +3397,7 @@ function tabAllowed(t){
   if (t === 'verif' || t === 'aprob') return seesAll();
   if (t === 'rnuevo') return canReport();
   if (t === 'rsem') return canWeekly();
+  if (t === 'est') return canStats();
   if (t === 'rarch' || t === 'rpf') return !soloSemanal();
   return true;
 }
