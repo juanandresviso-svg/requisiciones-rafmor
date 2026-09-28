@@ -457,6 +457,29 @@ body.simulando .brandbar{border-bottom-color:#8E6BC7}
 .estcal span{height:36px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
 .estcal span.si{background:#2E5E4F;color:#fff}.estcal span.no{background:#F6D3C6;color:#7A2413}.estcal span.fut{background:#F2F4EF;color:#9AA59E}
 .estclima{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.estclima div{background:#F2F4EF;border-radius:10px;padding:10px;display:grid}.estclima b{font-size:20px}.estclima span{font-size:12.5px;color:var(--muted)}
+nav.tabs{overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:0 0 auto}
+.frentebar{display:grid;gap:2px;margin-bottom:14px;padding:12px 14px;border-radius:var(--radius);background:#1B2220;color:#fff}
+.frentebar span{font-size:12.5px;color:#C9D2CD;text-transform:uppercase;letter-spacing:.3px;font-weight:600}
+.frentebar b{font:700 22px/1.1 "Barlow Condensed",sans-serif}
+.frentebar.sin{background:var(--red-soft);color:var(--red)}.frentebar.sin span{color:var(--red)}
+.lgtipos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lgtipos button{min-height:64px;border-radius:12px;border:1.5px solid var(--rule);background:var(--sunk);text-align:left;padding:10px 12px;cursor:pointer;display:grid;gap:2px}
+.lgtipos button b{font:700 17px/1.1 Barlow,sans-serif;color:var(--ink)}.lgtipos button span{font-size:13px;color:var(--muted)}
+.lgtipos button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink)}.lgtipos button[aria-pressed="true"] b{color:#fff}.lgtipos button[aria-pressed="true"] span{color:#C9D2CD}
+.lgsum{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.lgsum div{background:var(--sunk);border:1px solid var(--rule);border-radius:12px;padding:10px 12px;display:grid}
+.lgsum b{font:700 26px/1 "Barlow Condensed",sans-serif}.lgsum span{font-size:13px;color:var(--muted)}
+.lgdet{border:1px solid var(--rule);border-radius:12px;padding:10px 12px;margin-bottom:10px;display:grid;gap:4px}
+.lgdet div{display:flex;justify-content:space-between;font-size:14px}
+.lgcard{border:1px solid var(--rule);border-left:5px solid #D96C24;border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--surface);cursor:pointer}
+.lgcard.traslado{border-left-color:#2D5687}
+.lgh{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.lgt{font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:#8A4410}.lgcard.traslado .lgt{color:#2D5687}
+.lgm{font-size:16px;margin:2px 0}.lgs{font-size:13.5px;color:var(--muted)}
+.ufrente{display:flex;gap:6px;margin:6px 0}.ufrente .in{flex:1;min-height:40px;padding:6px 10px;font-size:14px}.ufrente .btn{min-height:40px;padding:0 10px}
+@media (max-width:380px){.mods button{font-size:13.5px;padding:0 4px}}
 </style>
 </head>
 <body>
@@ -559,9 +582,11 @@ body.simulando .brandbar{border-bottom-color:#8E6BC7}
       <button role="tab" aria-selected="false" data-tab="aprob" data-mod="req" hidden>Aprobadas<span class="cnt" id="cAprob" hidden></span></button>
       <button role="tab" aria-selected="false" data-tab="mias" data-mod="req" hidden>Mías</button>
       <button role="tab" aria-selected="false" data-tab="rnuevo" data-mod="rep" hidden>Nuevo</button>
+      <button role="tab" aria-selected="false" data-tab="rlog" data-mod="rep" hidden>Nuevo registro</button>
       <button role="tab" aria-selected="false" data-tab="rarch" data-mod="rep" hidden>Diario</button>
       <button role="tab" aria-selected="false" data-tab="rsem" data-mod="rep" hidden>Semanal</button>
       <button role="tab" aria-selected="false" data-tab="rpf" data-mod="rep" hidden>Archivo</button>
+      <button role="tab" aria-selected="false" data-tab="rlogl" data-mod="rep" hidden>Logística</button>
       <button role="tab" aria-selected="false" data-tab="est" data-mod="est" hidden>Estadísticas</button>
       <button role="tab" aria-selected="false" data-tab="ajustes" data-mod="both" class="gear" aria-label="Ajustes y cuenta" title="Ajustes y cuenta"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.7h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span class="cnt" id="cUsers" hidden></span></button>
     </nav>
@@ -714,6 +739,65 @@ body.simulando .brandbar{border-bottom-color:#8E6BC7}
       <p class="hint" style="margin:-4px 0 6px">Reportes de hoy y de ayer.</p>
       <div id="recList"></div>
       <div class="empty" id="recEmpty" hidden></div>
+    </div>
+  </section>
+
+  <!-- LOGÍSTICA: NUEVO REGISTRO -->
+  <section class="panel" id="p-rlog">
+    <div class="frentebar" id="lgFrente"></div>
+    <div class="block">
+      <h2>Tipo de registro</h2>
+      <div class="lgtipos" id="lgTipo"><button type="button" data-v="combustible" aria-pressed="true"><b>Carga de combustible</b><span>de la unidad</span></button><button type="button" data-v="traslado" aria-pressed="false"><b>Traslado</b><span>a un puesto fronterizo</span></button></div>
+    </div>
+    <div class="block">
+      <h2 id="lgTit">Carga de combustible</h2>
+      <div class="row2">
+        <label class="f"><span>Fecha</span><input class="in" type="date" id="lg-fecha"></label>
+        <label class="f"><span>Unidad</span><input class="in" id="lg-unidad" list="dl-unidades" autocomplete="off" placeholder="Vehículo o placa"></label>
+      </div>
+      <div id="lgComb">
+        <div class="row2">
+          <label class="f"><span>Litros</span><input class="in" id="lg-litros" inputmode="decimal" placeholder="Ej. 120"></label>
+          <label class="f"><span>Kilometraje (opcional)</span><input class="in" id="lg-km" inputmode="numeric" placeholder="Odómetro"></label>
+        </div>
+        <div class="f"><span class="lbl">Combustible</span><div class="chips" id="lg-comb"><button type="button" aria-pressed="true">Gasoil</button><button type="button" aria-pressed="false">Gasolina</button></div></div>
+        <label class="f"><span>Dónde se cargó (opcional)</span><input class="in" id="lg-lugar" autocomplete="off" placeholder="Estación, tanque de obra…"></label>
+      </div>
+      <div id="lgTras" hidden>
+        <label class="f"><span>Puesto fronterizo de destino</span><select class="in" id="lg-puesto"><option value="">Elige el puesto…</option></select></label>
+        <div class="row2">
+          <label class="f"><span>Origen (opcional)</span><input class="in" id="lg-origen" autocomplete="off" placeholder="Ej. Almacén Maracaibo"></label>
+          <label class="f"><span>Kilometraje (opcional)</span><input class="in" id="lg-km2" inputmode="numeric" placeholder="Odómetro"></label>
+        </div>
+        <label class="f"><span>Qué se trasladó y para qué</span><textarea class="in" id="lg-carga" rows="3" placeholder="Ej. 40 sacos de cemento y cabillas para la losa de La Zipa"></textarea></label>
+      </div>
+      <label class="f" style="margin-bottom:0"><span>Observaciones (opcional)</span><textarea class="in" id="lg-obs"></textarea></label>
+    </div>
+    <div class="block">
+      <h2>Soporte <span id="lg-count">0</span></h2>
+      <p class="hint" style="margin-top:-6px">Opcional: foto del ticket, del odómetro o de la carga, o la guía de despacho en PDF.</p>
+      <div class="pick" style="grid-template-columns:1fr 1fr">
+        <label class="btn dark">Tomar foto<input type="file" accept="image/*" capture="environment" hidden data-lgpick></label>
+        <label class="btn">Galería o PDF<input type="file" accept="image/*,application/pdf,.pdf" multiple hidden data-lgpick></label>
+      </div>
+      <div class="media" id="lg-media" style="margin-top:10px"></div>
+      <p class="err" id="lg-err" hidden></p>
+    </div>
+  </section>
+
+  <!-- LOGÍSTICA: LISTA -->
+  <section class="panel" id="p-rlogl">
+    <div class="block">
+      <h2 id="lglTit">Registros de logística <button class="btn ghost" id="lglRef" style="min-height:36px;padding:0 8px;font-size:15px">Actualizar</button></h2>
+      <div class="row2">
+        <label class="f"><span>Mes</span><input class="in" type="month" id="lgl-mes"></label>
+        <label class="f" id="lgl-frWrap"><span>Frente</span><select class="in" id="lgl-frente"><option value="">Todos</option></select></label>
+      </div>
+      <div class="seg" id="lgl-tipo" style="margin-bottom:12px"><button type="button" data-v="" aria-pressed="true">Todos</button><button type="button" data-v="combustible" aria-pressed="false">Combustible</button><button type="button" data-v="traslado" aria-pressed="false">Traslados</button></div>
+      <div id="lglSum"></div>
+      <div id="lglList"></div>
+      <div class="empty" id="lglEmpty" hidden></div>
+      <button class="btn dark block100" id="lglXls" hidden style="margin-top:12px">Descargar Excel del mes</button>
     </div>
   </section>
 
@@ -882,6 +966,9 @@ body.simulando .brandbar{border-bottom-color:#8E6BC7}
 <div class="dock" id="dock" hidden>
   <div class="in2"><button class="btn primary" id="gen">Enviar a verificación</button></div>
 </div>
+<div class="dock" id="dockLog" hidden>
+  <div class="in2"><button class="btn primary" id="lg-send">Guardar registro</button></div>
+</div>
 <div class="dock" id="dockRep" hidden>
   <div class="in2"><button class="btn primary" id="r-send">Enviar reporte</button></div>
 </div>
@@ -1037,6 +1124,14 @@ body.simulando .brandbar{border-bottom-color:#8E6BC7}
   </div>
 </dialog>
 
+<!-- Registro de logística -->
+<dialog id="lgDlg">
+  <div class="sheet"><div class="grab"></div>
+    <h3><span id="lgdTit">Registro</span><button class="btn ghost" id="lgdClose" style="min-height:40px">Cerrar</button></h3>
+    <div id="lgdBody"></div>
+  </div>
+</dialog>
+
 <!-- Novedades -->
 <dialog id="novDlg">
   <div class="sheet"><div class="grab"></div>
@@ -1056,6 +1151,7 @@ body.simulando .brandbar{border-bottom-color:#8E6BC7}
 </dialog>
 
 <datalist id="dl-temas"><option value="Logística"><option value="Seguridad"><option value="Reunión con el comando"><option value="Planificación"><option value="Personal"><option value="Clima y accesos"><option value="Proveedores"></datalist>
+<datalist id="dl-unidades"></datalist><datalist id="dl-frentes"></datalist>
 <datalist id="dl-areas"></datalist><datalist id="dl-coord"></datalist>
 <datalist id="dl-equipos"></datalist><datalist id="dl-locaciones"></datalist><datalist id="dl-und"></datalist>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -1259,7 +1355,7 @@ const ROLES = {
   compras:{ label:'Compras', desc:'Ve todo el proceso y firma el recibido cuando se aprueba.' },
   costos:{ label:'Costos', desc:'Ve todo el proceso y también hace requisiciones.' },
   gerente_general:{ label:'Gerente General', desc:'Acceso a toda la plataforma. Aprueba las requisiciones.' },
-  logistica:{ label:'Logística', desc:'Monta requisiciones y reportes, y ve su propio historial.' },
+  logistica:{ label:'Logística', desc:'Monta requisiciones y registra cargas de combustible y traslados de su frente.' },
   comandante_base:{ label:'Comandante de la Base', desc:'Consulta el reporte semanal de su base.' },
   reporte_general:{ label:'Reporte General', desc:'Consulta el reporte semanal de todo el proyecto.' }
 };
@@ -1269,7 +1365,7 @@ const soloPropio = () => me && !me.es_master && ['contratista','logistica'].incl
 const canGeneralReq = () => me && (me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol));
 const soloSemanal = () => me && !me.es_master && ['comandante_base','reporte_general'].includes(me.rol);
 const seesAll = () => me && (me.es_master || ['gerente_operaciones','compras','costos','gerente_general'].includes(me.rol));
-const roleText = u => ((ROLES[u.rol] || {}).label || u.rol) + (u.rol === 'comandante_base' && u.base ? ' · ' + baseName(u.base).replace('B.P.F ', '') : '');
+const roleText = u => ((ROLES[u.rol] || {}).label || u.rol) + (u.rol === 'comandante_base' && u.base ? ' · ' + baseName(u.base).replace('B.P.F ', '') : '') + (u.rol === 'logistica' && u.frente ? ' · ' + u.frente : '');
 const seesUsers = () => me && (me.es_master || me.rol === 'gerente_general');
 
 /* ---------- listas locales (autocompletar) ---------- */
@@ -1898,7 +1994,9 @@ $('#avList').addEventListener('click', e => {
 let uFilter = 'pendiente', usersCache = [], autoAbrirUsuarios = false;
 $('#seg-ufil').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; uFilter = b.dataset.v; segSet('seg-ufil', uFilter); renderUsers(); });
 $('#uRefresh').onclick = () => loadUsers();
+async function cargarFrentes(){ try { const F = await rpc('rq_logistica_frentes') || []; $('#dl-frentes').innerHTML = F.map(f => `<option value="${esc(f)}">`).join(''); } catch (e) {} }
 async function loadUsers(){
+  if (me.es_master) cargarFrentes();
   $('#usersHint').textContent = me.es_master ? 'Aprueba los registros nuevos, administra los roles y revisa cuándo se conectó cada usuario por última vez. Solo tú ves estos datos.' : 'Lista de usuarios de la plataforma. Solo el usuario maestro puede aprobarlos o cambiarlos.';
   try { usersCache = await rpc('rq_usuarios') || []; renderUsers(); const np = me.es_master ? usersCache.filter(u => u.estado === 'pendiente').length : 0; setCount('cUsers', np);
     const sc = $('#uSumCnt'); if (sc) { sc.textContent = np + ' por aprobar'; sc.hidden = !np; }
@@ -1935,6 +2033,7 @@ function renderUsers(){
     return `<li><div class="h1"><b>${esc(u.nombre)}</b>${u.es_master ? '<span class="tag com">Maestro</span>' : ''}</div>
       <div class="tags" style="margin:4px 0 2px"><span class="tag">${esc(roleText(u))}</span>${tag}</div>
       <div class="h2">${esc(u.email)}${u.empresa ? '. ' + esc(u.empresa) : ''}${u.cargo ? ', ' + esc(u.cargo) : ''}${u.telefono ? '. Tel. ' + esc(u.telefono) : ''}</div>
+      ${me.es_master && u.rol === 'logistica' ? `<div class="ufrente"><input class="in" list="dl-frentes" data-ufr="${u.id}" value="${esc(u.frente || '')}" placeholder="Frente de trabajo (ej. Frente Norte)" aria-label="Frente de trabajo"><button class="btn" data-ufrb="${u.id}">Guardar frente</button></div>` : ''}
       ${me.es_master ? `<div class="ucon ${conClass(u.ultima_conexion)}"><b>Última conexión: ${hace(u.ultima_conexion)}</b>${u.ultima_conexion ? `<span class="uf">(${fechaHora(u.ultima_conexion)})</span>` : ''}</div>
       <div class="umeta">Último inicio de sesión: ${fechaHora(u.ultimo_ingreso)} · Registrado: ${fechaHora(u.creado)}${u.aprobado_por ? ' · Aprobado por ' + esc(u.aprobado_por) : ''}<br>Requisiciones: ${u.requisiciones || 0} · Reportes diarios: ${u.reportes || 0} · Firmas: ${u.firmas || 0}</div>` : ''}
       ${acts ? `<div class="hb">${acts}</div>` : ''}</li>`;
@@ -1944,6 +2043,10 @@ function renderUsers(){
 }
 $('#lUsers').addEventListener('change', e => { const s = e.target.closest('[data-urol]'); if (!s) return; const bs = document.querySelector(`[data-ubase="${s.dataset.urol}"]`); if (bs) bs.hidden = s.value !== 'comandante_base'; });
 $('#lUsers').addEventListener('click', async e => {
+  const fb = e.target.closest('[data-ufrb]');
+  if (fb) { const inp = document.querySelector(`[data-ufr="${fb.dataset.ufrb}"]`); fb.disabled = true;
+    try { await rpc('rq_usuario_frente', { p_id: fb.dataset.ufrb, p_frente: inp.value }); toast(inp.value.trim() ? 'Frente asignado: ' + inp.value.trim() : 'Frente quitado'); loadUsers(); }
+    catch (er) { toast(er.message); } finally { fb.disabled = false; } return; }
   const b = e.target.closest('[data-uact]'); if (!b) return;
   const id = b.dataset.uid, act = b.dataset.uact, sel = document.querySelector(`[data-urol="${id}"]`), bsel = document.querySelector(`[data-ubase="${id}"]`);
   if ((act === 'aprobar' || act === 'rol') && sel && sel.value === 'comandante_base' && !(bsel && bsel.value)) { toast('Elige la base del comandante'); if (bsel) { bsel.hidden = false; bsel.focus(); } return; }
@@ -2363,7 +2466,7 @@ $('#logoDel').onclick = () => { settings.logo = null; LS.set('settings', setting
    REPORTES DIARIOS
    ===================================================================== */
 const MAX_FILES = 30, MAX_VIDEO = 50 * 1024 * 1024, BUCKET = 'reportes';
-const canReport = () => me && (me.es_master || ['contratista','gerente_operaciones','gerente_general','logistica'].includes(me.rol));
+const canReport = () => me && (me.es_master || ['contratista','gerente_operaciones','gerente_general'].includes(me.rol));
 const uuid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c === 'x' ? r : (r&0x3|0x8)).toString(16); });
 const DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const dayLabel = iso => { const [y,m,d] = iso.split('-').map(Number); const dt = new Date(y, m-1, d); return `${DIAS[dt.getDay()]} ${d}-${m}-${y}`; };
@@ -2949,15 +3052,20 @@ function setMod(m, tab){
   curMod = m; LS.set('mod', m);
   $$('#mods button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mod === m));
   applyTabVisibility();
-  const first = tab || (m === 'est' ? 'est' : m === 'rep' ? (soloSemanal() ? 'rsem' : canReport() ? 'rnuevo' : 'rarch') : defaultReqTab());
+  const first = tab || (m === 'est' ? 'est' : m === 'rep' ? (soloSemanal() ? 'rsem' : esLogistica() ? 'rlog' : canReport() ? 'rnuevo' : 'rarch') : defaultReqTab());
   showTab(first);
 }
 $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mod]'); if (b) setMod(b.dataset.mod); });
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.13.1';
+const APP_VERSION = '4.14.0';
 const NOVEDADES = [
+  { v: '4.14.0', fecha: '2026-09-27', titulo: 'Novedades', items: [
+    { r: ['logistica'], t: 'Tus reportes ahora son de dos tipos: carga de combustible de la unidad (con litros y tu frente de trabajo) y traslados (con el puesto fronterizo de destino). Entra a Reportes → Nuevo registro. Tu frente lo asigna el administrador.' },
+    { r: ['gerente_general','gerente_operaciones','compras','costos','master'], t: 'Nueva pestaña Reportes → Logística: cargas de combustible y traslados de los operadores, con litros por unidad, traslados por puesto y descarga en Excel.' },
+    { r: ['master'], t: 'Asigna el frente de trabajo de cada operador de Logística en Ajustes → Usuarios.' }
+  ] },
   { v: '4.13.1', fecha: '2026-09-27', titulo: 'Novedades', items: [
     { r: ['gerente_general','gerente_operaciones','compras','costos','master','reporte_general','comandante_base'], t: 'El PDF semanal trae los reportes de cada día con sus fotos, ahora sin el índice de reportes por día en la portada. Las estadísticas se descargan aparte, desde el módulo Estadísticas.' }
   ] },
@@ -3374,16 +3482,137 @@ async function pdfEstadisticas(d){
   const r = await deliver({ name: `Estadisticas_avance_${d.hasta}.pdf`, blob }); if (r === 'declined') toast('Descarga cancelada');
 }
 
+/* ---------- Logística: combustible y traslados ---------- */
+const esLogistica = () => me && !me.es_master && me.rol === 'logistica';
+const veLogistica = () => me && (me.es_master || ['gerente_general','gerente_operaciones','compras','costos'].includes(me.rol));
+Object.assign(ERRS, { sin_frente:'Todavía no tienes frente de trabajo asignado. Pídeselo al administrador.', falta_unidad:'Escribe la unidad (vehículo o placa).', falta_litros:'Escribe los litros cargados.', falta_carga:'Describe qué se trasladó.' });
+CECOS.bases.forEach(bb => { const o = document.createElement('option'); o.value = bb.n; o.textContent = bb.n + '. ' + bb.nombre.replace('B.P.F ', ''); $('#lg-puesto').appendChild(o); });
+let lg = { tipo: 'combustible', comb: 'Gasoil', files: [], id: null };
+function pintarUnidades(){ $('#dl-unidades').innerHTML = (LS.get('unidades', []) || []).map(u => `<option value="${esc(u)}">`).join(''); }
+function lgLimpiar(keep){ lg = { tipo: keep ? lg.tipo : 'combustible', comb: 'Gasoil', files: [], id: null };
+  ['lg-litros','lg-km','lg-lugar','lg-origen','lg-km2','lg-carga','lg-obs'].forEach(i => $('#' + i).value = ''); $('#lg-puesto').value = ''; }
+function pintarLg(){
+  $('#lgFrente').innerHTML = me.frente ? `<span>Frente de trabajo</span><b>${esc(me.frente)}</b>` : `<span>Sin frente asignado</span><b style="font-size:15px">Pide al administrador que te asigne tu frente de trabajo para poder registrar.</b>`;
+  $('#lgFrente').classList.toggle('sin', !me.frente);
+  $$('#lgTipo button').forEach(x => x.setAttribute('aria-pressed', x.dataset.v === lg.tipo));
+  $('#lgTit').textContent = lg.tipo === 'combustible' ? 'Carga de combustible' : 'Traslado';
+  $('#lgComb').hidden = lg.tipo !== 'combustible'; $('#lgTras').hidden = lg.tipo !== 'traslado';
+  $$('#lg-comb button').forEach(x => x.setAttribute('aria-pressed', x.textContent === lg.comb));
+  const t = today(); $('#lg-fecha').max = t; $('#lg-fecha').min = addDays(t, -3); if (!$('#lg-fecha').value || $('#lg-fecha').value > t || $('#lg-fecha').value < addDays(t, -3)) $('#lg-fecha').value = t;
+  $('#lg-media').innerHTML = lg.files.map((f, i) => `<div class="mi">${f.kind === 'pdf' ? `<div class="pdft"><b>PDF</b><span>${esc(f.file.name)}</span></div>` : `<img src="${f.thumb}" alt="Soporte ${i+1}">`}<button class="x" data-lgrm="${i}" aria-label="Quitar">×</button></div>`).join('');
+  $('#lg-count').textContent = lg.files.length ? String(lg.files.length) : '';
+  $('#lg-send').disabled = !me.frente; pintarUnidades();
+}
+$('#lgTipo').addEventListener('click', e => { const x = e.target.closest('[data-v]'); if (!x) return; lg.tipo = x.dataset.v; $('#lg-err').hidden = true; pintarLg(); });
+$('#lg-comb').addEventListener('click', e => { const x = e.target.closest('button'); if (!x) return; lg.comb = x.textContent; pintarLg(); });
+$('#lg-media').addEventListener('click', e => { const x = e.target.closest('[data-lgrm]'); if (!x) return; const f = lg.files.splice(+x.dataset.lgrm, 1)[0]; if (f && f.thumb) URL.revokeObjectURL(f.thumb); pintarLg(); });
+$$('[data-lgpick]').forEach(inp => inp.addEventListener('change', e => {
+  [...e.target.files].forEach(file => { const mime = guessMime(file); const kind = mime === 'application/pdf' ? 'pdf' : mime.startsWith('image/') ? 'foto' : '';
+    if (!kind || lg.files.length >= 20) return; if (kind === 'pdf' && file.size > MAX_PDF) return toast('El PDF pesa más de 20 MB');
+    lg.files.push({ file, kind, mime, thumb: kind === 'foto' ? URL.createObjectURL(file) : '' }); });
+  e.target.value = ''; pintarLg();
+}));
+$('#lg-send').onclick = async () => {
+  const err = m => { $('#lg-err').textContent = m; $('#lg-err').hidden = false; $('#lg-err').scrollIntoView({ behavior:'smooth', block:'center' }); };
+  const v = id => $('#' + id).value.trim();
+  if (!me.frente) return err(ERRS.sin_frente);
+  if (!v('lg-unidad')) { $('#lg-unidad').classList.add('bad'); return err(ERRS.falta_unidad); }
+  if (lg.tipo === 'combustible' && !(parseFloat(v('lg-litros').replace(',', '.')) > 0)) { $('#lg-litros').classList.add('bad'); return err(ERRS.falta_litros); }
+  if (lg.tipo === 'traslado' && !v('lg-puesto')) { $('#lg-puesto').classList.add('bad'); return err('Elige el puesto fronterizo de destino.'); }
+  if (lg.tipo === 'traslado' && v('lg-carga').length < 3) { $('#lg-carga').classList.add('bad'); return err(ERRS.falta_carga); }
+  const b = $('#lg-send'); b.disabled = true; b.textContent = 'Guardando…';
+  try {
+    lg.id = lg.id || uuid(); const fecha = $('#lg-fecha').value || today();
+    for (let i = 0; i < lg.files.length; i++) { const f = lg.files[i]; if (f.up) continue;
+      const { blob, mime } = f.kind === 'foto' ? await prepImage(f) : { blob: f.file, mime: 'application/pdf' };
+      const path = `${me.id}/log/${fecha}/${lg.id}/${String(i + 1).padStart(2, '0')}-${f.kind}.${EXT[mime] || 'bin'}`;
+      const { error } = await sb.storage.from(BUCKET).upload(path, await blob.arrayBuffer(), { contentType: mime, upsert: false });
+      if (error && !/exists|Duplicate/i.test(error.message || '')) throw mapErr(error);
+      f.up = { path, tipo: f.kind, mime, size: blob.size, nombre: f.file.name }; }
+    await rpc('rq_logistica_crear', { p_id: lg.id, p_archivos: lg.files.map(f => f.up), p_datos: { tipo: lg.tipo, fecha, unidad: v('lg-unidad'),
+      litros: v('lg-litros').replace(',', '.'), combustible: lg.comb, kilometraje: lg.tipo === 'combustible' ? v('lg-km') : v('lg-km2'), lugar: v('lg-lugar'),
+      puesto: v('lg-puesto'), origen: v('lg-origen'), carga: v('lg-carga'), observaciones: v('lg-obs') } });
+    const U = [v('lg-unidad')].concat((LS.get('unidades', []) || []).filter(x => x !== v('lg-unidad'))).slice(0, 15); LS.set('unidades', U);
+    toast(lg.tipo === 'combustible' ? 'Carga de combustible registrada' : 'Traslado registrado');
+    lg.files.forEach(f => f.thumb && URL.revokeObjectURL(f.thumb)); lgLimpiar(true); pintarLg();
+  } catch (e) { err(e.message || 'No se pudo guardar'); }
+  finally { b.disabled = !me.frente; b.textContent = 'Guardar registro'; }
+};
+['lg-unidad','lg-litros','lg-puesto','lg-carga'].forEach(id => $('#' + id).addEventListener('input', e => { e.target.classList.remove('bad'); $('#lg-err').hidden = true; }));
+
+/* Lista (Logística: los suyos; Compras, Costos, Gerentes: todos) */
+let lgl = { tipo: '', rows: [] };
+$('#lgl-tipo').addEventListener('click', e => { const x = e.target.closest('[data-v]'); if (!x) return; lgl.tipo = x.dataset.v; segSet('lgl-tipo', lgl.tipo); pintarLgl(); });
+$('#lgl-mes').addEventListener('change', () => loadLgl()); $('#lgl-frente').addEventListener('change', () => pintarLgl()); $('#lglRef').onclick = () => loadLgl();
+async function loadLgl(){
+  if (!$('#lgl-mes').value) $('#lgl-mes').value = today().slice(0, 7);
+  $('#lglTit').firstChild.textContent = esLogistica() ? 'Mis registros ' : 'Registros de logística ';
+  $('#lgl-frWrap').hidden = esLogistica(); $('#lglXls').hidden = esLogistica();
+  const [y, m] = $('#lgl-mes').value.split('-').map(Number); const desde = `${$('#lgl-mes').value}-01`, hasta = `${$('#lgl-mes').value}-${String(new Date(y, m, 0).getDate()).padStart(2, '0')}`;
+  $('#lglList').innerHTML = ''; $('#lglEmpty').hidden = false; $('#lglEmpty').textContent = 'Cargando…';
+  try {
+    lgl.rows = await rpc('rq_logistica_listar', { p_desde: desde, p_hasta: hasta, p_limite: 1000 }) || [];
+    const fr = [...new Set(lgl.rows.map(r => r.frente))].sort(); const cur = $('#lgl-frente').value;
+    $('#lgl-frente').innerHTML = '<option value="">Todos</option>' + fr.map(f => `<option ${f === cur ? 'selected' : ''}>${esc(f)}</option>`).join('');
+    pintarLgl();
+  } catch (e) { $('#lglEmpty').textContent = e.message; }
+}
+function filasLgl(){ const fr = $('#lgl-frente').value; return lgl.rows.filter(r => (!lgl.tipo || r.tipo === lgl.tipo) && (!fr || r.frente === fr)); }
+const num = n => (Math.round(+n * 10) / 10).toLocaleString('es-VE');
+function pintarLgl(){
+  const L = filasLgl(); const C = L.filter(r => r.tipo === 'combustible'), T = L.filter(r => r.tipo === 'traslado');
+  const litros = C.reduce((a, r) => a + (+r.litros || 0), 0);
+  const porUnidad = {}; C.forEach(r => porUnidad[r.unidad] = (porUnidad[r.unidad] || 0) + (+r.litros || 0));
+  const porPuesto = {}; T.forEach(r => porPuesto[r.puesto_nombre] = (porPuesto[r.puesto_nombre] || 0) + 1);
+  $('#lglSum').innerHTML = L.length ? `<div class="lgsum"><div><b>${num(litros)} L</b><span>${C.length} carga${C.length === 1 ? '' : 's'} de combustible</span></div><div><b>${T.length}</b><span>traslado${T.length === 1 ? '' : 's'}</span></div></div>
+    ${Object.keys(porUnidad).length ? `<div class="lgdet"><span class="lbl">Litros por unidad</span>${Object.entries(porUnidad).sort((a, b) => b[1] - a[1]).map(([u, l]) => `<div><span>${esc(u)}</span><b>${num(l)} L</b></div>`).join('')}</div>` : ''}
+    ${Object.keys(porPuesto).length ? `<div class="lgdet"><span class="lbl">Traslados por puesto</span>${Object.entries(porPuesto).sort((a, b) => b[1] - a[1]).map(([p, n]) => `<div><span>${esc(p)}</span><b>${n}</b></div>`).join('')}</div>` : ''}` : '';
+  $('#lglEmpty').hidden = L.length > 0; $('#lglEmpty').textContent = 'No hay registros en este mes.';
+  $('#lglList').innerHTML = L.map(r => `<article class="lgcard ${r.tipo}" data-lg="${r.id}" tabindex="0">
+      <div class="lgh"><span class="lgt">${r.tipo === 'combustible' ? 'Combustible' : 'Traslado'}</span><span>${fmt(r.fecha)}</span></div>
+      <div class="lgm">${r.tipo === 'combustible' ? `<b>${num(r.litros)} L</b> de ${esc((r.combustible || 'combustible').toLowerCase())}` : `<b>A ${esc(r.puesto_nombre)}</b>`} · ${esc(r.unidad)}</div>
+      <div class="lgs">${r.tipo === 'traslado' ? esc(r.carga) + ' · ' : ''}Frente ${esc(r.frente)}${esLogistica() ? '' : ' · ' + esc(r.autor_nombre)}${(r.archivos || []).length ? ` · 📎 ${(r.archivos || []).length}` : ''}</div></article>`).join('');
+}
+$('#lglList').addEventListener('click', e => { const a = e.target.closest('[data-lg]'); if (a) abrirLg(lgl.rows.find(r => r.id === a.dataset.lg)); });
+async function abrirLg(r){
+  if (!r) return; const files = r.archivos || []; const url = await signed(files.map(a => a.path));
+  $('#lgdTit').textContent = (r.tipo === 'combustible' ? 'Carga de combustible · ' : 'Traslado · ') + fmt(r.fecha);
+  const fila = (k, v) => v || v === 0 ? `<dt>${k}</dt><dd>${esc(String(v))}</dd>` : '';
+  $('#lgdBody').innerHTML = `<dl class="dl">${fila('Frente', r.frente)}${fila('Unidad', r.unidad)}${r.tipo === 'combustible' ? fila('Litros', num(r.litros) + ' L') + fila('Combustible', r.combustible) + fila('Dónde', r.lugar)
+      : fila('Destino', r.puesto_nombre) + fila('Origen', r.origen)}${fila('Kilometraje', r.kilometraje != null ? num(r.kilometraje) + ' km' : '')}${fila('Registró', r.autor_nombre)}${fila('Hora', new Date(r.creado).toLocaleString('es-VE', { timeZone:'America/Caracas', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }))}</dl>
+    ${r.tipo === 'traslado' ? `<div class="sec">Qué se trasladó</div><p style="margin:0 0 10px;white-space:pre-wrap">${esc(r.carga)}</p>` : ''}
+    ${r.observaciones ? `<div class="sec">Observaciones</div><p style="margin:0 0 10px;white-space:pre-wrap">${esc(r.observaciones)}</p>` : ''}
+    ${files.length ? `<div class="sec">Soporte</div><div class="gal">${files.map(a => a.tipo === 'pdf' ? `<div class="g"><button class="btn block100" data-lgpdf="${esc(a.path)}" style="min-height:120px">📄 ${esc(a.nombre || 'PDF')}</button></div>` : `<div class="g"><img src="${url(a.path)}" alt="Soporte" data-lgimg="${esc(a.path)}"></div>`).join('')}</div>` : ''}`;
+  $('#lgDlg').showModal();
+}
+$('#lgdBody').addEventListener('click', async e => { const p = e.target.closest('[data-lgpdf]'); if (p) return abrirPdf(p.dataset.lgpdf);
+  const im = e.target.closest('[data-lgimg]'); if (im) { lbItems = [{ src: im.src, path: im.dataset.lgimg, name: 'soporte', cap: 'Soporte' }]; lbIdx = 0; showLb(); $('#lbDlg').showModal(); } });
+$('#lgdClose').onclick = () => $('#lgDlg').close();
+$('#lglXls').onclick = async () => {
+  if (!window.ExcelJS) return toast('No se pudo cargar el generador de Excel');
+  const L = filasLgl(); if (!L.length) return toast('No hay registros para descargar');
+  const wb = new ExcelJS.Workbook(); const hdr = { font: { bold: true, color: { argb: 'FFF5EFE0' } }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF556325' } } };
+  const hoja = (nombre, cols, filas) => { const ws = wb.addWorksheet(nombre); ws.columns = cols.map(([h, w]) => ({ header: h, width: w })); ws.getRow(1).eachCell(c => Object.assign(c, hdr)); filas.forEach(f => ws.addRow(f)); };
+  hoja('Combustible', [['Fecha',12],['Frente',18],['Unidad',22],['Litros',10],['Combustible',12],['Kilometraje',12],['Dónde',22],['Registró',22],['Observaciones',40]],
+    L.filter(r => r.tipo === 'combustible').map(r => [fmt(r.fecha), r.frente, r.unidad, +r.litros, r.combustible, r.kilometraje != null ? +r.kilometraje : '', r.lugar || '', r.autor_nombre, r.observaciones || '']));
+  hoja('Traslados', [['Fecha',12],['Frente',18],['Unidad',22],['Destino',24],['Origen',20],['Qué se trasladó',50],['Kilometraje',12],['Registró',22],['Observaciones',40]],
+    L.filter(r => r.tipo === 'traslado').map(r => [fmt(r.fecha), r.frente, r.unidad, r.puesto_nombre, r.origen || '', r.carga, r.kilometraje != null ? +r.kilometraje : '', r.autor_nombre, r.observaciones || '']));
+  const buf = await wb.xlsx.writeBuffer();
+  const res = await deliver({ name: `Logistica_${$('#lgl-mes').value}.xlsx`, blob: new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }) }); if (res === 'declined') toast('Descarga cancelada');
+};
+
 /* ---------- Pestañas ---------- */
 function showTab(t){
   $$('#mainTabs button').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === t));
   $$('#mainView section.panel').forEach(p => p.classList.toggle('on', p.id === 'p-'+t));
-  $('#dock').hidden = t !== 'nueva'; $('#dockRep').hidden = t !== 'rnuevo';
+  $('#dock').hidden = t !== 'nueva'; $('#dockRep').hidden = t !== 'rnuevo'; $('#dockLog').hidden = t !== 'rlog';
   if (t === 'nueva') fillForm();
   if (t === 'rnuevo') fillRep();
   if (t === 'rarch') abrirDiario();
   if (t === 'rpf') abrirArchivo();
   if (t === 'est') { est.vista = 'obra'; loadEst(); }
+  if (t === 'rlog') pintarLg();
+  if (t === 'rlogl') loadLgl();
   if (t === 'rsem') loadWeek();
   if (t === 'verif') loadVerif();
   if (t === 'aprob') loadAprob();
@@ -3398,7 +3627,9 @@ function tabAllowed(t){
   if (t === 'rnuevo') return canReport();
   if (t === 'rsem') return canWeekly();
   if (t === 'est') return canStats();
-  if (t === 'rarch' || t === 'rpf') return !soloSemanal();
+  if (t === 'rarch' || t === 'rpf') return !soloSemanal() && !esLogistica();
+  if (t === 'rlog') return esLogistica();
+  if (t === 'rlogl') return esLogistica() || veLogistica();
   return true;
 }
 function applyTabVisibility(){ $$('#mainTabs button').forEach(b => { b.hidden = !((b.dataset.mod === curMod || b.dataset.mod === 'both') && tabAllowed(b.dataset.tab)); }); }
