@@ -622,7 +622,7 @@ nav.tabs button{flex:0 0 auto}
       <button class="bell" id="bellBtn" aria-label="Avisos"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1z"/></svg><span class="cnt" id="bellCnt" hidden></span></button>
     </div>
     <div class="simbar" id="simBar" hidden role="status"><span><b>Modo prueba</b><span id="simTxt"></span></span><button class="btn" id="simSalir">Volver a maestro</button></div>
-    <div class="mods" id="mods" role="group" aria-label="Módulo"><button type="button" data-mod="req" aria-pressed="true">Requisiciones</button><button type="button" data-mod="rep" aria-pressed="false">Reportes<span class="dot" id="repDot" hidden></span></button><button type="button" data-mod="est" aria-pressed="false" hidden>Estadísticas</button><button type="button" data-mod="tar" aria-pressed="false" hidden>Tareas<span class="dot" id="tarDot" hidden></span></button></div>
+    <div class="mods" id="mods" role="group" aria-label="Módulo"><button type="button" data-mod="tar" aria-pressed="false" hidden>Tareas<span class="dot" id="tarDot" hidden></span></button><button type="button" data-mod="req" aria-pressed="true">Requisiciones</button><button type="button" data-mod="rep" aria-pressed="false">Reportes<span class="dot" id="repDot" hidden></span></button><button type="button" data-mod="est" aria-pressed="false" hidden>Estadísticas</button></div>
     <nav class="tabs" role="tablist" id="mainTabs">
       <button role="tab" aria-selected="false" data-tab="nueva" data-mod="req" hidden>Nueva</button>
       <button role="tab" aria-selected="false" data-tab="verif" data-mod="req" hidden>Por verificar<span class="cnt" id="cVerif" hidden></span></button>
@@ -3320,8 +3320,11 @@ $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mo
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.17.0';
+const APP_VERSION = '4.17.1';
 const NOVEDADES = [
+  { v: '4.17.1', fecha: '2026-09-29', titulo: 'Novedades', items: [
+    { r: ['gerente_operaciones','compras','costos','gerente_general','master'], t: 'El módulo Tareas ahora es el primero y la app abre directamente en él, para que veas de inmediato lo pendiente por puesto fronterizo.' }
+  ] },
   { v: '4.17.0', fecha: '2026-09-29', titulo: 'Tareas por puesto fronterizo', items: [
     { r: ['gerente_operaciones','compras','costos','gerente_general','master'], t: 'Nuevo módulo "Tareas": dashboard de tareas pendientes por puesto fronterizo (y del proyecto general), con responsable, prioridad y fecha límite. Todos pueden comentar y actualizar el estado.' },
     { r: ['gerente_operaciones','compras','costos','gerente_general','master'], t: 'Te avisamos cuando te asignan una tarea, cuando alguien comenta o la actualiza, y cada mañana por las que vencen hoy o mañana y las vencidas. El punto rojo en "Tareas" indica que tienes tareas vencidas.' }
@@ -4358,7 +4361,7 @@ async function route(){
     setHeader(); showView('main'); pintarSim();
     if (!draft || draft.owner !== me.id) { draft = blank(); saveDraft(); }
     if (!rep || rep.owner !== me.id) { rep = repBlank(); saveRep(); }
-    if (first) setMod(curMod); else applyTabVisibility();
+    if (first) setMod(canTareas() ? 'tar' : curMod); else applyTabVisibility();
     refreshCounts();
     if (first) setTimeout(revisarNovedades, 600);
     if (first) { pintarPush(); revisarAbrirURL(); setTimeout(revisarAnuncios, 1500); }
