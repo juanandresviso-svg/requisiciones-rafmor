@@ -503,6 +503,30 @@ nav.tabs button{flex:0 0 auto}
 .wzq > b{display:block;font-size:15.5px}
 .wzit{padding:6px 0;border-top:1px dashed var(--rule);display:grid;gap:6px;font-size:14px}
 .wzit .row2{margin:0}
+.mods:has(> button[data-mod="tar"]:not([hidden])):has(> button[data-mod="est"]:not([hidden])){grid-auto-flow:row;grid-template-columns:1fr 1fr}
+.tkalerta{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:12px 14px;border-radius:var(--radius);background:#FBE9E4;color:#7A2413}
+.tkalerta b{flex:1}.tkalerta .btn{min-height:40px}
+.tkkpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:12px}
+.tkkpis div{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:10px 8px;display:grid;text-align:center}
+.tkkpis b{font:700 28px/1 "Barlow Condensed",sans-serif}.tkkpis span{font-size:11.5px;color:var(--muted);line-height:1.2}
+.tkkpis .venc b{color:#B3261E}.tkkpis .pronto b{color:#B26A00}.tkkpis .ok b{color:var(--green)}
+.tkgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.tkp{text-align:left;padding:9px 10px;border-radius:10px;border:1.5px solid var(--rule);border-left:5px solid #9AA59E;background:var(--sunk);cursor:pointer;display:grid;gap:1px;min-height:60px}
+.tkp:first-child{grid-column:1/-1}
+.tkp b{font:700 15px/1.15 "Barlow Condensed",sans-serif}.tkp span{font-size:12.5px;color:var(--muted)}.tkp em{font-style:normal;font-size:12.5px;font-weight:700}
+.tkp.venc{border-left-color:#B3261E}.tkp.venc em{color:#B3261E}.tkp.pronto{border-left-color:#E0A000}.tkp.pronto em{color:#8A5A00}.tkp.abierta{border-left-color:#2D5687}.tkp.ok{border-left-color:var(--green)}
+.tkp.sel{background:var(--ink);border-color:var(--ink)}.tkp.sel b,.tkp.sel span,.tkp.sel em{color:#fff}
+.tkc{border:1px solid var(--rule);border-left:5px solid #9AA59E;border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--surface);cursor:pointer;display:grid;gap:3px}
+.tkc.venc{border-left-color:#B3261E}.tkc.hoy,.tkc.pronto{border-left-color:#E0A000}.tkc.ok{border-left-color:var(--green);opacity:.85}
+.tkh{display:flex;justify-content:space-between;align-items:center;gap:6px}.tkpu{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--muted)}
+.tkt{font-size:16px}.tkm{font-size:13.5px;color:var(--muted)}
+.tkpl.venc{color:#B3261E;font-weight:700}.tkpl.hoy{color:#8A5A00;font-weight:700}.tkpl.pronto{color:#8A5A00;font-weight:600}.tkpl.ok{color:var(--green);font-weight:600}
+.tag.pri.alta{background:#FBE9E4;border-color:transparent;color:#B3261E}.tag.pri.media{background:#FFF4D6;border-color:transparent;color:#8A5A00}.tag.pri.baja{background:var(--sunk)}
+.tkplbar{margin:-4px 0 12px;padding:8px 12px;border-radius:8px;font-weight:700;background:var(--sunk)}
+.tkplbar.venc{background:#FBE9E4;color:#B3261E}.tkplbar.hoy,.tkplbar.pronto{background:#FFF4D6;color:#8A5A00}.tkplbar.ok{background:var(--green-soft);color:var(--green)}
+.tkcoms{display:grid;gap:8px;margin-bottom:8px}
+.tkcom{background:var(--sunk);border-radius:10px;padding:8px 10px}.tkcom b{font-size:14px}.tkcom span{font-size:12px;color:var(--muted);margin-left:6px}.tkcom p{margin:4px 0 0;font-size:14.5px;white-space:pre-wrap}
+.tkhist{margin-top:10px;font-size:13.5px}.tkhist summary{cursor:pointer;font-weight:600;min-height:32px}.tkhist div{padding:6px 0;border-top:1px dashed var(--rule)}
 </style>
 </head>
 <body>
@@ -598,7 +622,7 @@ nav.tabs button{flex:0 0 auto}
       <button class="bell" id="bellBtn" aria-label="Avisos"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1z"/></svg><span class="cnt" id="bellCnt" hidden></span></button>
     </div>
     <div class="simbar" id="simBar" hidden role="status"><span><b>Modo prueba</b><span id="simTxt"></span></span><button class="btn" id="simSalir">Volver a maestro</button></div>
-    <div class="mods" id="mods" role="group" aria-label="Módulo"><button type="button" data-mod="req" aria-pressed="true">Requisiciones</button><button type="button" data-mod="rep" aria-pressed="false">Reportes<span class="dot" id="repDot" hidden></span></button><button type="button" data-mod="est" aria-pressed="false" hidden>Estadísticas</button></div>
+    <div class="mods" id="mods" role="group" aria-label="Módulo"><button type="button" data-mod="req" aria-pressed="true">Requisiciones</button><button type="button" data-mod="rep" aria-pressed="false">Reportes<span class="dot" id="repDot" hidden></span></button><button type="button" data-mod="est" aria-pressed="false" hidden>Estadísticas</button><button type="button" data-mod="tar" aria-pressed="false" hidden>Tareas<span class="dot" id="tarDot" hidden></span></button></div>
     <nav class="tabs" role="tablist" id="mainTabs">
       <button role="tab" aria-selected="false" data-tab="nueva" data-mod="req" hidden>Nueva</button>
       <button role="tab" aria-selected="false" data-tab="verif" data-mod="req" hidden>Por verificar<span class="cnt" id="cVerif" hidden></span></button>
@@ -612,6 +636,7 @@ nav.tabs button{flex:0 0 auto}
       <button role="tab" aria-selected="false" data-tab="rlogl" data-mod="rep" hidden>Logística</button>
       <button role="tab" aria-selected="false" data-tab="rmem" data-mod="rep" hidden>Memorias</button>
       <button role="tab" aria-selected="false" data-tab="est" data-mod="est" hidden>Estadísticas</button>
+      <button role="tab" aria-selected="false" data-tab="tar" data-mod="tar" hidden>Tareas por puesto</button>
       <button role="tab" aria-selected="false" data-tab="ajustes" data-mod="both" class="gear" aria-label="Ajustes y cuenta" title="Ajustes y cuenta"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.7h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span class="cnt" id="cUsers" hidden></span></button>
     </nav>
   </header>
@@ -892,6 +917,23 @@ nav.tabs button{flex:0 0 auto}
   <section class="panel" id="p-est">
     <div class="estper" id="estPer" role="group" aria-label="Período"><button type="button" data-p="semana">Esta semana</button><button type="button" data-p="mes">Este mes</button><button type="button" data-p="todo">Toda la obra</button></div>
     <div id="estBox"><p class="hint">Cargando…</p></div>
+  </section>
+
+  <!-- TAREAS -->
+  <section class="panel" id="p-tar">
+    <div class="tkalerta" id="tkAlerta" hidden></div>
+    <div class="tkkpis" id="tkKpis"></div>
+    <button class="btn primary block100" id="tkNueva" style="margin-bottom:14px">Nueva tarea</button>
+    <div class="block">
+      <div class="esth"><h2 style="margin:0;font:700 22px/1.1 'Barlow Condensed',sans-serif">Por puesto fronterizo</h2><span id="tkPuestoSel"></span></div>
+      <div class="tkgrid" id="tkGrid"></div>
+    </div>
+    <div class="block">
+      <div class="seg" id="tkEstado" style="margin-bottom:8px"><button type="button" data-v="abiertas" aria-pressed="true">Abiertas</button><button type="button" data-v="vencidas" aria-pressed="false">Vencidas</button><button type="button" data-v="completadas" aria-pressed="false">Completadas</button></div>
+      <label class="chk" style="margin-bottom:10px"><input type="checkbox" id="tkMias"><span>Solo las mías (asignadas o creadas por mí)</span></label>
+      <div id="tkList"></div>
+      <div class="empty" id="tkEmpty" hidden></div>
+    </div>
   </section>
 
   <!-- AJUSTES -->
@@ -1189,6 +1231,15 @@ nav.tabs button{flex:0 0 auto}
     <div id="wzBody"></div>
     <p class="err" id="wzErr" hidden></p>
     <button class="btn primary block100" id="wzListo" style="margin-top:12px">Listo, llenar la requisición</button>
+  </div>
+</dialog>
+
+<!-- Tarea -->
+<dialog id="tkDlg">
+  <div class="sheet"><div class="grab"></div>
+    <h3><span id="tkdTit">Tarea</span><button class="btn ghost" id="tkdClose" style="min-height:40px">Cerrar</button></h3>
+    <div id="tkdBody"></div>
+    <p class="err" id="tkdErr" hidden></p>
   </div>
 </dialog>
 
@@ -2018,6 +2069,7 @@ async function refreshCounts(){
     const [av, v, a] = await Promise.all(tasks);
     setCount('bellCnt', av ? av.sin_leer : 0);
     if (canReport()) loadToday(); else $('#repDot').hidden = true;
+    if (canTareas()) rpc('rq_tareas_resumen').then(r => { $('#tarDot').hidden = !r.mias_vencidas; }).catch(() => {}); else $('#tarDot').hidden = true;
     if (v) setCount('cVerif', v.length); if (a) setCount('cAprob', a.length);
     if (me.es_master) { const us = await rpc('rq_usuarios'); setCount('cUsers', (us || []).filter(u => u.estado === 'pendiente').length); }
   } catch (e) {}
@@ -2191,6 +2243,7 @@ $('#avList').addEventListener('click', e => {
   if (li.dataset.tipo === 'recordatorio') { if (canReport()) setMod('rep', 'rnuevo'); return; }
   if (li.dataset.tipo === 'semanal') { if (canWeekly()) { wStart = addDays(weekStart(today()), -7); setMod('rep', 'rsem'); } return; }
   if (c.startsWith('rep:')) { openReport(c.slice(4)); return; }
+  if (c.startsWith('tarea:')) { setMod('tar', 'tar'); abrirTarea(null, c.slice(6)); return; }
   if (c === 'accion:push') { abrirAjuste('pushBlock'); return; }
   if (!c) return;
   openDetail(c);
@@ -3250,23 +3303,29 @@ $('#lbClose').onclick = () => $('#lbDlg').close();
 let curMod = LS.get('mod', 'req');
 function setMod(m, tab){
   if (m === 'est' && !canStats()) m = 'req';
+  if (m === 'tar' && !canTareas()) m = 'req';
   if (soloSemanal() && m === 'req') { m = 'rep'; tab = 'rsem'; }
   if (soloSemanal() && m === 'rep') tab = 'rsem';
   $('#mods').hidden = soloSemanal() && !canStats();
   $('#mods [data-mod="req"]').hidden = soloSemanal();
   $('#mods [data-mod="est"]').hidden = !canStats();
+  $('#mods [data-mod="tar"]').hidden = !canTareas();
   curMod = m; LS.set('mod', m);
   $$('#mods button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mod === m));
   applyTabVisibility();
-  const first = tab || (m === 'est' ? 'est' : m === 'rep' ? (soloSemanal() ? 'rsem' : esLogistica() ? 'rlog' : canReport() ? 'rnuevo' : 'rarch') : defaultReqTab());
+  const first = tab || (m === 'tar' ? 'tar' : m === 'est' ? 'est' : m === 'rep' ? (soloSemanal() ? 'rsem' : esLogistica() ? 'rlog' : canReport() ? 'rnuevo' : 'rarch') : defaultReqTab());
   showTab(first);
 }
 $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mod]'); if (b) setMod(b.dataset.mod); });
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.16.0';
+const APP_VERSION = '4.17.0';
 const NOVEDADES = [
+  { v: '4.17.0', fecha: '2026-09-29', titulo: 'Tareas por puesto fronterizo', items: [
+    { r: ['gerente_operaciones','compras','costos','gerente_general','master'], t: 'Nuevo módulo "Tareas": dashboard de tareas pendientes por puesto fronterizo (y del proyecto general), con responsable, prioridad y fecha límite. Todos pueden comentar y actualizar el estado.' },
+    { r: ['gerente_operaciones','compras','costos','gerente_general','master'], t: 'Te avisamos cuando te asignan una tarea, cuando alguien comenta o la actualiza, y cada mañana por las que vencen hoy o mañana y las vencidas. El punto rojo en "Tareas" indica que tienes tareas vencidas.' }
+  ] },
   { v: '4.16.0', fecha: '2026-09-28', titulo: 'Novedades', items: [
     { r: ['contratista','costos','gerente_general','gerente_operaciones','logistica','master'], t: 'Ya puedes cargar en Nueva la "Solicitud de materiales" en PDF que hace el contratista (Item, Descripción, Und, Cantidad), aunque tenga varias páginas. La app te pregunta lo que falta: el puesto fronterizo, el tipo de gasto para el CeCo, los materiales incompletos y tu firma.' },
     { r: ['contratista','costos','gerente_general','gerente_operaciones','logistica','compras','master'], t: 'Una requisición ahora puede tener hasta 150 materiales: el Excel sale con varias hojas del formato (13 materiales por hoja, numeradas 1/5, 2/5…).' }
@@ -3463,6 +3522,7 @@ function abrirDestino(d){
   if (!d || !me) return;
   if (d === 'recordatorio') { if (canReport()) setMod('rep', 'rnuevo'); return; }
   if (d === 'accion:push') { abrirAjuste('pushBlock'); return; }
+  if (d.startsWith('tarea:')) { if (canTareas()) { setMod('tar', 'tar'); abrirTarea(null, d.slice(6)); } return; }
   if (d.startsWith('rep:')) { setMod('rep', canReport() ? 'rnuevo' : soloSemanal() ? 'rsem' : 'rarch'); openReport(d.slice(4)); return; }
   openDetail(d);
 }
@@ -4088,6 +4148,95 @@ async function pdfMemoria(prog){
   return doc.output('blob');
 }
 
+/* ---------- Tareas pendientes por puesto fronterizo ---------- */
+const canTareas = () => me && (me.es_master || ['gerente_operaciones','compras','costos','gerente_general'].includes(me.rol));
+Object.assign(ERRS, { falta_titulo:'Escribe el título de la tarea.' });
+const TK_EST = { pendiente:'Pendiente', en_proceso:'En proceso', bloqueada:'Bloqueada', completada:'Completada' };
+const TK_PRI = { alta:'Alta', media:'Media', baja:'Baja' };
+let tk = { puesto: null, estado: 'abiertas', mias: false, resumen: null, rows: [], resp: [], cur: null };
+const plazo = t => { if (t.estado === 'completada') return { txt: 'Completada' + (t.completada_en ? ' el ' + fmt(isoLocal(t.completada_en)) : ''), cls: 'ok' };
+  if (t.dias == null) return { txt: 'Sin fecha límite', cls: '' };
+  if (t.dias < 0) return { txt: `Vencida hace ${-t.dias} día${t.dias === -1 ? '' : 's'}`, cls: 'venc' };
+  if (t.dias === 0) return { txt: 'Vence hoy', cls: 'hoy' }; if (t.dias === 1) return { txt: 'Vence mañana', cls: 'hoy' };
+  return { txt: `Vence en ${t.dias} días (${fmt(t.fecha_limite)})`, cls: t.dias <= 3 ? 'pronto' : '' }; };
+const puestoTxt = n => n == null ? 'Proyecto general' : baseName(n).replace('B.P.F ', '');
+async function loadTareas(){
+  $('#tkList').innerHTML = '<p class="hint">Cargando…</p>'; $('#tkEmpty').hidden = true;
+  try {
+    const [res, rows] = await Promise.all([rpc('rq_tareas_resumen'), rpc('rq_tareas_listar', { p_puesto: tk.puesto, p_estado: tk.estado, p_mias: tk.mias })]);
+    tk.resumen = res; tk.rows = rows || []; pintarTareas();
+  } catch (e) { $('#tkList').innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+}
+function pintarTareas(){
+  const r = tk.resumen; if (!r) return;
+  $('#tkAlerta').hidden = !r.mias_vencidas; if (r.mias_vencidas) $('#tkAlerta').innerHTML = `<b>Tienes ${r.mias_vencidas} tarea${r.mias_vencidas === 1 ? '' : 's'} vencida${r.mias_vencidas === 1 ? '' : 's'}</b><button class="btn" id="tkVerMias">Ver</button>`;
+  const vm = $('#tkVerMias'); if (vm) vm.onclick = () => { tk.estado = 'vencidas'; tk.mias = true; tk.puesto = null; $('#tkMias').checked = true; loadTareas(); };
+  $('#tkKpis').innerHTML = `<div><b>${r.abiertas}</b><span>abiertas</span></div><div class="venc"><b>${r.vencidas}</b><span>vencidas</span></div><div class="pronto"><b>${r.por_vencer}</b><span>vencen en 3 días</span></div><div class="ok"><b>${r.completadas_mes}</b><span>completadas este mes</span></div>`;
+  const by = {}; (r.puestos || []).forEach(x => by[x.puesto == null ? 0 : x.puesto] = x);
+  const card = (n, nombre) => { const x = by[n] || { abiertas: 0, vencidas: 0, por_vencer: 0, alta: 0 }; const cls = x.vencidas ? 'venc' : x.por_vencer ? 'pronto' : x.abiertas ? 'abierta' : 'ok';
+    return `<button type="button" class="tkp ${cls} ${tk.puesto === n ? 'sel' : ''}" data-tkp="${n}"><b>${esc(nombre)}</b><span>${x.abiertas ? `${x.abiertas} abierta${x.abiertas === 1 ? '' : 's'}` : 'Al día'}</span>${x.vencidas ? `<em>${x.vencidas} vencida${x.vencidas === 1 ? '' : 's'}</em>` : x.por_vencer ? `<em>${x.por_vencer} por vencer</em>` : ''}</button>`; };
+  $('#tkGrid').innerHTML = card(0, 'Proyecto general') + CECOS.bases.map(bb => card(bb.n, bb.n + '. ' + bb.nombre.replace('B.P.F ', ''))).join('');
+  $('#tkPuestoSel').innerHTML = tk.puesto != null ? `<button class="btn ghost" id="tkQuitarP" style="min-height:34px;font-size:14px">${esc(puestoTxt(tk.puesto || null))} ✕</button>` : '<span class="hint" style="margin:0">Toca un puesto para filtrar</span>';
+  const qp = $('#tkQuitarP'); if (qp) qp.onclick = () => { tk.puesto = null; loadTareas(); };
+  segSet('tkEstado', tk.estado); $('#tkMias').checked = tk.mias;
+  $('#tkList').innerHTML = tk.rows.map(t => { const pl = plazo(t); return `<article class="tkc pri-${t.prioridad} ${pl.cls}" data-tk="${t.id}" tabindex="0">
+      <div class="tkh"><span class="tkpu">${esc(puestoTxt(t.puesto))}</span><span class="tag pri ${t.prioridad}">${TK_PRI[t.prioridad]}</span></div>
+      <b class="tkt">${esc(t.titulo)}</b>
+      <div class="tkm"><span class="tkpl ${pl.cls}">${pl.txt}</span> · ${TK_EST[t.estado]} · ${t.responsable_nombre ? esc(t.responsable_nombre) : 'Sin responsable'}${(t.comentarios || []).length ? ` · 💬 ${t.comentarios.length}` : ''}${t.requisicion ? ` · ${esc(t.requisicion)}` : ''}</div></article>`; }).join('');
+  $('#tkEmpty').hidden = tk.rows.length > 0; $('#tkEmpty').textContent = tk.estado === 'vencidas' ? 'No hay tareas vencidas.' : tk.estado === 'completadas' ? 'No hay tareas completadas.' : 'No hay tareas abiertas. Toca "Nueva tarea".';
+  $('#tarDot').hidden = !r.mias_vencidas;
+}
+$('#tkGrid').addEventListener('click', e => { const b = e.target.closest('[data-tkp]'); if (!b) return; const n = +b.dataset.tkp; tk.puesto = tk.puesto === n ? null : n; loadTareas(); });
+$('#tkEstado').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; tk.estado = b.dataset.v; loadTareas(); });
+$('#tkMias').addEventListener('change', e => { tk.mias = e.target.checked; loadTareas(); });
+$('#tkList').addEventListener('click', e => { const a = e.target.closest('[data-tk]'); if (a) abrirTarea(tk.rows.find(t => t.id === a.dataset.tk)); });
+$('#tkNueva').onclick = () => abrirTarea(null);
+$('#tkdClose').onclick = () => $('#tkDlg').close();
+async function cargarResp(){ if (!tk.resp.length) { try { tk.resp = await rpc('rq_tareas_responsables') || []; } catch (e) {} } }
+async function abrirTarea(t, id){
+  await cargarResp();
+  if (!t && id) { try { const L = await rpc('rq_tareas_listar', { p_puesto: null, p_estado: null, p_mias: false }); t = (L || []).find(x => x.id === id); } catch (e) {} if (!t) return toast('No se encontró la tarea'); }
+  tk.cur = t; $('#tkdErr').hidden = true;
+  const nueva = !t, v = t || { prioridad: 'media', estado: 'pendiente', puesto: tk.puesto > 0 ? tk.puesto : null };
+  const puedeBorrar = t && (me.es_master || t.creado_por === me.id);
+  const respOpts = `<option value="">Sin responsable (avisa a Operaciones)</option>` + tk.resp.map(u => `<option value="${u.id}" ${v.responsable_id === u.id ? 'selected' : ''}>${esc(u.nombre)} · ${esc((ROLES[u.rol] || {}).label || u.rol)}</option>`).join('');
+  const pl = t ? plazo(t) : null;
+  $('#tkdTit').textContent = nueva ? 'Nueva tarea' : 'Tarea';
+  $('#tkdBody').innerHTML = `${t ? `<div class="tkplbar ${pl.cls}">${pl.txt}</div>` : ''}
+    <label class="f"><span>Título</span><input class="in" id="tk-tit" value="${esc(v.titulo || '')}" placeholder="Ej. Confirmar proveedor de cerámica"></label>
+    <label class="f"><span>Puesto fronterizo</span><select class="in" id="tk-pu"><option value="">Proyecto general</option>${CECOS.bases.map(bb => `<option value="${bb.n}" ${v.puesto === bb.n ? 'selected' : ''}>${bb.n}. ${esc(bb.nombre.replace('B.P.F ', ''))}</option>`).join('')}</select></label>
+    <label class="f"><span>Detalle</span><textarea class="in" id="tk-desc" rows="3">${esc(v.descripcion || '')}</textarea></label>
+    <div class="row2"><label class="f"><span>Fecha límite</span><input class="in" type="date" id="tk-fl" value="${esc(v.fecha_limite || '')}"></label>
+      <label class="f"><span>Requisición (opcional)</span><input class="in" id="tk-req" value="${esc(v.requisicion || '')}" placeholder="Ej. LF-0012"></label></div>
+    <div class="f"><span class="lbl">Prioridad</span><div class="chips" id="tk-pri">${Object.entries(TK_PRI).map(([k, l]) => `<button type="button" data-v="${k}" aria-pressed="${v.prioridad === k}">${l}</button>`).join('')}</div></div>
+    <label class="f"><span>Responsable</span><select class="in" id="tk-resp">${respOpts}</select></label>
+    ${t ? `<div class="f"><span class="lbl">Estado</span><div class="chips" id="tk-est">${Object.entries(TK_EST).map(([k, l]) => `<button type="button" data-v="${k}" aria-pressed="${v.estado === k}">${l}</button>`).join('')}</div></div>` : ''}
+    <button class="btn primary block100" id="tk-guardar">${nueva ? 'Crear tarea' : 'Guardar cambios'}</button>
+    ${t && t.requisicion ? `<button class="btn block100" id="tk-verreq" style="margin-top:8px">Ver requisición ${esc(t.requisicion)}</button>` : ''}
+    ${t ? `<div class="sec" style="margin-top:16px">Comentarios</div>
+      <div class="tkcoms">${(t.comentarios || []).map(c => `<div class="tkcom"><b>${esc(c.quien)}</b><span>${esc((ROLES[c.rol] || {}).label || '')} · ${fechaHora(c.cuando)}</span><p>${esc(c.texto)}</p></div>`).join('') || '<p class="hint">Sin comentarios todavía.</p>'}</div>
+      <div class="addrow"><input class="in" id="tk-com" placeholder="Escribe un comentario…"><button class="btn dark" id="tk-comenta">Enviar</button></div>
+      <details class="tkhist"><summary>Historial (${(t.historial || []).length})</summary>${(t.historial || []).slice().reverse().map(h => `<div><b>${esc(h.quien)}</b> · ${fechaHora(h.cuando)}<br>${esc(h.que)}</div>`).join('')}</details>
+      <p class="hint" style="margin:8px 0 0">Creada por ${esc(t.creado_por_nombre || '')} el ${fechaHora(t.creado)}.</p>
+      ${puedeBorrar ? '<button class="btn ghost" id="tk-borrar" style="color:var(--red);margin-top:6px">Borrar tarea</button>' : ''}` : ''}`;
+  let pri = v.prioridad, est = v.estado;
+  $$('#tk-pri button').forEach(x => x.onclick = () => { pri = x.dataset.v; $$('#tk-pri button').forEach(y => y.setAttribute('aria-pressed', y === x)); });
+  $$('#tk-est button').forEach(x => x.onclick = () => { est = x.dataset.v; $$('#tk-est button').forEach(y => y.setAttribute('aria-pressed', y === x)); });
+  $('#tk-guardar').onclick = async () => {
+    const datos = { titulo: $('#tk-tit').value.trim(), puesto: $('#tk-pu').value, descripcion: $('#tk-desc').value, fecha_limite: $('#tk-fl').value, requisicion: $('#tk-req').value, prioridad: pri, responsable: $('#tk-resp').value };
+    if (datos.titulo.length < 3) { $('#tkdErr').textContent = ERRS.falta_titulo; $('#tkdErr').hidden = false; return; }
+    try { if (nueva) { await rpc('rq_tarea_crear', { p_id: uuid(), p_datos: datos }); toast('Tarea creada'); }
+      else { await rpc('rq_tarea_actualizar', { p_id: t.id, p_cambios: Object.assign(datos, { estado: est }) }); toast('Tarea actualizada'); }
+      $('#tkDlg').close(); loadTareas(); }
+    catch (e) { $('#tkdErr').textContent = e.message; $('#tkdErr').hidden = false; }
+  };
+  const vr = $('#tk-verreq'); if (vr) vr.onclick = () => { $('#tkDlg').close(); openDetail(t.requisicion); };
+  const cm = $('#tk-comenta'); if (cm) cm.onclick = async () => { const tx = $('#tk-com').value.trim(); if (tx.length < 2) return;
+    try { const r2 = await rpc('rq_tarea_comentar', { p_id: t.id, p_texto: tx }); toast('Comentario enviado'); abrirTarea(Object.assign({}, t, r2, { dias: t.dias })); loadTareas(); } catch (e) { toast(e.message); } };
+  const bo = $('#tk-borrar'); if (bo) bo.onclick = async () => { if (!confirm('¿Borrar esta tarea?')) return; try { await rpc('rq_tarea_borrar', { p_id: t.id }); $('#tkDlg').close(); toast('Tarea borrada'); loadTareas(); } catch (e) { toast(e.message); } };
+  if (!$('#tkDlg').open) $('#tkDlg').showModal();
+}
+
 /* ---------- Pestañas ---------- */
 function showTab(t){
   $$('#mainTabs button').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === t));
@@ -4101,6 +4250,7 @@ function showTab(t){
   if (t === 'rlog') pintarLg();
   if (t === 'rlogl') loadLgl();
   if (t === 'rmem') loadMemorias();
+  if (t === 'tar') loadTareas();
   if (t === 'rsem') loadWeek();
   if (t === 'verif') loadVerif();
   if (t === 'aprob') loadAprob();
@@ -4119,6 +4269,7 @@ function tabAllowed(t){
   if (t === 'rlog') return esLogistica();
   if (t === 'rlogl') return esLogistica() || veLogistica();
   if (t === 'rmem') return canMemorias();
+  if (t === 'tar') return canTareas();
   return true;
 }
 function applyTabVisibility(){ $$('#mainTabs button').forEach(b => { b.hidden = !((b.dataset.mod === curMod || b.dataset.mod === 'both') && tabAllowed(b.dataset.tab)); }); }
