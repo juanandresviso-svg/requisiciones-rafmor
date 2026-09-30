@@ -527,6 +527,22 @@ nav.tabs button{flex:0 0 auto}
 .tkcoms{display:grid;gap:8px;margin-bottom:8px}
 .tkcom{background:var(--sunk);border-radius:10px;padding:8px 10px}.tkcom b{font-size:14px}.tkcom span{font-size:12px;color:var(--muted);margin-left:6px}.tkcom p{margin:4px 0 0;font-size:14.5px;white-space:pre-wrap}
 .tkhist{margin-top:10px;font-size:13.5px}.tkhist summary{cursor:pointer;font-weight:600;min-height:32px}.tkhist div{padding:6px 0;border-top:1px dashed var(--rule)}
+.dtprog{height:8px;border-radius:4px;background:var(--sunk);overflow:hidden;margin-top:8px}.dtprog i{display:block;height:100%;background:var(--green);transition:width .2s}
+.dtambs{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.dtrow{width:100%;display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--rule);border-radius:10px;background:var(--surface);text-align:left;cursor:pointer;font:inherit;color:inherit}
+.dtsw{width:14px;height:34px;border-radius:4px;flex:0 0 auto;display:inline-block;border:1px solid rgba(0,0,0,.15)}.dtsw.sm{width:12px;height:12px;margin-right:6px;vertical-align:-1px}
+#dtAmbDlg h3{display:flex;align-items:center;gap:10px}#dtAmbDlg h3 .dtsw{height:24px}
+.dtrt{flex:1;min-width:0;display:grid}.dtrt b{font-size:15.5px}.dtrt span{font-size:13px;color:var(--muted)}
+.dteqs{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:6px}
+.dteq{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--rule);border-radius:10px}
+.dtnm{flex:1;min-width:0;display:grid;gap:2px}.dtnm b{font-size:15px}.dtnm span{font-size:12.5px;color:var(--muted)}
+.dtfix{min-height:30px;font-size:13px;padding:0;justify-self:start;color:#2D5687}
+.dtstep{display:flex;align-items:center;gap:4px}.dtstep button{width:44px;height:44px;border-radius:10px;border:1.5px solid var(--rule);background:var(--sunk);font:700 22px Barlow,sans-serif;cursor:pointer;color:var(--ink)}
+.dtstep input{width:56px;height:44px;text-align:center;font:700 19px Barlow,sans-serif;border:1.5px solid var(--rule);border-radius:10px;background:var(--surface);color:var(--ink)}
+.dttw{overflow-x:auto;margin:0 -4px}.dtt{border-collapse:collapse;width:100%;font-size:13.5px}
+.dtt th,.dtt td{padding:6px 7px;border-bottom:1px solid var(--rule);text-align:center;white-space:nowrap}.dtt th{font-size:12px;color:var(--muted);font-weight:700}
+.dtt td:first-child,.dtt th:first-child{text-align:left;position:sticky;left:0;background:var(--surface)}
+.dtt td.z{color:#B8BFBA}.dtt td.hot{color:#B3261E;font-weight:700}.dtt tfoot td{font-weight:700;border-top:2px solid var(--ink)}
 </style>
 </head>
 <body>
@@ -936,6 +952,36 @@ nav.tabs button{flex:0 0 auto}
     </div>
   </section>
 
+  <!-- DOTACIÓN DE EQUIPOS -->
+  <section class="panel" id="p-dot">
+    <div class="memtop"><button class="btn ghost" id="dtVolver" style="padding-left:0">← Ajustes</button><span id="dtConn" class="hint" style="margin:0;text-align:right"></span></div>
+    <div class="memtit"><b>Dotación de equipos</b><span id="dtCode"></span></div>
+    <label class="f"><span>Puesto fronterizo</span><select class="in" id="dtPuesto"></select></label>
+    <div class="seg" id="dtTabs" style="margin-bottom:12px"><button type="button" data-v="lev" aria-pressed="true">Levantamiento</button><button type="button" data-v="res" aria-pressed="false">Resumen</button><button type="button" data-v="con" aria-pressed="false">Consolidado</button></div>
+    <div id="dtLev">
+      <div class="block">
+        <div class="esth"><h2 style="margin:0">Ambientes</h2><span id="dtAmbCount"></span></div>
+        <div class="dtprog"><i id="dtProgBar"></i></div><p class="hint" id="dtProgTxt" style="margin:4px 0 10px"></p>
+        <ul class="dtambs" id="dtAmbList"></ul>
+        <div class="empty" id="dtAmbEmpty" hidden>Este puesto no tiene ambientes todavía.<br><button class="btn" id="dtTipicos" style="margin-top:10px">Cargar los 12 ambientes típicos</button></div>
+        <button class="btn primary block100" id="dtNuevo" style="margin-top:10px">Agregar ambiente</button>
+      </div>
+    </div>
+    <div id="dtRes" hidden>
+      <div class="tkkpis" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div><b id="dtRev">0</b><span>ambientes revisados</span></div><div class="venc"><b id="dtBuy">0</b><span>a adquirir</span></div><div class="pronto"><b id="dtPend">0</b><span>por instalar</span></div></div>
+      <div class="block"><h2 id="dtResTit">Resumen</h2><p class="hint" style="margin-top:-6px">A adquirir = necesario − existente. Por instalar = necesario − instalado.</p><div class="dttw"><table class="dtt" id="dtResTable"></table></div></div>
+      <div class="block"><h2>Necesario por ambiente</h2><div class="dttw"><table class="dtt" id="dtResAmb"></table></div></div>
+    </div>
+    <div id="dtCon" hidden>
+      <div class="block">
+        <h2>Consolidado de la obra</h2><p class="hint" id="dtConSub" style="margin-top:-6px"></p>
+        <div class="seg" id="dtConSeg" style="margin-bottom:10px"><button type="button" data-v="buy" aria-pressed="true">A adquirir</button><button type="button" data-v="n" aria-pressed="false">Necesario</button><button type="button" data-v="e" aria-pressed="false">Existente</button><button type="button" data-v="pend" aria-pressed="false">Por instalar</button></div>
+        <div class="dttw"><table class="dtt" id="dtConTable"></table></div>
+        <button class="btn dark block100" id="dtXlsx" style="margin-top:12px">Descargar Excel (consolidado, por puesto y por ambiente)</button>
+      </div>
+    </div>
+  </section>
+
   <!-- AJUSTES -->
   <section class="panel" id="p-ajustes">
     <div class="block" id="pushBlock">
@@ -964,6 +1010,12 @@ nav.tabs button{flex:0 0 auto}
       <button class="btn ghost block100 danger" id="logout" style="border:0;margin-top:8px">Cerrar sesión</button>
     </div>
     <div class="block"><h2>Novedades <span class="st" id="appVer"></span></h2><button class="btn block100" id="verNovedades">Ver las novedades de la app</button></div>
+    <div class="block" id="dotBlock" hidden>
+      <h2>Dotación de equipos (13 B.P.F)</h2>
+      <p class="hint" style="margin-top:-6px">Levantamiento por ambiente, puesto por puesto: por cada equipo se cuenta lo necesario, lo existente en buen estado y lo instalado. Resumen por puesto (a adquirir y por instalar), consolidado de la obra y Excel.</p>
+      <div id="dotMini" class="hint"></div>
+      <button class="btn dark block100" id="dotAbrir">Abrir dotación de equipos</button>
+    </div>
     <div class="block"><h2>Instalar en el teléfono</h2><button class="btn block100" data-install>Ver instrucciones para Android y iPhone</button></div>
     <div class="block" id="usersBlock" hidden>
       <h2>Usuarios <button class="btn ghost" id="uRefresh" style="min-height:36px;padding:0 8px;font-size:15px">Actualizar</button></h2>
@@ -1240,6 +1292,38 @@ nav.tabs button{flex:0 0 auto}
     <h3><span id="tkdTit">Tarea</span><button class="btn ghost" id="tkdClose" style="min-height:40px">Cerrar</button></h3>
     <div id="tkdBody"></div>
     <p class="err" id="tkdErr" hidden></p>
+  </div>
+</dialog>
+
+<!-- Dotación: ambiente -->
+<dialog id="dtAmbDlg">
+  <div class="sheet"><div class="grab"></div>
+    <h3><span class="dtsw" id="dtaSw"></span><span id="dtaName" style="flex:1"></span><button class="btn ghost" id="dtaClose" style="min-height:40px">Cerrar</button></h3>
+    <p class="hint" id="dtaTipo" style="margin:-6px 0 4px"></p><p class="hint" id="dtaRef" style="margin:0 0 8px"></p>
+    <div class="seg" id="dtMode"><button type="button" data-v="n" aria-pressed="true">Necesario</button><button type="button" data-v="e" aria-pressed="false">Existente</button><button type="button" data-v="i" aria-pressed="false">Instalado</button></div>
+    <p class="hint" id="dtModeHint" style="margin:6px 0 8px"></p>
+    <ul class="dteqs" id="dtEqList"></ul>
+    <div id="dtEdit">
+      <div class="addrow"><select class="in" id="dtAddSel"></select><button class="btn" id="dtAddBtn">Agregar</button></div>
+      <div class="addrow" id="dtOtroRow" hidden><input class="in" id="dtOtroNom" placeholder="Nombre del equipo (ej. Lavadora)"><button class="btn" id="dtOtroBtn">Crear</button></div>
+      <label class="f" style="margin-top:10px"><span>Notas del ambiente</span><textarea class="in" id="dtaNota" rows="2"></textarea></label>
+      <details class="tkhist"><summary>Nombre, uso y eliminar</summary>
+        <label class="f"><span>Nombre</span><input class="in" id="dtaRename"></label>
+        <div class="chips" id="dtaTipoChips"></div>
+        <button class="btn ghost" id="dtaDel" style="color:var(--red)">Eliminar ambiente</button>
+      </details>
+    </div>
+    <div class="memnav" style="margin-top:12px"><button class="btn" id="dtaPrev">Anterior</button><button class="btn primary" id="dtaRev">Marcar revisado</button></div>
+  </div>
+</dialog>
+<!-- Dotación: nuevo ambiente -->
+<dialog id="dtNewDlg">
+  <div class="sheet"><div class="grab"></div>
+    <h3>Nuevo ambiente<button class="btn ghost" id="dtnClose" style="min-height:40px">Cerrar</button></h3>
+    <label class="f"><span>Nombre</span><input class="in" id="dtnName" placeholder="Ej. Dormitorio de tropa"></label>
+    <span class="lbl">Uso</span><div class="chips" id="dtnTipo"></div>
+    <p class="hint" id="dtnHint"></p>
+    <button class="btn primary block100" id="dtnSave">Crear ambiente</button>
   </div>
 </dialog>
 
@@ -2670,7 +2754,7 @@ $('#lbDel').onclick = async () => {
 
 /* ---------- Mi cuenta y ajustes ---------- */
 function renderSettings(){
-  pintarPush(); pintarSim();
+  pintarPush(); pintarSim(); pintarDotMini();
   $('#anuBlock').hidden = !me.es_master; if (me.es_master) pintarAnuRoles();
   $('#usersBlock').hidden = !seesUsers(); if (seesUsers()) loadUsers();
   $('#histBlock').hidden = !me.es_master; $('#driveBlock').hidden = !me.es_master; $('#antesBlock').hidden = !canAntes();
@@ -3320,8 +3404,12 @@ $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mo
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.17.1';
+const APP_VERSION = '4.18.0';
 const NOVEDADES = [
+  { v: '4.18.0', fecha: '2026-09-29', titulo: 'Dotación de equipos', items: [
+    { r: ['gerente_operaciones','gerente_general','master'], t: 'La app de Dotación de equipos ahora está dentro de Puestos Fronterizos: Ajustes → Dotación de equipos. Levantamiento por ambiente, puesto por puesto (necesario, existente e instalado), resumen por puesto, consolidado de la obra y Excel. Caño del Medio ya tiene sus 17 ambientes cargados.' },
+    { r: ['compras','costos'], t: 'En Ajustes → Dotación de equipos puedes consultar lo que hay que adquirir y por instalar en cada puesto y en toda la obra, y descargar el Excel.' }
+  ] },
   { v: '4.17.1', fecha: '2026-09-29', titulo: 'Novedades', items: [
     { r: ['gerente_operaciones','compras','costos','gerente_general','master'], t: 'El módulo Tareas ahora es el primero y la app abre directamente en él, para que veas de inmediato lo pendiente por puesto fronterizo.' }
   ] },
@@ -4240,6 +4328,194 @@ async function abrirTarea(t, id){
   if (!$('#tkDlg').open) $('#tkDlg').showModal();
 }
 
+/* ---------- Dotación de equipos (13 B.P.F) ---------- */
+const DT_EQUIPOS = [ {k:'literas', n:'Literas'}, {k:'colchones', n:'Colchones'}, {k:'ventiladores', n:'Ventiladores'}, {k:'aires', n:'Aires acondicionados'}, {k:'neveras', n:'Neveras'},
+  {k:'congeladores', n:'Congeladores'}, {k:'bombillos', n:'Bombillos'}, {k:'reflectores', n:'Reflectores solares'}, {k:'bombas', n:'Bombas de agua'}, {k:'starlink', n:'Starlink'},
+  {k:'filtros', n:'Filtros de agua'}, {k:'pocetas', n:'Pocetas'}, {k:'lavamanos', n:'Lavamanos'}, {k:'urinarios', n:'Urinarios'}, {k:'griferia', n:'Grifería'} ];
+const DT_TIPOS = {
+  dormitorio:{n:'Dormitorio', c:'#9B2226', eq:['literas','colchones','ventiladores','aires','bombillos']}, banos:{n:'Baños y duchas', c:'#8F8F14', eq:['pocetas','lavamanos','urinarios','griferia','bombillos']},
+  cocina:{n:'Cocina', c:'#B5735F', eq:['neveras','congeladores','filtros','griferia','bombillos','ventiladores']}, comedor:{n:'Comedor', c:'#8E2A8E', eq:['ventiladores','aires','bombillos']},
+  despensa:{n:'Despensa', c:'#666B6A', eq:['neveras','congeladores','bombillos']}, deposito:{n:'Depósito', c:'#6F7331', eq:['bombillos']}, armas:{n:'Depósito de armas', c:'#F2A7AD', eq:['bombillos','ventiladores']},
+  enfermeria:{n:'Enfermería', c:'#EFA3A8', eq:['aires','neveras','lavamanos','griferia','bombillos']}, operaciones:{n:'Sala de operaciones', c:'#F2EC7E', eq:['starlink','aires','bombillos']},
+  ejercicios:{n:'Sala de ejercicios', c:'#22306B', eq:['ventiladores','bombillos']}, servicios:{n:'Servicios generales', c:'#18E0E8', eq:['bombas','filtros','bombillos']},
+  exteriores:{n:'Exteriores y perímetro', c:'#E8E000', eq:['reflectores']}, otro:{n:'Otro', c:'#A9B1AD', eq:['bombillos']} };
+const DT_TIPICOS = [['Dormitorio de tropa','dormitorio'],['Hab. tropas profesionales','dormitorio'],['Baños y duchas','banos'],['Cocina','cocina'],['Comedor','comedor'],['Despensa','despensa'],['Depósito','deposito'],['Depósito de armas','armas'],['Enfermería','enfermeria'],['Sala de operaciones','operaciones'],['Servicios generales','servicios'],['Exteriores y perímetro','exteriores']];
+const DT_MODES = { n:'Necesario', e:'Existente', i:'Instalado' };
+const DT_HINT = { n:'Cuántos equipos debe tener este ambiente según la dotación.', e:'Cuántos hay hoy en buen estado. Los dañados no cuentan.', i:'Cuántos quedaron instalados y probados.' };
+const canDotacion = () => me && (me.es_master || ['gerente_operaciones','gerente_general','compras','costos'].includes(me.rol));
+let dt = { amb: {}, extras: [], edita: false, puesto: LS.get('dtPuesto', 13), tab: 'lev', mode: 'n', con: 'buy', open: null, pend: LS.get('dtPend', {}), newTipo: 'dormitorio', timers: {} };
+const dnum = v => Math.max(0, Math.floor(Number(v) || 0));
+const dtCat = () => DT_EQUIPOS.concat(dt.extras || []);
+const dtName = k => (dtCat().find(e => e.k === k) || { n: k }).n;
+const dtOrder = k => { const i = dtCat().findIndex(e => e.k === k); return i < 0 ? 999 : i; };
+const dtCode = n => { const b = CECOS.bases.find(x => x.n === n); return b ? b.nombre.replace('B.P.F ', '').split(' ').map(w => w.slice(0, 4)).join(' ').slice(0, 6) : n; };
+const dtAmbs = pu => Object.values(dt.amb).filter(a => a.puesto === pu).sort((a, b) => (a.orden || 0) - (b.orden || 0) || String(a.nombre).localeCompare(b.nombre));
+function dtSum(list){ const t = {}; list.forEach(a => { for (const k in (a.eq || {})) { const q = a.eq[k]; t[k] = t[k] || { n:0, e:0, i:0 }; t[k].n += dnum(q.n); t[k].e += dnum(q.e); t[k].i += dnum(q.i); } });
+  for (const k in t) { t[k].buy = Math.max(0, t[k].n - t[k].e); t[k].pend = Math.max(0, t[k].n - t[k].i); } return t; }
+const dtKeys = t => Object.keys(t).sort((a, b) => dtOrder(a) - dtOrder(b));
+function dtConn(){ const n = Object.keys(dt.pend).length; $('#dtConn').textContent = !dt.edita ? 'Solo consulta' : n ? `${n} cambio${n === 1 ? '' : 's'} por guardar` : 'Guardado'; }
+async function loadDot(){
+  CECOS.bases.length && ($('#dtPuesto').innerHTML = CECOS.bases.map(b => `<option value="${b.n}">${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</option>`).join(''));
+  try { const r = await rpc('rq_dotacion_listar'); dt.edita = !!r.puede_editar; dt.extras = r.extras || []; dt.amb = {}; (r.ambientes || []).forEach(a => dt.amb[a.id] = a);
+    for (const id in dt.pend) { if (dt.amb[id]) Object.assign(dt.amb[id], dt.pend[id]); else dt.amb[id] = dt.pend[id]; dtGuardar(id); }
+  } catch (e) { toast(e.message); }
+  pintarDot();
+}
+function pintarDot(){
+  $('#dtPuesto').value = String(dt.puesto); $('#dtCode').textContent = baseName(dt.puesto).replace('B.P.F ', '');
+  $('#dtPuesto').querySelectorAll('option').forEach(o => { const n = dtAmbs(+o.value).length; o.textContent = `${o.value}. ${baseName(+o.value).replace('B.P.F ', '')}${n ? ' · ' + n + ' amb.' : ''}`; });
+  $$('#dtTabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === dt.tab));
+  $('#dtLev').hidden = dt.tab !== 'lev'; $('#dtRes').hidden = dt.tab !== 'res'; $('#dtCon').hidden = dt.tab !== 'con';
+  $('#dtNuevo').hidden = !dt.edita; $('#dtTipicos').hidden = !dt.edita;
+  const list = dtAmbs(dt.puesto), rev = list.filter(a => a.revisado).length;
+  $('#dtProgBar').style.width = list.length ? (rev / list.length * 100) + '%' : '0%'; $('#dtProgTxt').textContent = `${rev} de ${list.length} ambientes revisados`;
+  $('#dtAmbCount').textContent = list.length ? list.length + ' ambientes' : ''; $('#dtAmbEmpty').hidden = list.length > 0;
+  $('#dtAmbList').innerHTML = list.map(a => { const tp = DT_TIPOS[a.tipo] || DT_TIPOS.otro; const t = dtSum([a]); const ks = dtKeys(t).filter(k => t[k].n || t[k].e || t[k].i);
+    const res = ks.length ? ks.slice(0, 4).map(k => `${dtName(k)} ${t[k].n}`).join(' · ') + (ks.length > 4 ? ` · +${ks.length - 4}` : '') : 'Sin cantidades todavía';
+    return `<li><button class="dtrow" data-dt="${esc(a.id)}"><span class="dtsw" style="background:${esc(a.color || tp.c)}"></span><span class="dtrt"><b>${esc(a.nombre)}</b><span>${esc(res)}</span></span><span class="tag ${a.revisado ? 'ok' : ''}">${a.revisado ? 'Revisado' : 'Pendiente'}</span></button></li>`; }).join('');
+  // Resumen del puesto
+  const t = dtSum(list), ks = dtKeys(t); let buy = 0, pend = 0; ks.forEach(k => { buy += t[k].buy; pend += t[k].pend; });
+  $('#dtRev').textContent = `${rev}/${list.length}`; $('#dtBuy').textContent = buy; $('#dtPend').textContent = pend; $('#dtResTit').textContent = baseName(dt.puesto);
+  const c = v => `<td class="${v ? '' : 'z'}">${v}</td>`;
+  if (!ks.length) { $('#dtResTable').innerHTML = '<tbody><tr><td class="z" style="white-space:normal">Aún no hay equipos cargados en este puesto.</td></tr></tbody>'; $('#dtResAmb').innerHTML = ''; }
+  else { const tot = { n:0, e:0, buy:0, i:0, pend:0 }; ks.forEach(k => { for (const f in tot) tot[f] += t[k][f]; });
+    $('#dtResTable').innerHTML = `<thead><tr><th>Equipo</th><th>Necesario</th><th>Existente</th><th>A adquirir</th><th>Instalado</th><th>Por instalar</th></tr></thead><tbody>` +
+      ks.map(k => `<tr><td>${esc(dtName(k))}</td>${c(t[k].n)}${c(t[k].e)}<td class="${t[k].buy ? 'hot' : 'z'}">${t[k].buy}</td>${c(t[k].i)}${c(t[k].pend)}</tr>`).join('') +
+      `</tbody><tfoot><tr><td>Total</td><td>${tot.n}</td><td>${tot.e}</td><td>${tot.buy}</td><td>${tot.i}</td><td>${tot.pend}</td></tr></tfoot>`;
+    $('#dtResAmb').innerHTML = `<thead><tr><th>Ambiente</th>${ks.map(k => `<th>${esc(dtName(k))}</th>`).join('')}</tr></thead><tbody>` +
+      list.map(a => `<tr><td>${esc(a.nombre)}</td>${ks.map(k => { const v = a.eq && a.eq[k] ? dnum(a.eq[k].n) : 0; return `<td class="${v ? '' : 'z'}">${v || '·'}</td>`; }).join('')}</tr>`).join('') + '</tbody>'; }
+  // Consolidado
+  const per = {}, all = {}; CECOS.bases.forEach(b => { const l = dtAmbs(b.n); per[b.n] = { t: dtSum(l), has: l.length > 0 }; for (const k in per[b.n].t) all[k] = 1; });
+  const ck = dtKeys(all), m = dt.con; $('#dtConSub').textContent = `${CECOS.bases.filter(b => per[b.n].has).length} de 13 puestos con levantamiento`;
+  $$('#dtConSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === m));
+  if (!ck.length) $('#dtConTable').innerHTML = '<tbody><tr><td class="z" style="white-space:normal">Todavía no hay equipos cargados en ningún puesto.</td></tr></tbody>';
+  else { const foot = CECOS.bases.map(() => 0); let gt = 0;
+    const rows = ck.map(k => { let s = 0; const cells = CECOS.bases.map((b, j) => { const v = per[b.n].t[k] ? per[b.n].t[k][m] : 0; s += v; foot[j] += v; return `<td class="${v ? '' : 'z'}">${per[b.n].has ? (v || '·') : '–'}</td>`; }).join(''); gt += s;
+      return `<tr><td>${esc(dtName(k))}</td>${cells}<td><b>${s}</b></td></tr>`; }).join('');
+    $('#dtConTable').innerHTML = `<thead><tr><th>Equipo</th>${CECOS.bases.map(b => `<th title="${esc(b.nombre)}" style="${per[b.n].has ? '' : 'opacity:.5'}">${b.n}</th>`).join('')}<th>Total</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td>Total</td>${foot.map(v => `<td>${v}</td>`).join('')}<td>${gt}</td></tr></tfoot>`; }
+  dtConn(); if (dt.open) pintarDtAmb();
+}
+function dtPatch(id, cambios){
+  const a = dt.amb[id]; if (!a || !dt.edita) return;
+  const merge = (t, s) => { for (const k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k])) { t[k] = t[k] && typeof t[k] === 'object' ? t[k] : {}; merge(t[k], s[k]); } else t[k] = s[k]; } };
+  merge(a, cambios); dt.pend[id] = a; LS.set('dtPend', dt.pend); pintarDot();
+  clearTimeout(dt.timers[id]); dt.timers[id] = setTimeout(() => dtGuardar(id), 600);
+}
+async function dtGuardar(id){
+  const a = dt.amb[id]; if (!a) return;
+  try { await rpc('rq_dotacion_guardar', { p_id: id, p_datos: { puesto: a.puesto, nombre: a.nombre, tipo: a.tipo, color: a.color, orden: a.orden || 0, ref: a.ref || '', nota: a.nota || '', revisado: !!a.revisado, eq: a.eq || {} } });
+    if (dt.pend[id] === a) { delete dt.pend[id]; LS.set('dtPend', dt.pend); } }
+  catch (e) { $('#dtConn').textContent = 'Sin conexión: los cambios quedan en el teléfono'; return; }
+  dtConn();
+}
+$('#dtPuesto').onchange = () => { dt.puesto = +$('#dtPuesto').value; LS.set('dtPuesto', dt.puesto); pintarDot(); };
+$('#dtTabs').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; dt.tab = b.dataset.v; pintarDot(); });
+$('#dtConSeg').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; dt.con = b.dataset.v; pintarDot(); });
+$('#dtVolver').onclick = () => showTab('ajustes');
+$('#dotAbrir').onclick = () => showTab('dot');
+$('#dtAmbList').addEventListener('click', e => { const b = e.target.closest('[data-dt]'); if (b) dtAbrir(b.dataset.dt); });
+function dtAbrir(id){ dt.open = id; pintarDtAmb(); if (!$('#dtAmbDlg').open) $('#dtAmbDlg').showModal(); }
+$('#dtaClose').onclick = () => $('#dtAmbDlg').close();
+$('#dtAmbDlg').addEventListener('close', () => { dt.open = null; });
+function pintarDtAmb(){
+  const a = dt.amb[dt.open]; if (!a) { $('#dtAmbDlg').close(); return; }
+  const tp = DT_TIPOS[a.tipo] || DT_TIPOS.otro, ro = !dt.edita;
+  $('#dtaSw').style.background = a.color || tp.c; $('#dtaName').textContent = a.nombre; $('#dtaTipo').textContent = tp.n + ' · ' + baseName(a.puesto);
+  $('#dtaRef').hidden = !a.ref; $('#dtaRef').textContent = a.ref ? 'Plano de usos: ' + a.ref : '';
+  $$('#dtMode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === dt.mode)); $('#dtModeHint').textContent = DT_HINT[dt.mode];
+  const ks = Object.keys(a.eq || {}).sort((x, y) => dtOrder(x) - dtOrder(y));
+  const foco = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.dk;
+  $('#dtEqList').innerHTML = ks.length ? ks.map(k => { const q = a.eq[k];
+    const otros = Object.keys(DT_MODES).filter(x => x !== dt.mode).map(x => `${DT_MODES[x]} <b>${dnum(q[x])}</b>`).join(' · ');
+    let fix = '';
+    if (!ro && k === 'colchones' && dt.mode === 'n' && a.eq.literas && dnum(a.eq.literas.n) && dnum(q.n) !== dnum(a.eq.literas.n) * 2) fix = `<button class="btn ghost dtfix" data-dfix="1">Igualar a 2 por litera (${dnum(a.eq.literas.n) * 2})</button>`;
+    if (!ro && !dnum(q.n) && !dnum(q.e) && !dnum(q.i)) fix += `<button class="btn ghost dtfix" data-drm="${k}">Quitar de este ambiente</button>`;
+    return `<li class="dteq"><div class="dtnm"><b>${esc(dtName(k))}</b><span>${otros}</span>${fix}</div>
+      <div class="dtstep"><button data-dd="-1" data-dk="${k}" aria-label="Restar ${esc(dtName(k))}" ${ro ? 'disabled' : ''}>−</button><input data-dk="${k}" inputmode="numeric" value="${dnum(q[dt.mode])}" aria-label="${DT_MODES[dt.mode]}: ${esc(dtName(k))}" ${ro ? 'readonly' : ''}><button data-dd="1" data-dk="${k}" aria-label="Sumar ${esc(dtName(k))}" ${ro ? 'disabled' : ''}>+</button></div></li>`; }).join('')
+    : '<li class="empty" style="list-style:none">Sin equipos. Agrega el primero abajo.</li>';
+  if (foco) { const el = $('#dtEqList').querySelector(`input[data-dk="${foco}"]`); if (el) { el.focus(); const l = el.value.length; try { el.setSelectionRange(l, l); } catch (e) {} } }
+  $('#dtEdit').hidden = ro;
+  const have = new Set(ks);
+  $('#dtAddSel').innerHTML = '<option value="">Agregar equipo…</option>' + dtCat().filter(e => !have.has(e.k)).map(e => `<option value="${e.k}">${esc(e.n)}</option>`).join('') + '<option value="__otro">Otro equipo…</option>';
+  if (document.activeElement !== $('#dtaNota')) $('#dtaNota').value = a.nota || '';
+  if (document.activeElement !== $('#dtaRename')) $('#dtaRename').value = a.nombre;
+  $('#dtaTipoChips').innerHTML = Object.entries(DT_TIPOS).map(([k, v]) => `<button type="button" data-dt2="${k}" aria-pressed="${a.tipo === k}"><span class="dtsw sm" style="background:${v.c}"></span>${esc(v.n)}</button>`).join('');
+  const rb = $('#dtaRev'); rb.hidden = ro; rb.textContent = a.revisado ? 'Revisado · siguiente' : 'Marcar revisado'; rb.className = 'btn ' + (a.revisado ? 'ok' : 'primary');
+  const list = dtAmbs(a.puesto); $('#dtaPrev').disabled = list.findIndex(x => x.id === dt.open) <= 0;
+}
+$('#dtMode').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; dt.mode = b.dataset.v; pintarDtAmb(); });
+const dtSetQty = (k, v) => { const a = dt.amb[dt.open]; if (!a || !a.eq[k]) return; dtPatch(dt.open, { eq: { [k]: { [dt.mode]: dnum(v) } } }); };
+$('#dtEqList').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || !dt.edita) return; const a = dt.amb[dt.open];
+  if (b.dataset.drm) { delete a.eq[b.dataset.drm]; dtPatch(dt.open, {}); return; }
+  if (b.dataset.dfix) { dtPatch(dt.open, { eq: { colchones: { n: dnum(a.eq.literas.n) * 2 } } }); return; }
+  if (b.dataset.dd) { const k = b.dataset.dk; dtSetQty(k, dnum(a.eq[k][dt.mode]) + Number(b.dataset.dd)); }
+});
+$('#dtEqList').addEventListener('input', e => { if (e.target.matches('input[data-dk]') && dt.edita) { const v = e.target.value.replace(/\D/g, ''); if (v !== e.target.value) e.target.value = v; if (v !== '') dtSetQty(e.target.dataset.dk, v); } });
+$('#dtEqList').addEventListener('focusin', e => { if (e.target.matches('input[data-dk]')) e.target.select(); });
+$('#dtEqList').addEventListener('focusout', e => { if (e.target.matches('input[data-dk]') && e.target.value === '' && dt.edita) dtSetQty(e.target.dataset.dk, 0); });
+$('#dtAddSel').onchange = () => { $('#dtOtroRow').hidden = $('#dtAddSel').value !== '__otro'; };
+$('#dtAddBtn').onclick = () => { const k = $('#dtAddSel').value; if (!k || k === '__otro') return; dtPatch(dt.open, { eq: { [k]: { n:0, e:0, i:0 } } }); toast(dtName(k) + ' agregado'); };
+$('#dtOtroBtn').onclick = async () => {
+  const n = $('#dtOtroNom').value.trim(); if (!n) return;
+  const k = 'x-' + n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+  if (!dtCat().some(e => e.k === k)) { dt.extras.push({ k, n }); try { await rpc('rq_dotacion_extras', { p_extras: dt.extras }); } catch (e) { toast(e.message); } }
+  $('#dtOtroNom').value = ''; $('#dtOtroRow').hidden = true; dtPatch(dt.open, { eq: { [k]: { n:0, e:0, i:0 } } }); toast(n + ' agregado al catálogo');
+};
+$('#dtaNota').addEventListener('change', () => dtPatch(dt.open, { nota: $('#dtaNota').value.trim() }));
+$('#dtaRename').addEventListener('change', () => { const v = $('#dtaRename').value.trim(); if (v) dtPatch(dt.open, { nombre: v }); });
+$('#dtaTipoChips').addEventListener('click', e => { const b = e.target.closest('[data-dt2]'); if (!b) return; dtPatch(dt.open, { tipo: b.dataset.dt2, color: DT_TIPOS[b.dataset.dt2].c }); });
+$('#dtaDel').onclick = async () => { if (!confirm('¿Eliminar este ambiente y sus cantidades?')) return; const id = dt.open; $('#dtAmbDlg').close();
+  try { await rpc('rq_dotacion_borrar', { p_id: id }); delete dt.amb[id]; delete dt.pend[id]; LS.set('dtPend', dt.pend); pintarDot(); toast('Ambiente eliminado'); } catch (e) { toast(e.message); } };
+$('#dtaRev').onclick = () => { const a = dt.amb[dt.open]; const list = dtAmbs(a.puesto); const i = list.findIndex(x => x.id === dt.open);
+  if (!a.revisado) { dtPatch(dt.open, { revisado: true }); toast('Ambiente revisado'); }
+  const next = list.slice(i + 1).find(x => !x.revisado) || list.find(x => !x.revisado && x.id !== dt.open);
+  if (next) dtAbrir(next.id); else { $('#dtAmbDlg').close(); toast('Todos los ambientes de este puesto están revisados'); } };
+$('#dtaPrev').onclick = () => { const a = dt.amb[dt.open]; const list = dtAmbs(a.puesto); const i = list.findIndex(x => x.id === dt.open); if (i > 0) dtAbrir(list[i - 1].id); };
+function dtNuevoAmb(nombre, tipo, orden){ const eq = {}; DT_TIPOS[tipo].eq.forEach(k => eq[k] = { n:0, e:0, i:0 }); const id = 'b' + dt.puesto + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  dt.amb[id] = { id, puesto: dt.puesto, nombre, tipo, color: DT_TIPOS[tipo].c, orden, eq, revisado: false, nota: '', ref: '' }; dtPatch(id, {}); return id; }
+function pintarDtNew(){ $('#dtnTipo').innerHTML = Object.entries(DT_TIPOS).map(([k, v]) => `<button type="button" data-t="${k}" aria-pressed="${dt.newTipo === k}"><span class="dtsw sm" style="background:${v.c}"></span>${esc(v.n)}</button>`).join('');
+  $('#dtnHint').textContent = 'Arranca con: ' + DT_TIPOS[dt.newTipo].eq.map(dtName).join(', ') + '. Puedes agregar o quitar después.'; }
+$('#dtNuevo').onclick = () => { $('#dtnName').value = ''; dt.newTipo = 'dormitorio'; pintarDtNew(); $('#dtNewDlg').showModal(); };
+$('#dtnClose').onclick = () => $('#dtNewDlg').close();
+$('#dtnTipo').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (!b) return; dt.newTipo = b.dataset.t; pintarDtNew(); });
+$('#dtnSave').onclick = () => { const nombre = $('#dtnName').value.trim() || DT_TIPOS[dt.newTipo].n; const orden = dtAmbs(dt.puesto).reduce((m, a) => Math.max(m, a.orden || 0), 0) + 1;
+  const id = dtNuevoAmb(nombre, dt.newTipo, orden); $('#dtNewDlg').close(); dtAbrir(id); };
+$('#dtTipicos').onclick = () => { DT_TIPICOS.forEach(([n, t], i) => dtNuevoAmb(n, t, i + 1)); toast('12 ambientes cargados. Ajusta nombres y cantidades.'); };
+$('#dtXlsx').onclick = async () => {
+  if (!window.ExcelJS) return toast('No se pudo cargar el generador de Excel');
+  const b = $('#dtXlsx'); b.disabled = true;
+  try {
+    const wb = new ExcelJS.Workbook(); wb.creator = 'Rafmor · Dotación de equipos';
+    const head = row => row.eachCell(c => { c.font = { bold: true }; c.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFF2A900' } }; c.alignment = { vertical:'middle', wrapText:true }; c.border = { bottom:{ style:'thin' } }; });
+    const per = {}, all = {}; CECOS.bases.forEach(p => { const l = dtAmbs(p.n); per[p.n] = { l, t: dtSum(l) }; for (const k in per[p.n].t) all[k] = 1; });
+    const ks = dtKeys(all), cod = p => p.nombre.replace('B.P.F ', '');
+    const c = wb.addWorksheet('Consolidado', { views:[{ state:'frozen', xSplit:1 }] });
+    c.addRow(['Dotación de equipos · Rafmor, 13 B.P.F del Zulia']).font = { bold:true, size:14 }; c.addRow(['Generado ' + new Date().toLocaleString('es-VE')]);
+    [['buy','A ADQUIRIR (necesario − existente)'],['n','NECESARIO'],['e','EXISTENTE EN BUEN ESTADO'],['pend','POR INSTALAR']].forEach(([m, label]) => {
+      c.addRow([]); c.addRow([label]).font = { bold:true }; head(c.addRow(['Equipo', ...CECOS.bases.map(cod), 'TOTAL']));
+      ks.forEach(k => { const vals = CECOS.bases.map(p => per[p.n].t[k] ? per[p.n].t[k][m] : 0); c.addRow([dtName(k), ...vals, vals.reduce((x, y) => x + y, 0)]); }); });
+    c.getColumn(1).width = 24; for (let i = 2; i <= 15; i++) c.getColumn(i).width = 11;
+    const s = wb.addWorksheet('Por puesto', { views:[{ state:'frozen', ySplit:1 }] });
+    head(s.addRow(['Puesto','Equipo','Necesario','Existente','A adquirir','Instalado','Por instalar']));
+    CECOS.bases.forEach(p => dtKeys(per[p.n].t).forEach(k => { const t = per[p.n].t[k]; s.addRow([p.nombre, dtName(k), t.n, t.e, t.buy, t.i, t.pend]); }));
+    s.columns.forEach((col, i) => col.width = i === 0 ? 26 : i === 1 ? 24 : 12); s.autoFilter = { from:'A1', to:'G1' };
+    const d = wb.addWorksheet('Por ambiente', { views:[{ state:'frozen', ySplit:1 }] });
+    head(d.addRow(['Puesto','Ambiente','Uso','Equipo','Necesario','Existente','Instalado','Revisado','Notas']));
+    CECOS.bases.forEach(p => per[p.n].l.forEach(a => Object.keys(a.eq || {}).sort((x, y) => dtOrder(x) - dtOrder(y)).forEach(k => { const q = a.eq[k];
+      d.addRow([p.nombre, a.nombre, (DT_TIPOS[a.tipo] || DT_TIPOS.otro).n, dtName(k), dnum(q.n), dnum(q.e), dnum(q.i), a.revisado ? 'Sí' : 'No', a.nota || '']); })));
+    [26,26,20,24,11,11,11,10,40].forEach((w, i) => d.getColumn(i + 1).width = w); d.autoFilter = { from:'A1', to:'I1' };
+    const buf = await wb.xlsx.writeBuffer();
+    const r = await deliver({ name: `Dotacion_equipos_BPF_${today()}.xlsx`, blob: new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }) }); if (r === 'declined') toast('Descarga cancelada');
+  } catch (e) { toast('No se pudo generar el Excel'); } finally { b.disabled = false; }
+};
+async function pintarDotMini(){
+  $('#dotBlock').hidden = !canDotacion(); if (!canDotacion()) return;
+  try { const r = await rpc('rq_dotacion_listar'); const A = r.ambientes || []; const pu = new Set(A.map(a => a.puesto));
+    const t = dtSum(A); let buy = 0; Object.values(t).forEach(x => buy += x.buy);
+    $("#dotMini").textContent = `${A.length} ambientes en ${pu.size} de 13 puestos · ${A.filter(a => a.revisado).length} revisados · ${buy} equipos a adquirir.`; } catch (e) {}
+}
+
 /* ---------- Pestañas ---------- */
 function showTab(t){
   $$('#mainTabs button').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === t));
@@ -4254,6 +4530,7 @@ function showTab(t){
   if (t === 'rlogl') loadLgl();
   if (t === 'rmem') loadMemorias();
   if (t === 'tar') loadTareas();
+  if (t === 'dot') loadDot();
   if (t === 'rsem') loadWeek();
   if (t === 'verif') loadVerif();
   if (t === 'aprob') loadAprob();
