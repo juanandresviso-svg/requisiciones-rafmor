@@ -592,6 +592,19 @@ nav.tabs button{flex:0 0 auto}
 .archmem .sec{margin:0 0 8px}
 .archmem .mm{display:grid;gap:6px;padding:10px;border-radius:10px;background:var(--surface);border:1px solid var(--rule);margin-bottom:8px;cursor:pointer}
 .archmem .mm .memch b{font-size:17px}
+/* v4.21.0: exportar dotación con filtros */
+.dtxbtn{margin:-2px 0 12px;display:flex;align-items:center;justify-content:center;gap:8px}
+.dtxh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:14px 0 8px;flex-wrap:wrap}
+.dtxh small{font-weight:500;color:var(--muted);font-size:13px}
+.dtxq{display:flex;gap:4px}
+.dtxq button{border:0;background:none;color:var(--ink);text-decoration:underline;font-size:13.5px;font-weight:600;padding:6px 4px;cursor:pointer}
+.dtxchips{max-height:190px;overflow-y:auto;padding:2px 0}
+.dtxchips button{min-height:36px;font-size:14px}
+.dtxchips button i{font-style:normal;font-weight:500;opacity:.65;margin-left:4px;font-size:12.5px}
+#dtxPu{display:grid;grid-template-columns:1fr 1fr;max-height:none}
+#dtxPu button{border-radius:10px;text-align:left;padding:6px 10px;line-height:1.15;font-size:13.5px}
+#dtxPu button i{display:block;margin:2px 0 0}
+.dtxres{margin:14px 0 10px;padding:10px 12px;border-radius:10px;background:var(--sunk);font-size:14.5px;line-height:1.4}
 </style>
 </head>
 <body>
@@ -1014,6 +1027,7 @@ nav.tabs button{flex:0 0 auto}
     <div class="memtit"><b>Dotación de equipos</b><span id="dtCode"></span></div>
     <label class="f"><span>Puesto fronterizo</span><select class="in" id="dtPuesto"></select></label>
     <div class="seg" id="dtTabs" style="margin-bottom:12px"><button type="button" data-v="lev" aria-pressed="true">Levantamiento</button><button type="button" data-v="res" aria-pressed="false">Resumen</button><button type="button" data-v="con" aria-pressed="false">Consolidado</button></div>
+    <button class="btn block100 dtxbtn" id="dtxBtn"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6 7.2V19l-4-2v-4.8z"/></svg>Exportar Excel por puesto y equipo</button>
     <div id="dtLev">
       <div class="block">
         <div class="esth"><h2 style="margin:0">Ambientes</h2><span id="dtAmbCount"></span></div>
@@ -1033,7 +1047,7 @@ nav.tabs button{flex:0 0 auto}
         <h2>Consolidado de la obra</h2><p class="hint" id="dtConSub" style="margin-top:-6px"></p>
         <div class="seg" id="dtConSeg" style="margin-bottom:10px"><button type="button" data-v="buy" aria-pressed="true">A adquirir</button><button type="button" data-v="n" aria-pressed="false">Necesario</button><button type="button" data-v="e" aria-pressed="false">Existente</button><button type="button" data-v="pend" aria-pressed="false">Por instalar</button></div>
         <div class="dttw"><table class="dtt" id="dtConTable"></table></div>
-        <button class="btn dark block100" id="dtXlsx" style="margin-top:12px">Descargar Excel (consolidado, por puesto y por ambiente)</button>
+        <button class="btn dark block100" id="dtXlsx" style="margin-top:12px">Descargar Excel (consolidado, tabla global, por puesto y por ambiente)</button>
       </div>
     </div>
   </section>
@@ -1311,6 +1325,21 @@ nav.tabs button{flex:0 0 auto}
     <label class="f"><span>Día</span><input class="in" type="date" id="a-xdate"></label>
     <div class="chips" id="xlsQuick" style="margin:-4px 0 12px"><button type="button" data-d="0">Hoy</button><button type="button" data-d="1">Ayer</button></div>
     <button class="btn primary block100" id="a-xbtn">Descargar Excel</button>
+  </div>
+</dialog>
+
+<!-- Dotación: exportar Excel con filtros (v4.21.0) -->
+<dialog id="dtxDlg">
+  <div class="sheet"><div class="grab"></div>
+    <h3>Exportar Excel<button class="btn ghost" id="dtxClose" style="min-height:40px">Cerrar</button></h3>
+    <p class="hint" style="margin-top:-6px">Elige los puestos y los equipos. El Excel trae el consolidado, la tabla global de los puestos por equipo, el detalle por puesto y por ambiente (por adquirir, por instalar e instalado), solo con lo que marques.</p>
+    <div class="dtxh"><span class="sec" style="margin:0">Puestos <small id="dtxPuN"></small></span><span class="dtxq"><button type="button" data-q="pu:all">Todos</button><button type="button" data-q="pu:con">Con levantamiento</button><button type="button" data-q="pu:none">Ninguno</button></span></div>
+    <div class="chips dtxchips" id="dtxPu"></div>
+    <div class="dtxh"><span class="sec" style="margin:0">Equipos <small id="dtxEqN"></small></span><span class="dtxq"><button type="button" data-q="eq:all">Todos</button><button type="button" data-q="eq:con">Con cantidades</button><button type="button" data-q="eq:none">Ninguno</button></span></div>
+    <div class="chips dtxchips" id="dtxEq"></div>
+    <div class="dtxres" id="dtxRes"></div>
+    <p class="err" id="dtxErr" hidden></p>
+    <button class="btn primary block100" id="dtxGo">Descargar Excel</button>
   </div>
 </dialog>
 
@@ -3532,8 +3561,17 @@ $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mo
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.20.0';
+const APP_VERSION = '4.23.0';
 const NOVEDADES = [
+  { v: '4.23.0', fecha: '2026-09-30', titulo: 'Dotación: Excel más directo', items: [
+    { r: ['gerente_operaciones','gerente_general','compras','costos','master'], t: 'Las cuatro pestañas del Excel de dotación (Consolidado, Tabla global, Por puesto y Por ambiente) ahora muestran solo Por adquirir, Por instalar e Instalado. La tabla global queda más angosta.' }
+  ] },
+  { v: '4.22.0', fecha: '2026-09-30', titulo: 'Dotación: tabla global en el Excel', items: [
+    { r: ['gerente_operaciones','gerente_general','compras','costos','master'], t: 'El Excel de dotación trae una pestaña nueva, "Tabla global": una fila por equipo y, para cada uno de los 13 puestos, necesario, existente, a adquirir, instalado y por instalar, con el total de la obra al final. También sale en el Excel filtrado por puesto y equipo.' }
+  ] },
+  { v: '4.21.0', fecha: '2026-09-30', titulo: 'Dotación: Excel por puesto y equipo', items: [
+    { r: ['gerente_operaciones','gerente_general','compras','costos','master'], t: 'En Dotación de equipos hay un botón nuevo, "Exportar Excel por puesto y equipo": marcas los puestos y los equipos que quieres (por ejemplo, solo aires y neveras en tres bases) y el Excel sale solo con eso, con el consolidado, el detalle por puesto y por ambiente.' }
+  ] },
   { v: '4.20.0', fecha: '2026-09-30', titulo: 'Reportes más ordenados', items: [
     { r: ['contratista','gerente_operaciones','gerente_general','master'], t: 'La pestaña "Nuevo" ya no está: para hacer un reporte toca el botón "Generar nuevo reporte", arriba en el módulo Reportes. Al enviarlo vuelves a donde estabas. Reportes ahora abre en el Diario.' },
     { r: ['gerente_operaciones','gerente_general','master'], t: 'Las memorias descriptivas ahora están dentro del Archivo: la carpeta "Memorias descriptivas" tiene todas (y ahí generas una nueva, de una base o de otro proyecto), y cada puesto muestra su memoria y el botón "Generar memoria descriptiva".' }
@@ -4650,32 +4688,117 @@ $('#dtnTipo').addEventListener('click', e => { const b = e.target.closest('[data
 $('#dtnSave').onclick = () => { const nombre = $('#dtnName').value.trim() || DT_TIPOS[dt.newTipo].n; const orden = dtAmbs(dt.puesto).reduce((m, a) => Math.max(m, a.orden || 0), 0) + 1;
   const id = dtNuevoAmb(nombre, dt.newTipo, orden); $('#dtNewDlg').close(); dtAbrir(id); };
 $('#dtTipicos').onclick = () => { DT_TIPICOS.forEach(([n, t], i) => dtNuevoAmb(n, t, i + 1)); toast('12 ambientes cargados. Ajusta nombres y cantidades.'); };
-$('#dtXlsx').onclick = async () => {
+// Excel de dotación. P: puestos (bases de CECOS), E: claves de equipo (null = todos). Sin filtros sale igual que siempre.
+async function dotXlsx(P, E, boton){
   if (!window.ExcelJS) return toast('No se pudo cargar el generador de Excel');
-  const b = $('#dtXlsx'); b.disabled = true;
+  if (boton) boton.disabled = true;
   try {
+    const todosP = P.length === CECOS.bases.length, filtrado = !todosP || !!E;
+    const incl = k => !E || E.has(k);
     const wb = new ExcelJS.Workbook(); wb.creator = 'Rafmor · Dotación de equipos';
     const head = row => row.eachCell(c => { c.font = { bold: true }; c.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFF2A900' } }; c.alignment = { vertical:'middle', wrapText:true }; c.border = { bottom:{ style:'thin' } }; });
-    const per = {}, all = {}; CECOS.bases.forEach(p => { const l = dtAmbs(p.n); per[p.n] = { l, t: dtSum(l) }; for (const k in per[p.n].t) all[k] = 1; });
+    const per = {}, all = {}; P.forEach(p => { const l = dtAmbs(p.n); per[p.n] = { l, t: dtSum(l) }; for (const k in per[p.n].t) if (incl(k)) all[k] = 1; });
+    if (E) E.forEach(k => { all[k] = 1; });
     const ks = dtKeys(all), cod = p => p.nombre.replace('B.P.F ', '');
     const c = wb.addWorksheet('Consolidado', { views:[{ state:'frozen', xSplit:1 }] });
     c.addRow(['Dotación de equipos · Rafmor, 13 B.P.F del Zulia']).font = { bold:true, size:14 }; c.addRow(['Generado ' + new Date().toLocaleString('es-VE')]);
-    [['buy','A ADQUIRIR (necesario − existente)'],['n','NECESARIO'],['e','EXISTENTE EN BUEN ESTADO'],['pend','POR INSTALAR']].forEach(([m, label]) => {
-      c.addRow([]); c.addRow([label]).font = { bold:true }; head(c.addRow(['Equipo', ...CECOS.bases.map(cod), 'TOTAL']));
-      ks.forEach(k => { const vals = CECOS.bases.map(p => per[p.n].t[k] ? per[p.n].t[k][m] : 0); c.addRow([dtName(k), ...vals, vals.reduce((x, y) => x + y, 0)]); }); });
-    c.getColumn(1).width = 24; for (let i = 2; i <= 15; i++) c.getColumn(i).width = 11;
+    if (filtrado) {
+      c.addRow(['Puestos: ' + (todosP ? 'los 13' : P.map(cod).join(', '))]).font = { italic:true };
+      c.addRow(['Equipos: ' + (E ? ks.map(dtName).join(', ') : 'todos')]).font = { italic:true };
+    }
+    [['buy','POR ADQUIRIR (necesario − existente)'],['pend','POR INSTALAR (necesario − instalado)'],['i','INSTALADO']].forEach(([m, label]) => {
+      c.addRow([]); c.addRow([label]).font = { bold:true }; head(c.addRow(['Equipo', ...P.map(cod), 'TOTAL']));
+      ks.forEach(k => { const vals = P.map(p => per[p.n].t[k] ? per[p.n].t[k][m] : 0); c.addRow([dtName(k), ...vals, vals.reduce((x, y) => x + y, 0)]); });
+      if (!ks.length) c.addRow(['Sin equipos para este filtro']); });
+    c.getColumn(1).width = 24; for (let i = 2; i <= P.length + 2; i++) c.getColumn(i).width = 11;
+    // Tabla global (v4.22.0): una fila por equipo y, por cada puesto, necesario, existente, a adquirir, instalado y por instalar; al final el total.
+    const g = wb.addWorksheet('Tabla global', { views:[{ state:'frozen', xSplit:1, ySplit:5 }] });
+    const MET = [['buy','Por adquirir'],['pend','Por instalar'],['i','Instalado']], NM = MET.length;
+    const gl = n => { let s2 = ''; while (n > 0) { const m = (n - 1) % 26; s2 = String.fromCharCode(65 + m) + s2; n = Math.floor((n - 1) / 26); } return s2; };
+    g.addRow([`Tabla global de dotación · ${todosP ? 'los 13 puestos' : P.length + ' puesto' + (P.length === 1 ? '' : 's')} por equipo`]).font = { bold:true, size:14 };
+    g.addRow(['Generado ' + new Date().toLocaleString('es-VE') + (E ? ' · Equipos: ' + ks.map(dtName).join(', ') : '')]);
+    g.addRow(['Por adquirir = necesario − existente · Por instalar = necesario − instalado']).font = { italic:true, color:{ argb:'FF5E6763' } };
+    const grupos = P.map(p => ({ t: `${p.n}. ${cod(p)}`, p })).concat([{ t: todosP ? 'TOTAL 13 PUESTOS' : 'TOTAL', p: null }]);
+    const hr1 = g.addRow(['Equipo', ...grupos.flatMap(x => [x.t, ...Array(NM - 1).fill('')])]), hr2 = g.addRow(['', ...grupos.flatMap(() => MET.map(m => m[1]))]);
+    g.mergeCells(4, 1, 5, 1);
+    const colGrp = ['FFF6EEDB','FFEAF1ED'];
+    grupos.forEach((x, gi) => { const c0 = 2 + gi * NM; g.mergeCells(4, c0, 4, c0 + NM - 1);
+      for (let k = 0; k < NM; k++) [hr1, hr2].forEach(r => { const cl = r.getCell(c0 + k); cl.fill = { type:'pattern', pattern:'solid', fgColor:{ argb: x.p ? colGrp[gi % 2] : 'FFF2A900' } };
+        cl.font = { bold:true, size: r === hr1 ? 11 : 9 }; cl.alignment = { horizontal:'center', vertical:'middle', wrapText:true };
+        cl.border = { left: k === 0 ? { style:'medium' } : { style:'hair' }, bottom:{ style:'thin' }, top: r === hr1 ? { style:'thin' } : undefined }; }); });
+    [hr1, hr2].forEach(r => { const cl = r.getCell(1); cl.font = { bold:true }; cl.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFF2A900' } }; cl.alignment = { vertical:'middle' }; });
+    hr2.height = 28;
+    const NUMF = '0;-0;"–"', r0 = 6;
+    ks.forEach((k, ri) => {
+      const vals = []; P.forEach(p => MET.forEach(([m]) => vals.push(per[p.n].t[k] ? per[p.n].t[k][m] : 0)));
+      const rn = r0 + ri, tot = MET.map((_, mi) => ({ formula: P.map((__, pi) => gl(2 + pi * NM + mi) + rn).join('+'), result: P.reduce((a, p) => a + (per[p.n].t[k] ? per[p.n].t[k][MET[mi][0]] : 0), 0) }));
+      const row = g.addRow([dtName(k), ...vals, ...tot]);
+      row.eachCell((cl, ci) => { if (ci === 1) return; cl.numFmt = NUMF; cl.alignment = { horizontal:'center' };
+        const mi = (ci - 2) % NM, gi = Math.floor((ci - 2) / NM); cl.border = { left: mi === 0 ? { style:'medium' } : { style:'hair' } };
+        if (MET[mi][0] === 'buy') cl.font = { bold:true, color:{ argb:'FF9B2226' } };
+        if (gi === grupos.length - 1) { cl.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFFFF4D6' } }; cl.font = Object.assign({}, cl.font || {}, { bold:true }); } });
+      if (ri % 2) row.getCell(1).fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFF4F5F2' } };
+    });
+    if (!ks.length) g.addRow(['Sin equipos para este filtro']);
+    else { const last = r0 + ks.length - 1, tr = g.addRow(['TOTAL', ...Array(grupos.length * NM).fill(0).map((_, i) => ({ formula: `SUM(${gl(2 + i)}${r0}:${gl(2 + i)}${last})`, result: ks.reduce((a, k) => { const gi = Math.floor(i / NM), mi = i % NM; const x = grupos[gi];
+        return a + (x.p ? (per[x.p.n].t[k] ? per[x.p.n].t[k][MET[mi][0]] : 0) : P.reduce((b, p) => b + (per[p.n].t[k] ? per[p.n].t[k][MET[mi][0]] : 0), 0)); }, 0) }))]);
+      tr.eachCell((cl, ci) => { cl.font = { bold:true }; cl.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFE3E6DF' } }; cl.border = { top:{ style:'medium' }, left: ci > 1 && (ci - 2) % NM === 0 ? { style:'medium' } : undefined };
+        if (ci > 1) { cl.numFmt = NUMF; cl.alignment = { horizontal:'center' }; } }); }
+    g.getColumn(1).width = 24; for (let i = 2; i <= 1 + grupos.length * NM; i++) g.getColumn(i).width = 10.5;
+    g.pageSetup = { orientation:'landscape', paperSize:9, scale:75, printTitlesColumn:'A:A', printTitlesRow:'4:5' };
     const s = wb.addWorksheet('Por puesto', { views:[{ state:'frozen', ySplit:1 }] });
-    head(s.addRow(['Puesto','Equipo','Necesario','Existente','A adquirir','Instalado','Por instalar']));
-    CECOS.bases.forEach(p => dtKeys(per[p.n].t).forEach(k => { const t = per[p.n].t[k]; s.addRow([p.nombre, dtName(k), t.n, t.e, t.buy, t.i, t.pend]); }));
-    s.columns.forEach((col, i) => col.width = i === 0 ? 26 : i === 1 ? 24 : 12); s.autoFilter = { from:'A1', to:'G1' };
+    head(s.addRow(['Puesto','Equipo','Por adquirir','Por instalar','Instalado']));
+    P.forEach(p => dtKeys(per[p.n].t).filter(incl).forEach(k => { const t = per[p.n].t[k]; s.addRow([p.nombre, dtName(k), t.buy, t.pend, t.i]); }));
+    s.columns.forEach((col, i) => col.width = i === 0 ? 26 : i === 1 ? 24 : 13); s.autoFilter = { from:'A1', to:'E1' };
     const d = wb.addWorksheet('Por ambiente', { views:[{ state:'frozen', ySplit:1 }] });
-    head(d.addRow(['Puesto','Ambiente','Uso','Equipo','Necesario','Existente','Instalado','Revisado','Notas']));
-    CECOS.bases.forEach(p => per[p.n].l.forEach(a => Object.keys(a.eq || {}).sort((x, y) => dtOrder(x) - dtOrder(y)).forEach(k => { const q = a.eq[k];
-      d.addRow([p.nombre, a.nombre, (DT_TIPOS[a.tipo] || DT_TIPOS.otro).n, dtName(k), dnum(q.n), dnum(q.e), dnum(q.i), a.revisado ? 'Sí' : 'No', a.nota || '']); })));
-    [26,26,20,24,11,11,11,10,40].forEach((w, i) => d.getColumn(i + 1).width = w); d.autoFilter = { from:'A1', to:'I1' };
+    head(d.addRow(['Puesto','Ambiente','Uso','Equipo','Por adquirir','Por instalar','Instalado','Revisado','Notas']));
+    P.forEach(p => per[p.n].l.forEach(a => Object.keys(a.eq || {}).filter(incl).sort((x, y) => dtOrder(x) - dtOrder(y)).forEach(k => { const q = a.eq[k];
+      d.addRow([p.nombre, a.nombre, (DT_TIPOS[a.tipo] || DT_TIPOS.otro).n, dtName(k), Math.max(0, dnum(q.n) - dnum(q.e)), Math.max(0, dnum(q.n) - dnum(q.i)), dnum(q.i), a.revisado ? 'Sí' : 'No', a.nota || '']); })));
+    [26,26,20,24,12,12,11,10,40].forEach((w, i) => d.getColumn(i + 1).width = w); d.autoFilter = { from:'A1', to:'I1' };
     const buf = await wb.xlsx.writeBuffer();
-    const r = await deliver({ name: `Dotacion_equipos_BPF_${today()}.xlsx`, blob: new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }) }); if (r === 'declined') toast('Descarga cancelada');
-  } catch (e) { toast('No se pudo generar el Excel'); } finally { b.disabled = false; }
+    const sufijo = !filtrado ? 'BPF' : (P.length === 1 ? cod(P[0]).replace(/\s+/g, '_') : P.length + '_puestos') + (E ? (E.size === 1 ? '_' + dtName([...E][0]).replace(/\s+/g, '_') : '_' + E.size + '_equipos') : '');
+    const r = await deliver({ name: `Dotacion_equipos_${sufijo}_${today()}.xlsx`, blob: new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }) }); if (r === 'declined') toast('Descarga cancelada');
+    return true;
+  } catch (e) { toast('No se pudo generar el Excel'); return false; } finally { if (boton) boton.disabled = false; }
+}
+$('#dtXlsx').onclick = () => dotXlsx(CECOS.bases, null, $('#dtXlsx'));
+// Exportar con filtros: puestos y equipos
+const dtx = { pu: new Set(), eq: new Set() };
+function dtxAbrir(){
+  dtx.pu = new Set(dt.tab === 'con' ? CECOS.bases.map(b => b.n) : [dt.puesto]);
+  dtx.eq = new Set(dtCat().map(e => e.k));
+  $('#dtxErr').hidden = true; dtxPintar(); $('#dtxDlg').showModal();
+}
+function dtxPintar(){
+  const conAmb = n => dtAmbs(n).length;
+  $('#dtxPu').innerHTML = CECOS.bases.map(b => `<button type="button" data-xpu="${b.n}" aria-pressed="${dtx.pu.has(b.n)}">${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}${conAmb(b.n) ? '' : '<i>sin datos</i>'}</button>`).join('');
+  const P = CECOS.bases.filter(b => dtx.pu.has(b.n)), t = dtSum(P.flatMap(b => dtAmbs(b.n)));
+  $('#dtxEq').innerHTML = dtCat().map(e => `<button type="button" data-xeq="${esc(e.k)}" aria-pressed="${dtx.eq.has(e.k)}">${esc(e.n)}${t[e.k] && t[e.k].n ? `<i>${t[e.k].n}</i>` : ''}</button>`).join('');
+  $('#dtxPuN').textContent = `${dtx.pu.size} de ${CECOS.bases.length}`; $('#dtxEqN').textContent = `${dtx.eq.size} de ${dtCat().length}`;
+  let filas = 0, buy = 0, pend = 0, ins = 0; P.forEach(b => dtAmbs(b.n).forEach(a => Object.keys(a.eq || {}).forEach(k => { if (dtx.eq.has(k)) filas++; })));
+  Object.keys(t).filter(k => dtx.eq.has(k)).forEach(k => { buy += t[k].buy; pend += t[k].pend; ins += t[k].i; });
+  $('#dtxRes').innerHTML = !dtx.pu.size || !dtx.eq.size ? 'Marca al menos un puesto y un equipo.'
+    : `<b>${dtx.pu.size === 13 ? 'Los 13 puestos' : dtx.pu.size + ' puesto' + (dtx.pu.size === 1 ? '' : 's')} · ${dtx.eq.size === dtCat().length ? 'todos los equipos' : dtx.eq.size + ' equipo' + (dtx.eq.size === 1 ? '' : 's')}</b><br>Por adquirir ${buy} · por instalar ${pend} · instalado ${ins} · ${filas} fila${filas === 1 ? '' : 's'} por ambiente`;
+  $('#dtxGo').disabled = !dtx.pu.size || !dtx.eq.size;
+}
+$('#dtxBtn').onclick = dtxAbrir;
+$('#dtxClose').onclick = () => $('#dtxDlg').close();
+$('#dtxDlg').addEventListener('click', e => {
+  const pu = e.target.closest('[data-xpu]'), eq = e.target.closest('[data-xeq]'), q = e.target.closest('[data-q]');
+  if (pu) { const n = +pu.dataset.xpu; dtx.pu.has(n) ? dtx.pu.delete(n) : dtx.pu.add(n); }
+  else if (eq) { const k = eq.dataset.xeq; dtx.eq.has(k) ? dtx.eq.delete(k) : dtx.eq.add(k); }
+  else if (q) {
+    const [g, v] = q.dataset.q.split(':');
+    if (g === 'pu') dtx.pu = new Set(v === 'none' ? [] : CECOS.bases.filter(b => v === 'all' || dtAmbs(b.n).length).map(b => b.n));
+    else { const P = CECOS.bases.filter(b => dtx.pu.has(b.n)), t = dtSum(P.flatMap(b => dtAmbs(b.n)));
+      dtx.eq = new Set(v === 'none' ? [] : dtCat().filter(e => v === 'all' || (t[e.k] && (t[e.k].n || t[e.k].e || t[e.k].i))).map(e => e.k)); }
+  } else return;
+  dtxPintar();
+});
+$('#dtxGo').onclick = async () => {
+  const P = CECOS.bases.filter(b => dtx.pu.has(b.n)); if (!P.length || !dtx.eq.size) return;
+  const E = dtx.eq.size === dtCat().length ? null : new Set(dtx.eq);
+  if (await dotXlsx(P, E, $('#dtxGo'))) $('#dtxDlg').close();
 };
 async function pintarDotMini(){
   $('#dotBlock').hidden = !canDotacion(); if (!canDotacion()) return;
