@@ -543,6 +543,42 @@ nav.tabs button{flex:0 0 auto}
 .dtt th,.dtt td{padding:6px 7px;border-bottom:1px solid var(--rule);text-align:center;white-space:nowrap}.dtt th{font-size:12px;color:var(--muted);font-weight:700}
 .dtt td:first-child,.dtt th:first-child{text-align:left;position:sticky;left:0;background:var(--surface)}
 .dtt td.z{color:#B8BFBA}.dtt td.hot{color:#B3261E;font-weight:700}.dtt tfoot td{font-weight:700;border-top:2px solid var(--ink)}
+/* Prioridad de requisiciones (v4.19.0) */
+:root{--p-urg:#B3261E;--p-urg-soft:#F7DEDB;--p-med:#E0A800;--p-med-soft:#FFF1C7;--p-med-ink:#6B4A00;--p-pla:#2F7A55;--p-pla-soft:#DDEFE5;--p-pla-ink:#2F7A55}
+:root[data-theme="dark"]{--p-urg-soft:#43201D;--p-med-soft:#3D3212;--p-med-ink:#F2D27A;--p-pla-soft:#1C3A2C;--p-pla-ink:#8FD9B4}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--p-urg-soft:#43201D;--p-med-soft:#3D3212;--p-med-ink:#F2D27A;--p-pla-soft:#1C3A2C;--p-pla-ink:#8FD9B4}}
+.prio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.prio button{position:relative;min-height:64px;padding:10px 6px 10px;border:2px solid var(--rule);border-radius:12px;background:var(--surface);font-weight:700;font-size:15px;line-height:1.15;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;text-align:center}
+.prio button::before{content:"";width:16px;height:16px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 3px var(--pcs)}
+.prio button[data-p="urgente"]{--pc:var(--p-urg);--pcs:var(--p-urg-soft)}
+.prio button[data-p="media"]{--pc:var(--p-med);--pcs:var(--p-med-soft)}
+.prio button[data-p="planificada"]{--pc:var(--p-pla);--pcs:var(--p-pla-soft)}
+.prio button[aria-pressed="true"]{background:var(--pc);border-color:var(--pc);color:#fff}
+.prio button[data-p="media"][aria-pressed="true"]{color:#1B2220}
+.prio button[aria-pressed="true"]::before{background:currentColor;box-shadow:none}
+.prio.bad button{border-color:var(--red)}
+.prio button:disabled{opacity:.55;cursor:default}
+.tag.prq{display:inline-flex;align-items:center;gap:5px;border-color:transparent}
+.tag.prq::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}
+.tag.prq.urgente{background:var(--p-urg);color:#fff}
+.tag.prq.media{background:var(--p-med-soft);color:var(--p-med-ink)}
+.tag.prq.media::before{background:var(--p-med)}
+.tag.prq.planificada{background:var(--p-pla-soft);color:var(--p-pla-ink)}
+.tag.prq.sin{background:var(--sunk);border:1px dashed var(--rule);color:var(--muted)}
+.tag.prq.sin::before{background:none;border:1.5px solid var(--muted);width:6px;height:6px}
+.hist li.pr-urgente{border-left:4px solid var(--p-urg);padding-left:10px}
+.hist li.pr-media{border-left:4px solid var(--p-med);padding-left:10px}
+.hist li.pr-planificada{border-left:4px solid var(--p-pla);padding-left:10px}
+.hist li.pr-sin{border-left:4px solid var(--rule);padding-left:10px}
+.pfil{display:flex;gap:6px;overflow-x:auto;margin:10px 0 4px;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.pfil button{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 11px;border:1.5px solid var(--rule);border-radius:18px;background:var(--sunk);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.pfil button i{width:9px;height:9px;border-radius:50%;background:var(--pc,transparent);border:1.5px solid var(--pc,var(--muted))}
+.pfil button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.pfil button small{font-size:12px;opacity:.75}
+.dprio{margin:0 0 14px;padding:12px;border-radius:12px;background:var(--sunk);border:1px solid var(--rule)}
+.dprio .dph{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;font-weight:600}
+.dprio .dph .tag{font-size:13px}
+.dprio .dpl{font-size:13px;color:var(--muted);margin:8px 0 0}
 </style>
 </head>
 <body>
@@ -682,6 +718,12 @@ nav.tabs button{flex:0 0 auto}
       <div class="seg" id="reqTipoSeg"><button type="button" data-v="puesto" aria-pressed="true">Para un puesto fronterizo</button><button type="button" data-v="general" aria-pressed="false">General del proyecto</button></div>
       <p class="hint" id="reqTipoHint" style="margin:10px 0 0" hidden></p>
     </div>
+    <div class="block" id="prioBlock">
+      <h2>Prioridad</h2>
+      <p class="hint" style="margin-top:-6px">¿Qué tan rápido hace falta? Compras la atiende en ese orden.</p>
+      <div class="prio" id="prioSel" role="group" aria-label="Prioridad de la requisición"></div>
+      <p class="err" id="prioErr" hidden></p>
+    </div>
     <div class="block">
       <h2>Datos de la solicitud</h2>
       <div class="row2">
@@ -700,7 +742,7 @@ nav.tabs button{flex:0 0 auto}
     </div>
     <div class="block">
       <h2>Notas</h2>
-      <textarea class="in" id="notas" placeholder="Urgencia, lugar de entrega, observaciones…"></textarea>
+      <textarea class="in" id="notas" placeholder="Lugar de entrega, observaciones…"></textarea>
     </div>
     <div class="block">
       <h2>Solicitado por</h2>
@@ -1547,6 +1589,7 @@ const ERRS = {
   solo_compras:'Solo Compras firma el recibido.', no_aprobada:'Todavía no está aprobada.', ya_recibida:'Compras ya firmó el recibido.',
   ya_verificada:'Ya fue verificada.', propia:'No puedes verificar una requisición que hiciste tú. La verifica otro Gerente de Operaciones.', falta_verificar:'Primero la verifica el Gerente de Operaciones.', misma_persona:'Quien verificó no puede aprobar.',
   no_pendiente:'Esta requisición ya está cerrada.', no_existe:'No se encontró la requisición.', firma_invalida:'Falta la firma.',
+  prioridad_invalida:'Elige la prioridad: urgente, media o compra planificada.', prioridad_cerrada:'Esta requisición ya está cerrada (rechazada o recibida): su prioridad no se puede cambiar.',
   sin_motivo:'Escribe el motivo del rechazo.', sin_materiales:'Agrega al menos un material.', max_materiales:'Una requisición admite máximo 150 materiales.',
   demasiado_grande:'La requisición es muy pesada. Borra la firma y vuelve a firmar.', datos_invalidos:'Los datos no son válidos.',
   no_a_ti_mismo:'No puedes desactivarte a ti mismo.', rol_invalido:'Rol no válido.', falta_nombre:'Falta el nombre.'
@@ -1615,8 +1658,18 @@ function updateCeco(){
   if (code) $('#cecoBox').classList.remove('bad');
 }
 
+/* ---------- Prioridad de la requisición (v4.19.0) ---------- */
+const PRIO = { urgente:'Urgente', media:'Prioridad media', planificada:'Compra planificada' };
+const PRIO_ORD = { urgente:0, media:1, planificada:2 };
+const prioRank = p => p in PRIO_ORD ? PRIO_ORD[p] : 3;
+const prioTag = p => p && PRIO[p] ? `<span class="tag prq ${p}">${PRIO[p]}</span>` : '<span class="tag prq sin">Sin prioridad</span>';
+const prioBtns = (sel, dis) => Object.keys(PRIO).map(k => `<button type="button" data-p="${k}" aria-pressed="${sel === k}"${dis ? ' disabled' : ''}>${PRIO[k]}</button>`).join('');
+const canPrio = r => seesAll() && r && r.estado !== 'rechazada' && !r.recibido && !(r.datos && r.datos.historica);
+function renderPrio(){ $('#prioSel').innerHTML = prioBtns(draft.prioridad || ''); }
+$('#prioSel').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (!b) return; draft.prioridad = b.dataset.p; saveDraft(); renderPrio(); $('#prioSel').classList.remove('bad'); $('#prioErr').hidden = true; });
+
 /* ---------- Borrador de requisición ---------- */
-const blank = () => ({ owner: me ? me.id : null, fechaSolicitud: today(), fechaRequerida:'', area: (me && me.area) || '', coordinacion: (me && me.coordinacion) || '', items:[], notas:'', firma:null });
+const blank = () => ({ owner: me ? me.id : null, prioridad:'', fechaSolicitud: today(), fechaRequerida:'', area: (me && me.area) || '', coordinacion: (me && me.coordinacion) || '', items:[], notas:'', firma:null });
 let draft = LS.get('draft2', null);
 function saveDraft(){ LS.set('draft2', draft); }
 const bindings = [['fechaSolicitud','fechaSolicitud'],['fechaRequerida','fechaRequerida'],['area','area'],['coordinacion','coordinacion'],['notas','notas']];
@@ -1638,7 +1691,7 @@ $('#reqTipoSeg').addEventListener('click', e => {
 function fillForm(){
   bindings.forEach(([id,k]) => $('#'+id).value = draft[k] || '');
   $('#meName').innerHTML = me ? `<b>${esc(me.nombre)}</b>${me.cargo ? ', ' + esc(me.cargo) : ''}${me.empresa ? '<br><span class="hint">' + esc(me.empresa) + '</span>' : ''}` : '';
-  syncReqTipo(); renderItems(); renderAdjunto(); requestAnimationFrame(() => padSol.load());
+  syncReqTipo(); renderPrio(); $('#prioSel').classList.remove('bad'); $('#prioErr').hidden = true; renderItems(); renderAdjunto(); requestAnimationFrame(() => padSol.load());
 }
 bindings.forEach(([id,k]) => $('#'+id).addEventListener('input', e => { draft[k] = e.target.value; e.target.classList.remove('bad'); saveDraft(); }));
 
@@ -1798,6 +1851,7 @@ async function downloadRemote(control, btn){
 let lastSent = null;
 function validate(){
   let first = null; const mark = id => { const el=$('#'+id); el.classList.add('bad'); first = first || el; };
+  if (!PRIO[draft.prioridad]) { $('#prioSel').classList.add('bad'); $('#prioErr').textContent = 'Elige la prioridad: urgente, media o compra planificada.'; $('#prioErr').hidden = false; first = $('#prioBlock'); }
   if (!draft.area.trim()) mark('area');
   if (!draft.fechaSolicitud) mark('fechaSolicitud');
   if (!draft.items.length) { $('#itemsErr').textContent = 'Agrega al menos un material.'; $('#itemsErr').hidden=false; first = first || $('#addItem'); }
@@ -1809,7 +1863,7 @@ function validate(){
 $('#gen').onclick = async () => {
   if (!validate()) return;
   const btn = $('#gen'); btn.disabled = true; btn.textContent = 'Enviando…';
-  const datos = { area: draft.area, coordinacion: draft.coordinacion, fechaSolicitud: draft.fechaSolicitud, fechaRequerida: draft.fechaRequerida, items: draft.items, notas: draft.notas, firma: draft.firma, general: !!draft.general };
+  const datos = { prioridad: draft.prioridad, area: draft.area, coordinacion: draft.coordinacion, fechaSolicitud: draft.fechaSolicitud, fechaRequerida: draft.fechaRequerida, items: draft.items, notas: draft.notas, firma: draft.firma, general: !!draft.general };
   try {
     if (draft.adjunto && draft.adjunto.pendiente) {
       if (!adjPendiente) { draft.adjunto = null; saveDraft(); }
@@ -1822,7 +1876,7 @@ $('#gen').onclick = async () => {
     lastSent = sent.control;
     const eraGeneral = !!draft.general; draft = blank(); draft.general = eraGeneral && canGeneralReq(); saveDraft(); fillForm();
     $('#doneTop').textContent = 'Requisición enviada'; $('#doneCtl').textContent = sent.control;
-    $('#doneMsg').textContent = 'Le llegó un aviso al Gerente de Operaciones para verificarla. Te avisaremos en cada paso.';
+    $('#doneMsg').textContent = (sent.prioridad === 'urgente' ? 'Va marcada como URGENTE. ' : '') + 'Le llegó un aviso al Gerente de Operaciones para verificarla. Te avisaremos en cada paso.';
     $('#doneDl').hidden = false; $('#doneDlg').showModal();
   } catch (e) {
     if (e.offline && confirm('No hay conexión, así que no se pudo enviar.\n\n¿Generar el Excel en este teléfono con un número provisional? La requisición sigue guardada aquí para enviarla cuando tengas señal.')) {
@@ -2030,7 +2084,7 @@ function abrirAsistente(sol, nombreArchivo){
   const texto = [...sol.titulos, nombreArchivo.replace(/[_-]+/g, ' ')].join(' ');
   let base = null; for (const t of sol.titulos) { base = matchBase(t); if (base) break; }
   if (!base) base = matchBase(texto.replace(/\bEL MEDI\b/i, 'DEL MEDIO'));
-  wz = { sol, base: base || '', baseDetectada: base, tipo: '', varias: false, area: draft.area || me.area || '', coordinacion: draft.coordinacion || me.coordinacion || '', fechaReq: draft.fechaRequerida || '',
+  wz = { sol, base: base || '', baseDetectada: base, tipo: '', prioridad: draft.prioridad || '', varias: false, area: draft.area || me.area || '', coordinacion: draft.coordinacion || me.coordinacion || '', fechaReq: draft.fechaRequerida || '',
     items: sol.items.map(it => ({ desc: it.desc, cant: it.cant, und: it.und })) };
   wzSig = draft.firma || null;
   pintarAsistente(); $('#wzDlg').showModal(); requestAnimationFrame(() => { if (!draft.firma) wzPad().load(); });
@@ -2050,17 +2104,21 @@ function pintarAsistente(){
       <p class="hint" style="margin:2px 0 6px">Se aplica a todos los materiales; después puedes cambiar alguno en particular.</p>
       <div class="chips" id="wzTipo">${CECOS.tipos.map(([k, l]) => `<button type="button" data-t="${k}" aria-pressed="${wz.tipo === k}">${esc(l)}${k === 'MAT' && !wz.tipo ? ' (sugerido)' : ''}</button>`).join('')}</div>
       ${ceco ? `<p class="hint" style="margin:6px 0 0">CeCo: <b>${esc(ceco)}</b></p>` : ''}</div>
-    <div class="wzq ${wz.area ? 'ok' : ''}"><b>3. Datos de la solicitud</b>
+    <div class="wzq ${wz.prioridad ? 'ok' : ''}"><b>3. ¿Qué prioridad tiene?</b>
+      <p class="hint" style="margin:2px 0 6px">Compras atiende primero las urgentes.</p>
+      <div class="prio" id="wzPrio">${prioBtns(wz.prioridad)}</div></div>
+    <div class="wzq ${wz.area ? 'ok' : ''}"><b>4. Datos de la solicitud</b>
       <label class="f" style="margin-top:6px"><span>Área solicitante</span><input class="in" id="wzArea" list="dl-areas" value="${esc(wz.area)}"></label>
       <div class="row2"><label class="f" style="margin:0"><span>Coordinación (opcional)</span><input class="in" id="wzCoord" list="dl-coords" value="${esc(wz.coordinacion)}"></label>
       <label class="f" style="margin:0"><span>¿Para cuándo? (opcional)</span><input class="in" type="date" id="wzFecha" value="${esc(wz.fechaReq)}"></label></div></div>
-    ${falt.length ? `<div class="wzq ${falt.every(([it]) => it.cant && it.und && it.desc) ? 'ok' : ''}"><b>4. Materiales incompletos (${falt.length})</b><p class="hint" style="margin:2px 0 6px">El documento no trae estos datos. Complétalos:</p>
+    ${falt.length ? `<div class="wzq ${falt.every(([it]) => it.cant && it.und && it.desc) ? 'ok' : ''}"><b>5. Materiales incompletos (${falt.length})</b><p class="hint" style="margin:2px 0 6px">El documento no trae estos datos. Complétalos:</p>
       ${falt.map(([it, i]) => `<div class="wzit"><span>${s.items[i].n}. ${esc(it.desc || '(sin descripción)')}</span><div class="row2"><input class="in" placeholder="Cantidad" inputmode="decimal" data-wzc="${i}" value="${esc(it.cant || '')}"><input class="in" placeholder="Unidad (und, m², kg…)" data-wzu="${i}" value="${esc(it.und || '')}"></div></div>`).join('')}</div>` : ''}
-    ${draft.firma ? '' : `<div class="wzq ${wzSig ? 'ok' : ''}" id="wzFirmaQ"><b>${falt.length ? 5 : 4}. Tu firma</b><p class="hint" style="margin:2px 0 6px">El documento no trae firma de quien solicita. Firma aquí con el dedo:</p>
+    ${draft.firma ? '' : `<div class="wzq ${wzSig ? 'ok' : ''}" id="wzFirmaQ"><b>${falt.length ? 6 : 5}. Tu firma</b><p class="hint" style="margin:2px 0 6px">El documento no trae firma de quien solicita. Firma aquí con el dedo:</p>
       <div class="sigbox"><canvas id="sig-wz"></canvas><div class="line"></div><div class="ph" id="sigph-wz">Firma aquí con el dedo</div></div><div class="sigtools"><button class="btn ghost" data-clr="wz" type="button">Borrar firma</button></div></div>`}`;
   $('#wzBase').onchange = e => { wz.base = e.target.value ? +e.target.value : ''; pintarAsistente(); if (!draft.firma) wzPad().load(); };
   $('#wzVarias').onchange = e => { wz.varias = e.target.checked; if (wz.varias) wz.base = ''; pintarAsistente(); if (!draft.firma) wzPad().load(); };
   $$('#wzTipo [data-t]').forEach(b => b.onclick = () => { wz.tipo = b.dataset.t; pintarAsistente(); if (!draft.firma) wzPad().load(); });
+  $$('#wzPrio [data-p]').forEach(b => b.onclick = () => { wz.prioridad = b.dataset.p; $('#wzErr').hidden = true; pintarAsistente(); if (!draft.firma) wzPad().load(); });
   $('#wzArea').oninput = e => { wz.area = e.target.value; }; $('#wzCoord').oninput = e => { wz.coordinacion = e.target.value; }; $('#wzFecha').onchange = e => { wz.fechaReq = e.target.value; };
   $$('[data-wzc]').forEach(x => x.oninput = e => { wz.items[+e.target.dataset.wzc].cant = e.target.value; });
   $$('[data-wzu]').forEach(x => x.oninput = e => { wz.items[+e.target.dataset.wzu].und = e.target.value; });
@@ -2072,13 +2130,14 @@ $('#wzListo').onclick = () => {
   const err = m => { $('#wzErr').textContent = m; $('#wzErr').hidden = false; };
   if (!wz.base && !wz.varias) return err('Elige el puesto fronterizo (la locación) o marca que son de varias bases.');
   if (!wz.tipo) return err('Elige el tipo de gasto para armar el CeCo.');
+  if (!PRIO[wz.prioridad]) return err('Elige la prioridad: urgente, media o compra planificada.');
   if (!wz.area.trim()) return err('Escribe el área solicitante.');
   const inc = wz.items.filter(it => !String(it.cant || '').trim() || !String(it.und || '').trim()); if (inc.length) return err(`Faltan cantidad o unidad en ${inc.length} material${inc.length === 1 ? '' : 'es'}.`);
   if (!draft.firma && !wzSig) return err('Firma para poder enviar la requisición.');
   const s = wz.sol;
   draft.items = wz.items.map(it => ({ desc: it.desc, cant: String(it.cant).trim(), und: String(it.und).trim(), equipo: '', espec: '', stock: '',
     base: wz.varias ? '' : wz.base, tipo: wz.tipo, locacion: wz.varias ? '' : baseName(wz.base), ceco: wz.varias ? '' : cecoFor(wz.base, wz.tipo) }));
-  draft.area = wz.area.trim(); draft.coordinacion = wz.coordinacion.trim(); if (wz.fechaReq) draft.fechaRequerida = wz.fechaReq;
+  draft.prioridad = wz.prioridad; draft.area = wz.area.trim(); draft.coordinacion = wz.coordinacion.trim(); if (wz.fechaReq) draft.fechaRequerida = wz.fechaReq;
   if (s.fecha && s.fecha <= today()) draft.fechaSolicitud = s.fecha;
   draft.notas = [s.sol ? `Solicitud de materiales N° ${s.sol} del contratista${s.fecha ? ' (' + fmt(s.fecha) + ')' : ''}.` : 'Solicitud de materiales del contratista.', s.titulos.join(' '), s.notas].filter(Boolean).join(' ').slice(0, 1500);
   if (!draft.firma && wzSig) draft.firma = wzSig;
@@ -2106,23 +2165,46 @@ function estadoTag(r){
 function basesTxt(r){ if (r.general) return 'Proyecto general'; const B = r.bases || []; if (B.length === 1) return baseName(B[0]); if (B.length > 1) return `Varias bases (${B.length})`; return ''; }
 function rowLi(r, primaryLabel, extra){
   const when = new Date(r.creado).toLocaleDateString('es-VE', { day:'2-digit', month:'short' });
-  const li = document.createElement('li');
+  const li = document.createElement('li'); li.className = 'pr-' + (PRIO[r.prioridad] ? r.prioridad : 'sin');
   const bt = basesTxt(r);
   li.innerHTML = `<div class="h1"><span class="ctlb"><b>${esc(r.control)}</b>${bt ? `<span class="bpf">${esc(bt)}</span>` : ''}</span><span style="color:var(--muted);font-weight:500;flex:0 0 auto">${when}</span></div>
-    <div class="tags" style="margin:4px 0 2px">${estadoTag(r)}${r.editada ? '<span class="tag">Editada</span>' : ''}${r.historica ? '<span class="tag hist">Histórica</span>' : ''}${r.adjunto ? '<span class="tag">📎 Con documento</span>' : ''}${r.general ? '<span class="tag gen">General</span>' : ''}</div>
+    <div class="tags" style="margin:4px 0 2px">${r.historica ? '' : prioTag(r.prioridad)}${estadoTag(r)}${r.editada ? '<span class="tag">Editada</span>' : ''}${r.historica ? '<span class="tag hist">Histórica</span>' : ''}${r.adjunto ? '<span class="tag">📎 Con documento</span>' : ''}${r.general ? '<span class="tag gen">General</span>' : ''}</div>
     <div class="h2">${esc(r.area || '')}${r.coordinacion ? ', ' + esc(r.coordinacion) : ''}. ${r.n} material${r.n === 1 ? '' : 'es'}. Pidió ${esc(r.solicitante || '')}${r.fechaRequerida ? '. Para el ' + fmt(r.fechaRequerida) : ''}</div>
     <div class="hb"><button class="btn ${primaryLabel ? 'primary' : ''}" data-open="${esc(r.control)}">${primaryLabel || 'Ver'}</button><button class="btn" data-rdl="${esc(r.control)}">Descargar</button>${extra || ''}</div>`;
   return li;
+}
+// Filtro de prioridad (común a Por verificar, Aprobadas y Mías). Las urgentes van arriba.
+let pFilter = LS.get('pFilter', 'todas');
+const PFIL = [['todas','Todas'],['urgente','Urgentes'],['media','Media'],['planificada','Planificadas'],['sin','Sin prioridad']];
+const PFIL_C = { urgente:'var(--p-urg)', media:'var(--p-med)', planificada:'var(--p-pla)' };
+function paintList(ul){
+  const st = ul._st; if (!st) return;
+  const rows = st.rows.slice().sort((a, b) => prioRank(a.prioridad) - prioRank(b.prioridad) || String(b.creado).localeCompare(String(a.creado)));
+  const cnt = { todas: rows.length }; rows.forEach(r => { const k = PRIO[r.prioridad] ? r.prioridad : 'sin'; cnt[k] = (cnt[k] || 0) + 1; });
+  const fil = st.fil;
+  if (fil) fil.innerHTML = PFIL.filter(([k]) => k === 'todas' || cnt[k] || k === pFilter).map(([k, l]) => `<button type="button" data-pf="${k}" aria-pressed="${pFilter === k}"${PFIL_C[k] ? ` style="--pc:${PFIL_C[k]}"` : ''}>${k === 'todas' ? '' : '<i></i>'}${l} <small>${cnt[k] || 0}</small></button>`).join('');
+  if (fil) fil.hidden = rows.length < 2 && pFilter === 'todas';
+  const vis = rows.filter(r => pFilter === 'todas' || (pFilter === 'sin' ? !PRIO[r.prioridad] : r.prioridad === pFilter));
+  ul.innerHTML = ''; vis.forEach(r => ul.appendChild(rowLi(r, st.labelFn(r), st.extraFn ? st.extraFn(r) : '')));
+  st.em.hidden = vis.length > 0;
+  st.em.textContent = rows.length && !vis.length ? `No hay requisiciones con ${pFilter === 'sin' ? 'prioridad sin asignar' : 'prioridad "' + PRIO[pFilter].toLowerCase() + '"'} en esta lista.` : st.emptyTxt;
 }
 async function loadList(ul, em, args, emptyTxt, labelFn, extraFn){
   if (!ul.children.length) { em.hidden = false; em.textContent = 'Cargando…'; }
   try {
     const rows = await rpc('rq_listar', args);
-    ul.innerHTML = ''; (rows || []).forEach(r => ul.appendChild(rowLi(r, labelFn(r), extraFn ? extraFn(r) : '')));
-    em.hidden = ul.children.length > 0; em.textContent = emptyTxt;
+    let fil = ul.previousElementSibling && ul.previousElementSibling.classList.contains('pfil') ? ul.previousElementSibling : null;
+    if (!fil) { fil = document.createElement('div'); fil.className = 'pfil'; fil.setAttribute('role', 'group'); fil.setAttribute('aria-label', 'Filtrar por prioridad'); ul.before(fil); }
+    ul._st = { rows: rows || [], em, emptyTxt, labelFn, extraFn, fil };
+    paintList(ul);
     return rows || [];
   } catch (e) { em.hidden = false; em.textContent = e.message; return null; }
 }
+document.addEventListener('click', e => {
+  const b = e.target.closest('.pfil [data-pf]'); if (!b) return;
+  pFilter = b.dataset.pf; LS.set('pFilter', pFilter);
+  ['#lVerif','#lAprob','#lMias'].forEach(id => paintList($(id)));
+});
 async function loadVerif(){
   $('#verifHint').textContent = me.rol === 'gerente_operaciones' ? 'Requisiciones enviadas que esperan tu revisión. Puedes ajustarlas, verificarlas o rechazarlas.' : 'Requisiciones enviadas que esperan la verificación del Gerente de Operaciones.';
   const rows = await loadList($('#lVerif'), $('#eVerif'), { p_estado: 'por_verificar' }, 'No hay requisiciones por verificar.', () => me.rol === 'gerente_operaciones' ? 'Revisar y verificar' : '');
@@ -2221,6 +2303,7 @@ function renderDetail(){
       ${step(rc, rc && `Recibida por ${esc(rc.nombre)} (compras) el ${fdate(rc.fecha)}`, 'Falta el recibido de Compras')}
     </div>
     ${cambios ? `<p class="chg">Ajustada por: ${cambios}</p>` : ''}
+    ${d.historica ? '' : prioDetalle(r)}
     <dl class="dl">
       ${d.general ? '<dt>Tipo</dt><dd><b>Requisición general del proyecto</b></dd>' : ''}
       <dt>Área</dt><dd>${esc(d.area || '')}</dd>
@@ -2232,6 +2315,7 @@ function renderDetail(){
     ${d.notas ? `<div class="sec">Notas</div><p style="margin:0 0 8px;white-space:pre-wrap">${esc(d.notas)}</p>` : ''}
     ${d.adjunto ? `<button class="btn block100" id="dAdj" style="margin:6px 0 4px">📎 Ver documento original (${esc(d.adjunto.mime === 'application/pdf' ? 'PDF' : 'foto')})</button>` : ''}`;
   if (d.adjunto) $('#dAdj').onclick = () => verAdjunto(d.adjunto);
+  const dp = $('#dPrioSel'); if (dp) dp.onclick = e => { const b = e.target.closest('[data-p]'); if (b) cambiarPrioridad(b.dataset.p, b); };
   const p = permsFor(r), btns = [];
   if (p.edit) btns.push('<button class="btn" data-act="editar">Ajustar requisición</button>');
   if (p.verificar) btns.push('<button class="btn primary" data-act="verificar">Verificar y firmar</button>');
@@ -2241,6 +2325,27 @@ function renderDetail(){
   $('#dActBtns').innerHTML = btns.join('');
   $('#dAct').hidden = !btns.length; $('#dForm').hidden = true; $('#dActBtns').hidden = false;
   $('#dLock').hidden = !p.why; $('#dLock').textContent = p.why;
+}
+function prioDetalle(r){
+  const H = r.prioridad_hist || [], ult = H[H.length - 1];
+  const quien = ult ? `${H.length > 1 ? 'Cambiada' : 'Asignada'} por ${esc(ult.nombre)} el ${fmt(isoLocal(ult.fecha))}` : '';
+  const log = H.length > 1 ? H.map(h => `${esc(h.nombre)}: ${esc(PRIO[h.prioridad] || h.prioridad)} (${fmt(isoLocal(h.fecha))})`).join(' · ') : '';
+  const edita = canPrio(r);
+  return `<div class="dprio"><div class="dph"><span>Prioridad</span>${prioTag(r.prioridad)}</div>
+    ${edita ? `<div class="prio" id="dPrioSel">${prioBtns(r.prioridad)}</div>` : ''}
+    ${!r.prioridad && edita ? '<p class="dpl">Esta requisición no tiene prioridad. Asígnale una tocando el color.</p>' : ''}
+    ${quien ? `<p class="dpl">${quien}.${log ? ' Historial: ' + log : ''}</p>` : ''}</div>`;
+}
+async function cambiarPrioridad(p, btn){
+  if (!detRow || detRow.prioridad === p) return;
+  if (detRow.prioridad && !confirm(`¿Cambiar la prioridad de ${detRow.control} de "${PRIO[detRow.prioridad]}" a "${PRIO[p]}"?`)) return;
+  $$('#dPrioSel button').forEach(b => b.disabled = true);
+  try {
+    const r = await rpc('rq_prioridad', { p_control: detRow.control, p_prioridad: p });
+    detRow = r; renderDetail();
+    toast(p === 'urgente' ? 'Marcada como URGENTE. Se avisó al solicitante y al equipo' : 'Prioridad: ' + PRIO[p]);
+    reloadActive();
+  } catch (e) { toast(e.message); $$('#dPrioSel button').forEach(b => b.disabled = false); }
 }
 $('#dActBtns').addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
@@ -3404,8 +3509,13 @@ $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mo
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.18.0';
+const APP_VERSION = '4.19.0';
 const NOVEDADES = [
+  { v: '4.19.0', fecha: '2026-09-30', titulo: 'Prioridad de las requisiciones', items: [
+    { r: ['contratista','logistica','costos','gerente_general','gerente_operaciones','master'], t: 'Al hacer una requisición ahora eliges su prioridad: rojo Urgente, amarillo Prioridad media o verde Compra planificada. Es obligatoria, también cuando la cargas desde un PDF o una foto.' },
+    { r: ['gerente_operaciones','gerente_general','compras','costos','master'], t: 'Cada requisición muestra su color en las listas y las urgentes salen primero. Filtra por prioridad con los botones de arriba de cada lista, y asígnala o cámbiala desde el detalle: queda registrado quién la cambió. Las requisiciones anteriores aparecen "Sin prioridad" para que se la asignen.' },
+    { r: ['gerente_operaciones','gerente_general','compras'], t: 'Te llega un aviso apenas una requisición se envía o se marca como urgente.' }
+  ] },
   { v: '4.18.0', fecha: '2026-09-29', titulo: 'Dotación de equipos', items: [
     { r: ['gerente_operaciones','gerente_general','master'], t: 'La app de Dotación de equipos ahora está dentro de Puestos Fronterizos: Ajustes → Dotación de equipos. Levantamiento por ambiente, puesto por puesto (necesario, existente e instalado), resumen por puesto, consolidado de la obra y Excel. Caño del Medio ya tiene sus 17 ambientes cargados.' },
     { r: ['compras','costos'], t: 'En Ajustes → Dotación de equipos puedes consultar lo que hay que adquirir y por instalar en cada puesto y en toda la obra, y descargar el Excel.' }
