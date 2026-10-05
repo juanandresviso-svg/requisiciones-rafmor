@@ -2097,9 +2097,11 @@ function parseSolicitud(T){
   const pages = [...new Set(T.map(t => t.p))].sort((a, b) => a - b);
   for (const pg of pages) {
     const P = T.filter(t => t.p === pg);
-    const hDesc = P.find(t => N(t).startsWith('DESCRIPCION'));
+    const hDesc = P.find(t => /^(DESCRIPCION|MATERIAL(ES)?\b)/.test(N(t)));
+    const hEsp = hDesc && P.find(t => /^ESPECIFICACION(ES)?\b/.test(N(t)) && Math.abs(t.y - hDesc.y) <= 4 && t.x > hDesc.x);
     const hItem = hDesc && P.find(t => /^(ITEM|RENG|N|NO|N[°º]|NRO\.?)$/.test(N(t)) && Math.abs(t.y - hDesc.y) <= 4 && t.x < hDesc.x);
-    const hUnd = P.find(t => /^(UND|UNIDAD|UNID)\.?$/.test(N(t))), hCant = P.find(t => /^CANT(IDAD|\.)?$/.test(N(t)));
+    const enH = t => hDesc && Math.abs(t.y - hDesc.y) <= 4;
+    const hUnd = P.find(t => enH(t) && /^(UND|UNIDAD|UNID)\b\.?/.test(N(t))), hCant = P.find(t => enH(t) && /^CANT(IDAD|\.)?\b/.test(N(t)));
     if (!hItem || !hDesc || !hUnd || !hCant || Math.abs(hItem.y - hDesc.y) > 4) continue;
     out.paginas++;
     const derecha = t => P.filter(o => o !== t && Math.abs(o.y - t.y) < 4 && o.x > t.x).sort((a, b) => a.x - b.x)[0];
@@ -2107,10 +2109,10 @@ function parseSolicitud(T){
     const so = P.find(t => /^SOL(ICITUD)?\.?\s*(N[°º]?\s*)?\d+$/.test(N(t))); if (so && !out.sol) out.sol = (N(so).match(/(\d+)$/) || [])[1] || '';
     if (P.some(t => /^LISTA DE MATERIALES$/.test(N(t)))) out.lista = true;
     const mo = P.find(t => /^M\.?\s?O\.?[-\s]/.test(N(t))); if (mo && !out.sol) { const md = derecha(mo); out.sol = (mo.s + (md && /^\d+$/.test(md.s.trim()) ? md.s.trim() : '')).replace(/\s+/g, ''); }
-    const pr = P.find(t => /^PROYECTO:?$/.test(N(t))); if (pr && !out.proyecto) { const pd = derecha(pr); if (pd) out.proyecto = pd.s.trim(); }
+    const pr = P.find(t => /^PROYECTO\b/.test(N(t)) && t.y > hItem.y + 3); if (pr && !out.proyecto) { const resto = pr.s.replace(/^proyecto\s*:?\s*/i, '').trim(); const pd = derecha(pr); out.proyecto = resto || (pd ? pd.s.trim() : ''); }
     const fa = P.find(t => /^FASE\s*#?\s*\d+/.test(N(t))); if (fa && !out.fase) out.fase = fa.s.trim();
     const yH = hItem.y, undC = cx(hUnd), cantX = hCant.x;
-    const abajo = /^(N|NO|N[°º]|NRO\.?)$/.test(N(hItem)) || P.some(t => /^LISTA DE MATERIALES$/.test(N(t)));
+    const abajo = /^(N|NO|N[°º]|NRO\.?)$/.test(N(hItem));
     // Capítulos ("CAPITULO #5 BOHIO") y pie ("Solicitado por: …") no son materiales.
     const esCap = t => /^CAP[IÍ]TULO\b/.test(N(t)), esPie = t => /^(SOLICITADO|ELABORADO|REVISADO|APROBADO) POR\b/.test(N(t));
     const caps = P.filter(t => t.y < yH - 3 && esCap(t)).map(t => ({ y: t.y, s: t.s.trim() })).sort((a, b) => b.y - a.y);
@@ -2129,7 +2131,7 @@ function parseSolicitud(T){
     tabla.forEach(t => {
       if (anclas.includes(t)) return;
       const esCant = /^[\d.]+(,\d+)?$/.test(t.s.trim()) && t.x >= cantX - 25;
-      const esUnd = !esCant && Math.abs(cx(t) - undC) < 40 && t.s.trim().length <= 16;
+      const esUnd = !esCant && t.s.trim().length <= 16 && (Math.abs(cx(t) - undC) < 40 || (t.x >= hUnd.x - 25 && t.x + t.w < cantX + 5));
       if (!esCant && !esUnd && t.y > primera + 6) { out.titulos.push(t.s.trim()); return; }
       if (!filas.length) return;
       let best = null, bd = 1e9; filas.forEach(fl => { const d = Math.abs(fl.y - t.y) - (fl.y >= t.y ? 0.01 : 0); if (d < bd) { bd = d; best = fl; } });
@@ -2142,9 +2144,12 @@ function parseSolicitud(T){
     filas.forEach(fl => {
       const ord = L => L.sort((a, b) => b.y - a.y || a.x - b.x).map(t => t.s.trim()).join(' ').replace(/\s+/g, ' ').trim();
       const und = ord(fl.und), cant = ord(fl.cant);
+      // Columna "Especificaciones" (formato Item · Material · Especificaciones · Unidad de compra · Cantidad neta): va después del material.
+      if (hEsp) { const mat = fl.desc.filter(t => t.x < hEsp.x - 5), esp = fl.desc.filter(t => t.x >= hEsp.x - 5);
+        fl.desc = mat; const e = ord(esp); if (e) fl.esp = e; }
       const cap = caps.filter(c => c.y > fl.y).pop();   // el capítulo más cercano por encima de la fila
       const capS = cap ? cap.s : capPrev;
-      out.items.push({ n: fl.n, desc: ord(fl.desc), und: UND_MAP[_norm(und).replace(/[.\s]/g, '')] || und.toLowerCase(), undOrig: und, cant: parseNum(cant), cap: capS });
+      out.items.push({ n: fl.n, desc: ord(fl.desc) + (fl.esp ? ', ' + fl.esp : ''), und: UND_MAP[_norm(und).replace(/[.\s]/g, '')] || und.toLowerCase(), undOrig: und, cant: parseNum(cant), cap: capS });
     });
     if (caps.length) capPrev = caps[caps.length - 1].s; else if (out.items.length) capPrev = out.items[out.items.length - 1].cap || capPrev;
     if (obs) out.notas = [out.notas, P.filter(t => t.y <= obs.y + 1 && t.y > 30 && !/^SOLICITUD DE MATERIALES$/.test(N(t))).sort((a, b) => b.y - a.y || a.x - b.x).map(t => t.s.trim()).join(' ')].filter(Boolean).join(' ').trim();
@@ -3640,8 +3645,11 @@ $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mo
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.24.0';
+const APP_VERSION = '4.25.0';
 const NOVEDADES = [
+  { v: '4.25.0', fecha: '2026-10-04', titulo: 'Otro formato de lista de materiales', items: [
+    { r: ['contratista','logistica','costos','gerente_general','gerente_operaciones','master'], t: 'La app también lee las listas con columnas Item, Material, Especificaciones, Unidad de compra y Cantidad neta (como la de Castilletes). Cada material queda con su especificación en la descripción y la app detecta el puesto por el nombre del proyecto.' }
+  ] },
   { v: '4.24.0', fecha: '2026-10-04', titulo: 'Listas de materiales por capítulo', items: [
     { r: ['contratista','logistica','costos','gerente_general','gerente_operaciones','master'], t: 'Ahora "Cargar PDF o foto de la requisición" también reconoce las listas de materiales por capítulo (como las de Romveca: Nº, descripción, unidad y cantidad). Los materiales repetidos en varios capítulos se agrupan en uno solo con la cantidad sumada, y el desglose por capítulo queda debajo de cada material.' },
     { r: ['gerente_operaciones','gerente_general','compras','costos','master'], t: 'En el detalle de la requisición, debajo de un material agrupado verás de qué capítulos sale su cantidad (por ejemplo: Cap. 1 Cerca perimetral: 108 · Cap. 5 Bohio: 32).' }
