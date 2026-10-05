@@ -59,6 +59,7 @@ textarea.in{min-height:84px;resize:vertical}
 .in:focus{border-color:var(--amber);background:var(--surface)}
 .in.bad{border-color:var(--red);background:var(--red-soft)}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row2>*{min-width:0}.row2 .in{width:100%;min-width:0;max-width:100%}
 .hint{font-size:13px;color:var(--muted);margin:-4px 0 10px}
 .err{color:var(--red);font-size:14px;font-weight:600;margin:4px 0 0}
 .seg{display:flex;border:1.5px solid var(--rule);border-radius:10px;overflow:hidden;background:var(--sunk)}
@@ -612,6 +613,24 @@ nav.tabs button{flex:0 0 auto}
 .wzrep ul{list-style:none;margin:4px 0 0;padding:0;max-height:240px;overflow-y:auto}
 .wzrep li{padding:6px 0;border-bottom:1px solid var(--rule);display:grid;gap:2px}.wzrep li span{color:var(--muted);font-size:12.5px}
 .wzwarn{display:block;margin:6px 0;padding:8px 10px;border-radius:8px;background:var(--red-soft);color:var(--red);font-weight:600}
+/* v4.27.0: viáticos */
+.vlist li.vli{cursor:pointer}.vnums{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin-top:4px;font-size:14px}.vnums b{font-size:16px}
+.vgastos li.vg{display:grid;grid-template-columns:52px 1fr;gap:10px;cursor:pointer}
+.vgth{width:52px;height:52px;border-radius:10px;background:var(--sunk);border:1px solid var(--rule);display:flex;align-items:center;justify-content:center;font-size:24px}
+.vgth .vpdf{font-size:12px;font-weight:800;color:var(--red)}.vgth .vnof{font-size:10.5px;line-height:1.1;text-align:center;color:var(--red);font-weight:700}
+.vlink{font-weight:600;color:var(--ink);text-decoration:underline;font-size:13.5px}
+.vt3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.vt3>div{background:var(--sunk);border-radius:10px;padding:10px;display:grid;gap:2px}
+.vt3 span{font-size:12.5px;color:var(--muted)}.vt3 b{font-size:18px}.vt3 small{font-size:11.5px;color:var(--muted)}
+.vt3 .pos b{color:var(--green)}.vt3 .neg b{color:var(--red)}
+.vsum{margin:4px 0 12px;padding:10px 12px;border-radius:10px;background:var(--sunk);display:grid;gap:2px}.vsum span{color:var(--red);font-size:13.5px}
+.vfbtn{width:100%;min-height:110px;border:2px dashed var(--rule);border-radius:14px;background:var(--sunk);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;margin-bottom:12px;color:var(--ink)}
+.vfbtn span{font-size:13px;color:var(--muted)}
+.vfok{display:grid;grid-template-columns:72px 1fr;gap:10px;align-items:center;padding:10px;border-radius:12px;background:var(--green-soft);margin-bottom:12px}
+.vfok img{width:72px;height:72px;object-fit:cover;border-radius:8px}.vfok .vpdf{width:72px;height:72px;display:flex;align-items:center;justify-content:center;background:var(--surface);border-radius:8px;font-weight:800}
+.vfok div{display:grid;gap:2px;font-size:13.5px}.vfok a,.vfok .lnk{color:var(--ink);font-weight:600;text-decoration:underline;background:none;border:0;padding:0;cursor:pointer;font-size:13.5px}
+.vfpend{background:var(--sunk);border:1.5px dashed var(--rule)}
+.vfst{padding:14px;border-radius:12px;background:var(--sunk);margin-bottom:12px;text-align:center;font-weight:600}
+.chips button:disabled{opacity:.6;cursor:default}
 </style>
 </head>
 <body>
@@ -707,7 +726,7 @@ nav.tabs button{flex:0 0 auto}
       <button class="bell" id="bellBtn" aria-label="Avisos"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1z"/></svg><span class="cnt" id="bellCnt" hidden></span></button>
     </div>
     <div class="simbar" id="simBar" hidden role="status"><span><b>Modo prueba</b><span id="simTxt"></span></span><button class="btn" id="simSalir">Volver a maestro</button></div>
-    <div class="mods" id="mods" role="group" aria-label="Módulo"><button type="button" data-mod="tar" aria-pressed="false" hidden>Tareas<span class="dot" id="tarDot" hidden></span></button><button type="button" data-mod="req" aria-pressed="true">Requisiciones</button><button type="button" data-mod="rep" aria-pressed="false">Reportes<span class="dot" id="repDot" hidden></span></button><button type="button" data-mod="est" aria-pressed="false" hidden>Estadísticas</button></div>
+    <div class="mods" id="mods" role="group" aria-label="Módulo"><button type="button" data-mod="tar" aria-pressed="false" hidden>Tareas<span class="dot" id="tarDot" hidden></span></button><button type="button" data-mod="req" aria-pressed="true">Requisiciones</button><button type="button" data-mod="rep" aria-pressed="false">Reportes<span class="dot" id="repDot" hidden></span></button><button type="button" data-mod="est" aria-pressed="false" hidden>Estadísticas</button><button type="button" data-mod="via" aria-pressed="false" hidden>Viáticos</button></div>
     <nav class="tabs" role="tablist" id="mainTabs">
       <button role="tab" aria-selected="false" data-tab="nueva" data-mod="req" hidden>Nueva</button>
       <button role="tab" aria-selected="false" data-tab="verif" data-mod="req" hidden>Por verificar<span class="cnt" id="cVerif" hidden></span></button>
@@ -720,6 +739,8 @@ nav.tabs button{flex:0 0 auto}
       <button role="tab" aria-selected="false" data-tab="rlogl" data-mod="rep" hidden>Logística</button>
       <button role="tab" aria-selected="false" data-tab="est" data-mod="est" hidden>Estadísticas</button>
       <button role="tab" aria-selected="false" data-tab="tar" data-mod="tar" hidden>Tareas por puesto</button>
+      <button role="tab" aria-selected="false" data-tab="vmis" data-mod="via" hidden>Mis reportes</button>
+      <button role="tab" aria-selected="false" data-tab="vtodos" data-mod="via" hidden>Todos</button>
       <button role="tab" aria-selected="false" data-tab="ajustes" data-mod="both" class="gear" aria-label="Ajustes y cuenta" title="Ajustes y cuenta"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.7h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span class="cnt" id="cUsers" hidden></span></button>
     </nav>
   </header>
@@ -735,6 +756,61 @@ nav.tabs button{flex:0 0 auto}
     <button class="btn" data-install>Ver cómo</button>
     <button class="x" id="installX" aria-label="Ocultar aviso">×</button>
   </div>
+
+  <!-- VIÁTICOS (v4.27.0) -->
+  <section class="panel" id="p-vmis">
+    <div class="block">
+      <div class="memtop"><h2 style="margin:0">Mis reportes de viáticos</h2><button class="btn ghost" id="vmRefresh">Actualizar</button></div>
+      <p class="hint">Reporta en qué gastaste el viático de cada viaje: un gasto por factura, con la foto de la factura. Las facturas se guardan en Google Drive.</p>
+      <button class="btn primary block100" id="vNuevo"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>Nuevo reporte de viáticos</button>
+      <ul class="hist vlist" id="vmList" style="margin-top:12px"></ul>
+      <div class="empty" id="vmEmpty" hidden>Todavía no tienes reportes de viáticos.</div>
+      <button class="btn block100" id="vmXlsx" style="margin-top:12px" hidden>Exportar mis reportes a Excel</button>
+    </div>
+  </section>
+  <section class="panel" id="p-vtodos">
+    <div class="block">
+      <div class="memtop"><h2 style="margin:0">Viáticos de Gerencias</h2><button class="btn ghost" id="vtRefresh">Actualizar</button></div>
+      <p class="hint">Reportes enviados por los Gerentes de Operaciones y Generales.</p>
+      <div class="row2"><label class="f"><span>Desde</span><input class="in" type="date" id="vtDesde"></label><label class="f"><span>Hasta</span><input class="in" type="date" id="vtHasta"></label></div>
+      <div class="row2"><label class="f"><span>Persona</span><select class="in" id="vtPersona"><option value="">Todas</option></select></label><label class="f"><span>Puesto</span><select class="in" id="vtPuesto"><option value="">Todos</option></select></label></div>
+      <div class="vsum" id="vtSum"></div>
+      <button class="btn primary block100" id="vtXlsx">Exportar Excel</button>
+      <ul class="hist vlist" id="vtList" style="margin-top:12px"></ul>
+      <div class="empty" id="vtEmpty" hidden>No hay reportes con estos filtros.</div>
+    </div>
+  </section>
+  <section class="panel" id="p-vedit">
+    <div class="memtop repTop"><button class="btn ghost" id="vVolver" style="padding-left:0">← Volver</button><b id="vTitulo">Reporte de viáticos</b></div>
+    <div class="drvwarn" id="vLock" hidden></div>
+    <div class="block">
+      <h2>El viaje</h2>
+      <div class="row2"><label class="f"><span>Desde</span><input class="in vin" type="date" id="vDesde"></label><label class="f"><span>Hasta</span><input class="in vin" type="date" id="vHasta"></label></div>
+      <div class="f"><span class="sec" style="margin:4px 0 6px;display:block">Puestos visitados</span><div class="chips" id="vPuestos"></div></div>
+      <label class="f" style="margin-top:10px"><span>Motivo del viaje</span><textarea class="in vin" id="vMotivo" placeholder="Supervisión de obra, reunión con el comando…"></textarea></label>
+    </div>
+    <div class="block">
+      <h2>Viático entregado</h2>
+      <p class="hint" style="margin-top:-6px">El monto que te entregaron antes del viaje (opcional). Sirve para calcular el saldo.</p>
+      <div class="row2"><label class="f"><span>Moneda</span><select class="in vin" id="vEntMon"><option value="USD">USD</option><option value="Bs">Bs</option></select></label><label class="f"><span>Monto</span><input class="in vin" id="vEntMonto" inputmode="decimal" placeholder="0,00"></label></div>
+      <label class="f" id="vEntTasaW" hidden><span>Tasa del día (Bs por 1 USD)</span><input class="in vin" id="vEntTasa" inputmode="decimal"></label>
+    </div>
+    <div class="block">
+      <div class="memtop"><h2 style="margin:0">Gastos</h2><span class="hint" id="vCount" style="margin:0"></span></div>
+      <ul class="hist vgastos" id="vGastos"></ul>
+      <div class="empty" id="vGEmpty">Agrega cada gasto con la foto de su factura.</div>
+      <button class="btn primary block100" id="vAddG" style="margin-top:10px">+ Agregar gasto</button>
+    </div>
+    <div class="block vtot" id="vTot"></div>
+    <div class="block">
+      <label class="f"><span>Notas (opcional)</span><textarea class="in vin" id="vNotas"></textarea></label>
+      <p class="err" id="vErr" hidden></p>
+      <p class="hint" id="vSaved" style="margin:8px 0"></p>
+      <button class="btn primary block100" id="vEnviar">Enviar reporte</button>
+      <button class="btn block100" id="vReabrir" style="margin-top:8px" hidden>Corregir este reporte</button>
+      <button class="btn ghost block100" id="vBorrar" style="margin-top:8px;color:var(--red)">Borrar borrador</button>
+    </div>
+  </section>
 
   <!-- REPORTES: GENERAR NUEVO REPORTE (v4.20.0) -->
   <div class="newrep" id="newRepBar" hidden><button class="btn primary block100" id="newRepBtn"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>Generar nuevo reporte</button></div>
@@ -1332,6 +1408,26 @@ nav.tabs button{flex:0 0 auto}
     <label class="f"><span>Día</span><input class="in" type="date" id="a-xdate"></label>
     <div class="chips" id="xlsQuick" style="margin:-4px 0 12px"><button type="button" data-d="0">Hoy</button><button type="button" data-d="1">Ayer</button></div>
     <button class="btn primary block100" id="a-xbtn">Descargar Excel</button>
+  </div>
+</dialog>
+
+<!-- Viáticos: gasto con factura (v4.27.0) -->
+<dialog id="vgDlg">
+  <div class="sheet"><div class="grab"></div>
+    <h3><span id="vgTit">Gasto</span><button class="btn ghost" id="vgClose" style="min-height:40px">Cerrar</button></h3>
+    <div class="vfac" id="vgFac"></div>
+    <input type="file" id="vgFile" accept="image/*,application/pdf" hidden>
+    <div class="row2"><label class="f"><span>Fecha</span><input class="in" type="date" id="vgFecha"></label><label class="f"><span>Puesto</span><select class="in" id="vgPuesto"></select></label></div>
+    <div class="f"><span class="sec" style="margin:6px 0;display:block">Categoría</span><div class="chips" id="vgCat"></div></div>
+    <label class="f" style="margin-top:10px"><span>Proveedor</span><input class="in" id="vgProv" placeholder="Hotel, restaurant, estación de servicio…"></label>
+    <div class="row2"><label class="f"><span>RIF</span><input class="in" id="vgRif" placeholder="J-12345678-9"></label><label class="f"><span>N° de factura</span><input class="in" id="vgNum"></label></div>
+    <label class="f"><span>Descripción</span><input class="in" id="vgDesc" placeholder="2 noches, almuerzo, gasolina 60 L…"></label>
+    <div class="row2"><label class="f"><span>Moneda</span><select class="in" id="vgMon"><option value="USD">USD</option><option value="Bs">Bs</option></select></label><label class="f"><span>Monto</span><input class="in" id="vgMonto" inputmode="decimal" placeholder="0,00"></label></div>
+    <label class="f" id="vgTasaW" hidden><span>Tasa del día (Bs por 1 USD)</span><input class="in" id="vgTasa" inputmode="decimal"></label>
+    <p class="hint" id="vgUsd" style="margin:4px 0 10px"></p>
+    <p class="err" id="vgErr" hidden></p>
+    <button class="btn primary block100" id="vgOk">Guardar gasto</button>
+    <button class="btn ghost block100" id="vgDel" style="margin-top:6px;color:var(--red)" hidden>Quitar este gasto</button>
   </div>
 </dialog>
 
@@ -2611,6 +2707,7 @@ $('#avList').addEventListener('click', e => {
   if (li.dataset.tipo === 'semanal') { if (canWeekly()) { wStart = addDays(weekStart(today()), -7); setMod('rep', 'rsem'); } return; }
   if (c.startsWith('rep:')) { openReport(c.slice(4)); return; }
   if (c.startsWith('tarea:')) { setMod('tar', 'tar'); abrirTarea(null, c.slice(6)); return; }
+  if (c.startsWith('viatico:')) { abrirViatico(c.slice(8)); return; }
   if (c === 'accion:push') { abrirAjuste('pushBlock'); return; }
   if (!c) return;
   openDetail(c);
@@ -3680,24 +3777,320 @@ let curMod = LS.get('mod', 'req');
 function setMod(m, tab){
   if (m === 'est' && !canStats()) m = 'req';
   if (m === 'tar' && !canTareas()) m = 'req';
+  if (m === 'via' && !(canViaticos() || veViaticos())) m = 'req';
   if (soloSemanal() && m === 'req') { m = 'rep'; tab = 'rsem'; }
   if (soloSemanal() && m === 'rep') tab = 'rsem';
   $('#mods').hidden = soloSemanal() && !canStats();
   $('#mods [data-mod="req"]').hidden = soloSemanal();
   $('#mods [data-mod="est"]').hidden = !canStats();
   $('#mods [data-mod="tar"]').hidden = !canTareas();
+  $('#mods [data-mod="via"]').hidden = !(canViaticos() || veViaticos());
   curMod = m; LS.set('mod', m);
   $$('#mods button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mod === m));
   applyTabVisibility();
-  const first = tab || (m === 'tar' ? 'tar' : m === 'est' ? 'est' : m === 'rep' ? (soloSemanal() ? 'rsem' : esLogistica() ? 'rlog' : 'rarch') : defaultReqTab());
+  const first = tab || (m === 'via' ? (canViaticos() ? 'vmis' : 'vtodos') : m === 'tar' ? 'tar' : m === 'est' ? 'est' : m === 'rep' ? (soloSemanal() ? 'rsem' : esLogistica() ? 'rlog' : 'rarch') : defaultReqTab());
   showTab(first);
 }
 $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mod]'); if (b) setMod(b.dataset.mod); });
 
+/* ---------- Viáticos de Gerencias (v4.27.0) ----------
+   Reporte de en qué se gastó el viático ya entregado. Cada gasto lleva la foto o PDF de su factura,
+   que la función subir-factura guarda en Google Drive y devuelve su enlace. */
+const canViaticos = () => me && (me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol));
+const veViaticos = () => me && (me.es_master || ['gerente_general','costos'].includes(me.rol));
+const V_CATS = ['Hospedaje','Alimentación','Transporte y pasajes','Combustible','Peajes y estacionamiento','Otros'];
+const vNum = x => { const t = String(x == null ? '' : x).trim(); if (!t) return null; const n = t.includes(',') ? parseFloat(t.replace(/\./g, '').replace(',', '.')) : parseFloat(t); return isNaN(n) ? null : n; };
+const vUsd = (mon, monto, tasa) => { const m = vNum(monto); if (m == null) return null; if (mon !== 'Bs') return m; const t = vNum(tasa); return t > 0 ? m / t : null; };
+const vPuestoNom = n => +n === 0 ? 'Proyecto general' : baseName(+n);
+const vCeco = g => +g.puesto ? cecoFor(+g.puesto, g.categoria === 'Combustible' ? 'COM' : 'ADM') : 'POR ASIGNAR';
+const vMonto = (mon, m) => mon === 'Bs' ? 'Bs ' + (+m).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : usd(m);
+function vCalc(d){
+  const G = d.gastos || [], gast = G.reduce((a, g) => a + (vUsd(g.moneda, g.monto, g.tasa) || 0), 0);
+  const e = d.entregado || {}, ent = vUsd(e.moneda || 'USD', e.monto, e.tasa);
+  return { gast, ent, saldo: ent == null ? null : ent - gast, fact: G.filter(g => g.archivo && g.archivo.url).length, sinF: G.filter(g => !(g.archivo && g.archivo.url)).length, n: G.length };
+}
+let vt = null, vtTimer = null, vtLista = [], vtTodos = [], vtDesdeTab = 'vmis';
+function vBlank(){ return { id: uuid(), numero: '', estado: 'borrador', persona: me.nombre, nuevo: true, datos: { desde: '', hasta: '', puestos: [], motivo: '', entregado: { moneda: 'USD', monto: '', tasa: '' }, notas: '', gastos: [] } }; }
+function vItem(v, propio){
+  const d = v.datos || {}, c = vCalc(d), ps = (d.puestos || []).map(n => vPuestoNom(n).replace('B.P.F ', '')).join(', ');
+  return `<li data-vid="${v.id}" role="button" tabindex="0" class="vli">
+    <div class="ctlb"><b>${esc(v.numero || 'Nuevo')}</b>${propio ? '' : `<span class="tag">${esc(v.persona)}</span>`}<span class="when">${d.desde ? fmt(d.desde) + (d.hasta && d.hasta !== d.desde ? ' al ' + fmt(d.hasta) : '') : 'Sin fechas'}</span></div>
+    <div class="tags" style="margin:4px 0 2px"><span class="tag ${v.estado === 'enviado' ? 'ok' : ''}">${v.estado === 'enviado' ? 'Enviado' : 'Borrador'}</span>${c.sinF ? `<span class="tag bad">${c.sinF} sin factura</span>` : ''}</div>
+    <div class="m">${esc(ps || 'Sin puestos')}${d.motivo ? ' · ' + esc(d.motivo) : ''}</div>
+    <div class="vnums"><span>${c.n} gasto${c.n === 1 ? '' : 's'}</span><b>${usd(c.gast)}</b>${c.saldo != null ? `<span>Saldo ${usd(c.saldo)}</span>` : ''}</div></li>`;
+}
+async function loadVMis(){
+  $('#vmEmpty').hidden = true;
+  try { vtLista = await rpc('rq_viaticos_listar', { p_todos: false }) || []; } catch (e) { toast(e.message); vtLista = []; }
+  $('#vmList').innerHTML = vtLista.map(v => vItem(v, true)).join('');
+  $('#vmEmpty').hidden = vtLista.length > 0; $('#vmXlsx').hidden = !vtLista.some(v => (v.datos.gastos || []).length);
+}
+function vtFiltrados(){
+  const d1 = $('#vtDesde').value, d2 = $('#vtHasta').value, pe = $('#vtPersona').value, pu = $('#vtPuesto').value;
+  return vtTodos.filter(v => { const d = v.datos || {};
+    if (d1 && (d.hasta || d.desde || '') < d1) return false; if (d2 && (d.desde || '') > d2) return false;
+    if (pe && v.persona_id !== pe) return false;
+    if (pu !== '' && !(d.puestos || []).map(String).includes(pu) && !(d.gastos || []).some(g => String(g.puesto) === pu)) return false;
+    return true; });
+}
+function pintarVTodos(){
+  const L = vtFiltrados(), tot = L.reduce((a, v) => { const c = vCalc(v.datos || {}); a.g += c.gast; a.n += c.n; a.s += c.sinF; return a; }, { g: 0, n: 0, s: 0 });
+  $('#vtList').innerHTML = L.map(v => vItem(v, false)).join(''); $('#vtEmpty').hidden = L.length > 0;
+  $('#vtSum').innerHTML = `<b>${L.length} reporte${L.length === 1 ? '' : 's'} · ${tot.n} gasto${tot.n === 1 ? '' : 's'} · ${usd(tot.g)}</b>${tot.s ? `<span>${tot.s} gasto${tot.s === 1 ? '' : 's'} sin factura</span>` : ''}`;
+  $('#vtXlsx').disabled = !L.length;
+}
+async function loadVTodos(){
+  try { vtTodos = await rpc('rq_viaticos_listar', { p_todos: true }) || []; } catch (e) { toast(e.message); vtTodos = []; }
+  vtTodos = vtTodos.filter(v => v.estado === 'enviado' || v.persona_id === me.id);
+  const per = [...new Map(vtTodos.map(v => [v.persona_id, v.persona])).entries()];
+  const sel = $('#vtPersona').value; $('#vtPersona').innerHTML = '<option value="">Todas</option>' + per.map(([id, n]) => `<option value="${id}" ${id === sel ? 'selected' : ''}>${esc(n)}</option>`).join('');
+  if (!$('#vtPuesto').options.length || $('#vtPuesto').options.length < 3) $('#vtPuesto').innerHTML = '<option value="">Todos</option>' + CECOS.bases.map(b => `<option value="${b.n}">${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</option>`).join('') + '<option value="0">Proyecto general</option>';
+  pintarVTodos();
+}
+['#vtDesde','#vtHasta','#vtPersona','#vtPuesto'].forEach(id => $(id).addEventListener('change', pintarVTodos));
+$('#vmRefresh').onclick = loadVMis; $('#vtRefresh').onclick = loadVTodos;
+$('#vNuevo').onclick = () => { vt = vBlank(); vtDesdeTab = 'vmis'; showTab('vedit'); };
+function vAbrir(v, desde){ vt = JSON.parse(JSON.stringify(v)); vt.datos.gastos = vt.datos.gastos || []; vt.datos.entregado = vt.datos.entregado || { moneda: 'USD' }; vtDesdeTab = desde; showTab('vedit'); }
+$('#vmList').addEventListener('click', e => { const li = e.target.closest('[data-vid]'); if (li) vAbrir(vtLista.find(v => v.id === li.dataset.vid), 'vmis'); });
+$('#vtList').addEventListener('click', e => { const li = e.target.closest('[data-vid]'); if (li) vAbrir(vtTodos.find(v => v.id === li.dataset.vid), 'vtodos'); });
+const vPropio = () => vt && (vt.persona_id ? vt.persona_id === me.id : true) || (me && me.es_master);
+const vEditable = () => vt && vt.estado === 'borrador' && vPropio();
+function pintarVEdit(){
+  if (!vt) return; const d = vt.datos, ed = vEditable();
+  $('#vTitulo').textContent = vt.numero ? `Viáticos ${vt.numero}${vt.persona && vt.persona_id !== me.id ? ' · ' + vt.persona : ''}` : 'Nuevo reporte de viáticos';
+  $('#vLock').hidden = ed; $('#vLock').textContent = vt.estado === 'enviado' ? `Reporte enviado${vt.enviado ? ' el ' + fmt(isoLocal(vt.enviado)) : ''}. ${vPropio() ? 'Si necesitas corregir algo, toca "Corregir este reporte".' : 'Solo lo puede corregir quien lo hizo.'}` : '';
+  $('#vDesde').value = d.desde || ''; $('#vHasta').value = d.hasta || ''; $('#vMotivo').value = d.motivo || ''; $('#vNotas').value = d.notas || '';
+  const e = d.entregado || {}; $('#vEntMon').value = e.moneda || 'USD'; $('#vEntMonto').value = e.monto || ''; $('#vEntTasa').value = e.tasa || ''; $('#vEntTasaW').hidden = (e.moneda || 'USD') !== 'Bs';
+  $('#vPuestos').innerHTML = CECOS.bases.map(b => `<button type="button" data-vp="${b.n}" aria-pressed="${(d.puestos || []).includes(b.n)}" ${ed ? '' : 'disabled'}>${esc(b.nombre.replace('B.P.F ', ''))}</button>`).join('');
+  $$('#p-vedit .vin').forEach(x => x.disabled = !ed);
+  $('#vAddG').hidden = !ed; $('#vEnviar').hidden = !ed; $('#vBorrar').hidden = !(ed && !vt.nuevo); $('#vReabrir').hidden = !(vt.estado === 'enviado' && vPropio());
+  pintarVGastos(); pintarVTot();
+}
+function pintarVGastos(){
+  const G = vt.datos.gastos || [];
+  $('#vGastos').innerHTML = G.map((g, i) => { const u = vUsd(g.moneda, g.monto, g.tasa);
+    return `<li data-vg="${i}" role="button" tabindex="0" class="vg"><div class="vgth">${g.archivo && g.archivo.url ? (g.archivo.mime === 'application/pdf' ? '<span class="vpdf">PDF</span>' : `<span class="vimg">🧾</span>`) : '<span class="vnof">Sin<br>factura</span>'}</div>
+      <div><div class="ctlb"><b>${esc(g.categoria || 'Sin categoría')}</b><span class="when">${g.fecha ? fmt(g.fecha) : ''}</span></div>
+      <div class="m">${esc([g.proveedor, g.descripcion].filter(Boolean).join(' · ') || '—')}</div>
+      <div class="m">${esc(vPuestoNom(g.puesto || 0))}${g.factura ? ' · Factura ' + esc(g.factura) : ''}</div>
+      <div class="vnums"><b>${g.monto ? vMonto(g.moneda, vNum(g.monto)) : '—'}</b>${g.moneda === 'Bs' && u != null ? `<span>= ${usd(u)}</span>` : ''}${g.archivo && g.archivo.url ? `<a href="${esc(g.archivo.url)}" target="_blank" rel="noopener" class="vlink" data-nolink>Ver factura</a>` : ''}</div></div></li>`; }).join('');
+  $('#vGEmpty').hidden = G.length > 0; $('#vCount').textContent = G.length ? `${G.length} gasto${G.length === 1 ? '' : 's'}` : '';
+}
+function pintarVTot(){
+  const c = vCalc(vt.datos);
+  $('#vTot').innerHTML = `<div class="vt3"><div><span>Entregado</span><b>${c.ent != null ? usd(c.ent) : '—'}</b></div><div><span>Gastado</span><b>${usd(c.gast)}</b></div>
+    <div class="${c.saldo == null ? '' : c.saldo >= 0 ? 'pos' : 'neg'}"><span>Saldo</span><b>${c.saldo != null ? usd(Math.abs(c.saldo)) : '—'}</b><small>${c.saldo == null ? 'Sin monto entregado' : c.saldo > 0.004 ? 'a favor de la empresa' : c.saldo < -0.004 ? 'a favor del gerente' : 'cuadrado'}</small></div></div>
+    <p class="hint" style="margin:8px 0 0">${c.fact} con factura${c.sinF ? ` · <b style="color:var(--red)">${c.sinF} sin factura</b>` : ''} · Totales en USD (los gastos en Bs se convierten con la tasa de cada uno).</p>`;
+}
+function vLeerForm(){
+  const d = vt.datos; d.desde = $('#vDesde').value; d.hasta = $('#vHasta').value; d.motivo = $('#vMotivo').value.trim(); d.notas = $('#vNotas').value.trim();
+  d.entregado = { moneda: $('#vEntMon').value, monto: vNorm($('#vEntMonto').value), tasa: $('#vEntMon').value === 'Bs' ? vNorm($('#vEntTasa').value) : '' };
+  $('#vEntTasaW').hidden = d.entregado.moneda !== 'Bs';
+}
+async function vGuardar(){
+  clearTimeout(vtTimer); if (!vEditable()) return true;
+  try { const r = await rpc('rq_viatico_guardar', { p_id: vt.id, p_datos: vt.datos });
+    vt.numero = r.numero; vt.persona_id = r.persona_id; vt.persona = r.persona; vt.estado = r.estado; vt.nuevo = false;
+    $('#vSaved').textContent = 'Guardado ' + new Date().toLocaleTimeString('es-VE', { hour: 'numeric', minute: '2-digit' }); $('#vTitulo').textContent = 'Viáticos ' + vt.numero; $('#vBorrar').hidden = false; return true; }
+  catch (e) { $('#vSaved').textContent = 'No se pudo guardar: ' + e.message; return false; }
+}
+// el entregado se guarda con números normalizados (acepta 1.234,56 o 1234.56)
+const vNorm = x => { const n = vNum(x); return n == null ? '' : String(n); };
+const vProgramar = () => { clearTimeout(vtTimer); $('#vSaved').textContent = 'Guardando…'; vtTimer = setTimeout(vGuardar, 900); };
+$$('#p-vedit .vin').forEach(x => x.addEventListener('input', () => { vLeerForm(); pintarVTot(); vProgramar(); }));
+$('#vPuestos').addEventListener('click', e => { const b = e.target.closest('[data-vp]'); if (!b || !vEditable()) return; const n = +b.dataset.vp, P = vt.datos.puestos = vt.datos.puestos || [];
+  const i = P.indexOf(n); i >= 0 ? P.splice(i, 1) : P.push(n); P.sort((a, b2) => a - b2); b.setAttribute('aria-pressed', i < 0); vProgramar(); });
+$('#vVolver').onclick = async () => { if (vEditable() && (vt.datos.gastos.length || vt.datos.desde || vt.datos.motivo || !vt.nuevo)) await vGuardar(); vt = null; showTab(tabAllowed(vtDesdeTab) ? vtDesdeTab : 'vmis'); };
+$('#vEnviar').onclick = async () => {
+  vLeerForm(); const d = vt.datos, err = m => { $('#vErr').textContent = m; $('#vErr').hidden = false; $('#vErr').scrollIntoView({ block: 'center', behavior: 'smooth' }); };
+  $('#vErr').hidden = true;
+  if (!d.desde || !d.hasta) return err('Pon las fechas del viaje.'); if (d.hasta < d.desde) return err('La fecha final es anterior a la inicial.');
+  if (!(d.puestos || []).length) return err('Marca al menos un puesto visitado.');
+  if (!d.gastos.length) return err('Agrega al menos un gasto.');
+  const mal = d.gastos.findIndex(g => vUsd(g.moneda, g.monto, g.tasa) == null); if (mal >= 0) return err(`Revisa el monto${d.gastos[mal].moneda === 'Bs' ? ' y la tasa' : ''} del gasto ${mal + 1}.`);
+  const c = vCalc(d); if (c.sinF && !confirm(`${c.sinF} gasto${c.sinF === 1 ? ' no tiene' : 's no tienen'} factura. ¿Enviar el reporte así?`)) return;
+  if (!(await vGuardar())) return err('No se pudo guardar el reporte. Revisa tu conexión.');
+  try { const r = await rpc('rq_viatico_enviar', { p_id: vt.id }); vt.estado = r.estado; vt.enviado = r.enviado; toast(`Reporte ${vt.numero} enviado`); pintarVEdit(); } catch (e) { err(e.message); }
+};
+$('#vReabrir').onclick = async () => { if (!confirm('El reporte vuelve a borrador para que lo corrijas y lo envíes de nuevo. ¿Seguir?')) return;
+  try { const r = await rpc('rq_viatico_reabrir', { p_id: vt.id }); vt.estado = r.estado; vt.enviado = null; pintarVEdit(); } catch (e) { toast(e.message); } };
+$('#vBorrar').onclick = async () => { if (!confirm('¿Borrar este borrador de viáticos? No se puede deshacer.')) return;
+  try { await rpc('rq_viatico_borrar', { p_id: vt.id }); toast('Borrador borrado'); vt = null; showTab('vmis'); } catch (e) { toast(e.message); } };
+// ---- gasto ----
+let vgI = -1, vgG = null, vgSubiendo = false;
+function vgAbrir(i){
+  const ed = vEditable(); vgI = i; vgG = i >= 0 ? JSON.parse(JSON.stringify(vt.datos.gastos[i])) : { id: uuid(), fecha: today() <= (vt.datos.hasta || '9999') && today() >= (vt.datos.desde || '') ? today() : (vt.datos.desde || today()), puesto: (vt.datos.puestos || [])[0] || '', categoria: '', moneda: 'USD', monto: '', tasa: (vt.datos.gastos.slice(-1)[0] || {}).tasa || '' };
+  $('#vgTit').textContent = i >= 0 ? `Gasto ${i + 1}` : 'Nuevo gasto';
+  $('#vgPuesto').innerHTML = '<option value="">Elige…</option>' + CECOS.bases.map(b => `<option value="${b.n}">${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</option>`).join('') + '<option value="0">Proyecto general</option>';
+  $('#vgFecha').value = vgG.fecha || ''; $('#vgPuesto').value = vgG.puesto === '' || vgG.puesto == null ? '' : String(vgG.puesto);
+  $('#vgProv').value = vgG.proveedor || ''; $('#vgRif').value = vgG.rif || ''; $('#vgNum').value = vgG.factura || ''; $('#vgDesc').value = vgG.descripcion || '';
+  $('#vgMon').value = vgG.moneda || 'USD'; $('#vgMonto').value = vgG.monto || ''; $('#vgTasa').value = vgG.tasa || '';
+  $$('#vgDlg .in').forEach(x => x.disabled = !ed); $('#vgOk').hidden = !ed; $('#vgDel').hidden = !(ed && i >= 0); $('#vgErr').hidden = true;
+  vgPintar(); $('#vgDlg').showModal();
+}
+function vgPintar(){
+  const ed = vEditable(), a = vgG.archivo;
+  $('#vgCat').innerHTML = V_CATS.map(c => `<button type="button" data-vc="${c}" aria-pressed="${vgG.categoria === c}" ${ed ? '' : 'disabled'}>${c}</button>`).join('');
+  $('#vgTasaW').hidden = $('#vgMon').value !== 'Bs';
+  const u = vUsd($('#vgMon').value, $('#vgMonto').value, $('#vgTasa').value); $('#vgUsd').textContent = $('#vgMon').value === 'Bs' && u != null ? `Equivale a ${usd(u)}` : '';
+  const pd = vgG._pend;
+  $('#vgFac').innerHTML = vgSubiendo ? '<div class="vfst">Subiendo la factura a Google Drive…</div>'
+    : pd ? `<div class="vfok vfpend">${pd.thumb ? `<img src="${pd.thumb}" alt="Factura">` : '<span class="vpdf">PDF</span>'}<div><b>Factura lista</b><span>Se guarda en Google Drive al tocar "Guardar gasto".</span><button type="button" class="lnk" id="vgCambiar">Cambiar</button></div></div>`
+    : a && a.url ? `<div class="vfok">${a.thumb ? `<img src="${a.thumb}" alt="Factura">` : `<span class="vpdf">${a.mime === 'application/pdf' ? 'PDF' : '🧾'}</span>`}<div><b>Factura guardada en Drive</b><span>${esc(a.nombre || '')}</span>
+        <a href="${esc(a.url)}" target="_blank" rel="noopener">Abrir en Drive</a>${ed ? ' · <button type="button" class="lnk" id="vgCambiar">Cambiar</button>' : ''}</div></div>`
+    : ed ? `<button type="button" class="vfbtn" id="vgSubir"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M9 3 7.2 5H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9Zm3 5a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg><b>Tomar foto o subir la factura</b><span>Foto o PDF. Se guarda en Google Drive.</span></button>`
+    : '<div class="vfst">Este gasto no tiene factura.</div>';
+  const sb2 = $('#vgSubir') || $('#vgCambiar'); if (sb2) sb2.onclick = () => $('#vgFile').click();
+}
+$('#vgCat').addEventListener('click', e => { const b = e.target.closest('[data-vc]'); if (!b || !vEditable()) return; vgG.categoria = b.dataset.vc; vgPintar(); });
+['#vgMon','#vgMonto','#vgTasa'].forEach(id => $(id).addEventListener('input', vgPintar));
+$('#vgClose').onclick = () => $('#vgDlg').close();
+$('#vgFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const esPdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+  if (!esPdf && !/^image\//.test(f.type)) return toast('Sube una foto o un PDF de la factura');
+  let blob = f, mime = esPdf ? 'application/pdf' : (f.type || 'image/jpeg'), thumb = '';
+  if (!esPdf) { const r = await prepImage({ file: f, mime }); blob = r.blob; mime = r.mime;
+    try { const bmp = await createImageBitmap(blob), s2 = Math.min(1, 160 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas'); c.width = Math.round(bmp.width * s2); c.height = Math.round(bmp.height * s2); c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height); thumb = c.toDataURL('image/jpeg', 0.6); } catch (er) {} }
+  if (blob.size > 9.5 * 1024 * 1024) return toast('La factura pasa de 9,5 MB. Toma la foto de nuevo o reduce el PDF.');
+  vgG._pend = { blob, mime, thumb, esPdf, nombre: f.name }; vgPintar();
+});
+// Sube la factura pendiente a Drive con un nombre que ya lleva fecha, categoría y proveedor.
+async function vgSubir(){
+  const p = vgG._pend; if (!p) return true;
+  if (vt.nuevo || !vt.numero) { if (!(await vGuardar())) throw new Error('no se pudo guardar el reporte (revisa tu conexión)'); }
+  const limpio = x => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40);
+  const nombre = [vt.numero, vgG.fecha, limpio(vgG.categoria), limpio(vgG.proveedor)].filter(Boolean).join('_') + (p.esPdf ? '.pdf' : '.jpg');
+  const { data, error } = await sb.functions.invoke('subir-factura', { body: { data: await b64(p.blob), media_type: p.mime, nombre, numero: vt.numero, persona: vt.persona || me.nombre, fecha: vgG.fecha } });
+  if (error || !data || !data.url) { let det = data && data.error; try { if (!det && error && error.context) det = (await error.context.json()).error; } catch (er) {}
+    throw new Error(det === 'drive_no_configurado' ? 'Google Drive todavía no está conectado (ver la guía de facturas en Drive)' : det || (error && error.message) || 'sin respuesta'); }
+  vgG.archivo = { id: data.id, url: data.url, nombre: data.nombre || nombre, mime: p.mime, ...(p.thumb ? { thumb: p.thumb } : {}) };
+  delete vgG._pend; return true;
+}
+$('#vgOk').onclick = async () => {
+  const err = m => { $('#vgErr').textContent = m; $('#vgErr').hidden = false; };
+  if (vgSubiendo) return;
+  Object.assign(vgG, { fecha: $('#vgFecha').value, puesto: $('#vgPuesto').value === '' ? '' : +$('#vgPuesto').value, proveedor: $('#vgProv').value.trim(), rif: $('#vgRif').value.trim().toUpperCase(),
+    factura: $('#vgNum').value.trim(), descripcion: $('#vgDesc').value.trim(), moneda: $('#vgMon').value, monto: $('#vgMonto').value.trim(), tasa: $('#vgMon').value === 'Bs' ? $('#vgTasa').value.trim() : '' });
+  if (!vgG.fecha) return err('Pon la fecha del gasto.'); if (vgG.puesto === '') return err('Elige el puesto (o Proyecto general).');
+  if (!vgG.categoria) return err('Elige la categoría.'); if (vNum(vgG.monto) == null || vNum(vgG.monto) <= 0) return err('Escribe el monto.');
+  if (vgG.moneda === 'Bs' && !(vNum(vgG.tasa) > 0)) return err('Escribe la tasa del día para convertir a USD.');
+  vgG.monto = String(vNum(vgG.monto)); vgG.tasa = vgG.moneda === 'Bs' ? String(vNum(vgG.tasa)) : '';
+  vgG.usd = Math.round(vUsd(vgG.moneda, vgG.monto, vgG.tasa) * 100) / 100;
+  if (vgG._pend) { vgSubiendo = true; vgPintar(); $('#vgOk').disabled = true;
+    try { await vgSubir(); toast('Factura guardada en Google Drive'); }
+    catch (er) { vgSubiendo = false; $('#vgOk').disabled = false; vgPintar();
+      if (!confirm('No se pudo subir la factura a Drive: ' + er.message + '\n\n¿Guardar el gasto sin factura por ahora? (Luego puedes abrirlo y volver a subirla.)')) return;
+      delete vgG._pend; }
+    vgSubiendo = false; $('#vgOk').disabled = false; }
+  if (vgI >= 0) vt.datos.gastos[vgI] = vgG; else vt.datos.gastos.push(vgG);
+  vt.datos.gastos.sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
+  $('#vgDlg').close(); pintarVGastos(); pintarVTot(); vGuardar();
+};
+$('#vgDel').onclick = () => { if (!confirm('¿Quitar este gasto del reporte? (La factura queda en Drive.)')) return; vt.datos.gastos.splice(vgI, 1); $('#vgDlg').close(); pintarVGastos(); pintarVTot(); vGuardar(); };
+$('#vAddG').onclick = () => vgAbrir(-1);
+$('#vGastos').addEventListener('click', e => { if (e.target.closest('[data-nolink]')) return; const li = e.target.closest('[data-vg]'); if (li) vgAbrir(+li.dataset.vg); });
+// ---- Excel ----
+async function vXlsx(L, filtroTxt, boton){
+  if (!window.ExcelJS) return toast('No se pudo cargar el generador de Excel');
+  if (boton) boton.disabled = true;
+  try {
+    const wb = new ExcelJS.Workbook(); wb.creator = 'Rafmor · Viáticos';
+    const AMB = 'FFF2A900', SOFT = 'FFF4F5F2', GRIS = 'FFE3E6DF', ROJO = 'FFF7DEDB', fnt = (o = {}) => Object.assign({ name: 'Arial', size: 10 }, o);
+    const borde = { top: { style: 'thin', color: { argb: 'FFC9CCC5' } }, left: { style: 'thin', color: { argb: 'FFC9CCC5' } }, bottom: { style: 'thin', color: { argb: 'FFC9CCC5' } }, right: { style: 'thin', color: { argb: 'FFC9CCC5' } } };
+    const head = row => row.eachCell(c => { c.font = fnt({ bold: true }); c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: AMB } }; c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }; c.border = borde; });
+    const titulo = (ws, t, sub) => { ws.addRow([t]).font = fnt({ bold: true, size: 14 }); ws.addRow([sub]).font = fnt({ size: 9, color: { argb: 'FF5E6763' } }); ws.addRow([`Generado ${new Date().toLocaleString('es-VE')} · ${filtroTxt}`]).font = fnt({ size: 9, color: { argb: 'FF5E6763' } }); ws.addRow([]); };
+    const NUM = '#,##0.00;(#,##0.00);"–"', R0 = 5;
+    const res = wb.addWorksheet('Resumen'), rp = wb.addWorksheet('Reportes', { views: [{ state: 'frozen', xSplit: 2, ySplit: R0 }] }), gs = wb.addWorksheet('Gastos', { views: [{ state: 'frozen', xSplit: 3, ySplit: R0 }] });
+    // Gastos
+    titulo(gs, 'DETALLE DE GASTOS (FACTURAS)', 'Un renglón por factura. Monto USD = monto si es en USD, o monto ÷ tasa si es en Bs.');
+    head(gs.addRow(['N° reporte','Fecha','Persona','Puesto','CeCo','Categoría','Proveedor','RIF','N° factura','Descripción','Moneda','Monto','Tasa (Bs por USD)','Monto (USD)','Factura']));
+    gs.getRow(R0).height = 30;
+    const filasG = []; L.forEach(v => (v.datos.gastos || []).forEach(g => filasG.push({ v, g })));
+    filasG.sort((a, b) => a.v.numero.localeCompare(b.v.numero) || String(a.g.fecha).localeCompare(String(b.g.fecha)));
+    filasG.forEach(({ v, g }, i) => { const r = R0 + 1 + i, m = vNum(g.monto), t = vNum(g.tasa);
+      const row = gs.addRow([v.numero, g.fecha ? new Date(g.fecha + 'T12:00:00') : '', v.persona, vPuestoNom(g.puesto || 0), vCeco(g), g.categoria || '', g.proveedor || '', g.rif || '', g.factura || '', g.descripcion || '',
+        g.moneda || 'USD', m, g.moneda === 'Bs' ? t : null, { formula: `IF(K${r}="USD",L${r},IF(M${r}>0,L${r}/M${r},0))`, result: vUsd(g.moneda, g.monto, g.tasa) || 0 },
+        g.archivo && g.archivo.url ? { text: 'Ver factura', hyperlink: g.archivo.url } : 'Sin factura']);
+      row.eachCell({ includeEmpty: true }, (c, ci) => { c.font = fnt(); c.border = borde; c.alignment = { vertical: 'top', wrapText: [7, 10].includes(ci) }; });
+      row.getCell(2).numFmt = 'dd-mm-yyyy'; [12, 13, 14].forEach(ci => row.getCell(ci).numFmt = '#,##0.00');
+      const fc = row.getCell(15); if (g.archivo && g.archivo.url) fc.font = fnt({ color: { argb: 'FF0563C1' }, underline: true }); else { fc.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: ROJO } }; fc.font = fnt({ color: { argb: 'FFB3261E' }, bold: true }); } });
+    const gEnd = R0 + filasG.length, gTot = gs.addRow(['TOTAL', '', '', '', '', '', '', '', '', '', '', '', '', { formula: `SUM(N${R0 + 1}:N${Math.max(gEnd, R0 + 1)})`, result: filasG.reduce((a, x) => a + (vUsd(x.g.moneda, x.g.monto, x.g.tasa) || 0), 0) }, '']);
+    gTot.eachCell({ includeEmpty: true }, c => { c.font = fnt({ bold: true }); c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GRIS } }; c.border = borde; }); gTot.getCell(14).numFmt = '#,##0.00';
+    [11, 11, 16, 22, 24, 20, 26, 14, 11, 30, 8, 12, 11, 12, 12].forEach((w, i) => gs.getColumn(i + 1).width = w);
+    if (filasG.length) gs.autoFilter = { from: { row: R0, column: 1 }, to: { row: gEnd, column: 15 } };
+    // Reportes
+    titulo(rp, 'REPORTES DE VIÁTICOS', 'Un renglón por viaje. Gastado, saldo y facturas se calculan desde la hoja Gastos.');
+    head(rp.addRow(['N° reporte','Persona','Cargo','Desde','Hasta','Días','Puestos visitados','Motivo del viaje','Entregado (USD)','Gastado (USD)','Saldo (USD)','A favor de','Facturas','Gastos sin factura','Estado','Enviado el','Notas']));
+    rp.getRow(R0).height = 30;
+    const Ls = L.slice().sort((a, b) => a.numero.localeCompare(b.numero));
+    Ls.forEach((v, i) => { const r = R0 + 1 + i, d = v.datos, c = vCalc(d), G = `Gastos!$A$${R0 + 1}:$A$${Math.max(gEnd, R0 + 1)}`;
+      const row = rp.addRow([v.numero, v.persona, v.cargo || '', d.desde ? new Date(d.desde + 'T12:00:00') : '', d.hasta ? new Date(d.hasta + 'T12:00:00') : '',
+        { formula: `IF(AND(D${r}<>"",E${r}<>""),E${r}-D${r}+1,"")`, result: d.desde && d.hasta ? Math.round((new Date(d.hasta) - new Date(d.desde)) / 864e5) + 1 : '' },
+        (d.puestos || []).map(vPuestoNom).join(', '), d.motivo || '', c.ent,
+        { formula: `SUMIFS(Gastos!$N$${R0 + 1}:$N$${Math.max(gEnd, R0 + 1)},${G},A${r})`, result: c.gast },
+        { formula: `IF(I${r}="","",I${r}-J${r})`, result: c.saldo == null ? '' : c.saldo },
+        { formula: `IF(K${r}="","",IF(K${r}>0.004,"Empresa",IF(K${r}<-0.004,"Gerente","Cuadrado")))`, result: c.saldo == null ? '' : c.saldo > 0.004 ? 'Empresa' : c.saldo < -0.004 ? 'Gerente' : 'Cuadrado' },
+        { formula: `COUNTIFS(${G},A${r},Gastos!$O$${R0 + 1}:$O$${Math.max(gEnd, R0 + 1)},"Ver factura")`, result: c.fact },
+        { formula: `COUNTIFS(${G},A${r},Gastos!$O$${R0 + 1}:$O$${Math.max(gEnd, R0 + 1)},"Sin factura")`, result: c.sinF },
+        v.estado === 'enviado' ? 'Enviado' : 'Borrador', v.enviado ? new Date(v.enviado) : '', d.notas || '']);
+      row.eachCell({ includeEmpty: true }, (cl, ci) => { cl.font = fnt(); cl.border = borde; cl.alignment = { vertical: 'top', wrapText: [7, 8, 17].includes(ci) }; });
+      [4, 5, 16].forEach(ci => row.getCell(ci).numFmt = 'dd-mm-yyyy'); [9, 10, 11].forEach(ci => row.getCell(ci).numFmt = NUM);
+      if (c.sinF) row.getCell(14).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: ROJO } }; });
+    const rEnd = R0 + Ls.length, sumF = col => ({ formula: `SUM(${col}${R0 + 1}:${col}${Math.max(rEnd, R0 + 1)})` });
+    const tots = Ls.reduce((a, v) => { const c = vCalc(v.datos); a.e += c.ent || 0; a.g += c.gast; a.s += c.saldo || 0; a.f += c.fact; a.n += c.sinF; return a; }, { e: 0, g: 0, s: 0, f: 0, n: 0 });
+    const rTot = rp.addRow(['TOTAL', '', '', '', '', '', '', '', { ...sumF('I'), result: tots.e }, { ...sumF('J'), result: tots.g }, { ...sumF('K'), result: tots.s }, '', { ...sumF('M'), result: tots.f }, { ...sumF('N'), result: tots.n }, '', '', '']);
+    rTot.eachCell({ includeEmpty: true }, c => { c.font = fnt({ bold: true }); c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GRIS } }; c.border = borde; }); [9, 10, 11].forEach(ci => rTot.getCell(ci).numFmt = NUM);
+    [11, 18, 20, 11, 11, 6, 30, 34, 13, 12, 12, 10, 9, 10, 10, 11, 30].forEach((w, i) => rp.getColumn(i + 1).width = w);
+    if (Ls.length) rp.autoFilter = { from: { row: R0, column: 1 }, to: { row: rEnd, column: 17 } };
+    // Resumen
+    titulo(res, 'RESUMEN DE VIÁTICOS · Rafmor, 13 B.P.F del Zulia', 'Totales en USD. Las fórmulas leen las hojas Reportes y Gastos.');
+    const rT = rTot.number, GR = `Gastos!$N$${R0 + 1}:$N$${Math.max(gEnd, R0 + 1)}`, GP = `Gastos!$C$${R0 + 1}:$C$${Math.max(gEnd, R0 + 1)}`, GC = `Gastos!$F$${R0 + 1}:$F$${Math.max(gEnd, R0 + 1)}`, GPU = `Gastos!$D$${R0 + 1}:$D$${Math.max(gEnd, R0 + 1)}`;
+    const kp = [['Reportes', { formula: `COUNTA(Reportes!A${R0 + 1}:A${Math.max(rEnd, R0 + 1)})`, result: Ls.length }, '0'], ['Facturas', { formula: `Reportes!M${rT}`, result: tots.f }, '0'], ['Gastos sin factura', { formula: `Reportes!N${rT}`, result: tots.n }, '0'],
+      ['Entregado (USD)', { formula: `Reportes!I${rT}`, result: tots.e }, '#,##0.00'], ['Gastado (USD)', { formula: `Reportes!J${rT}`, result: tots.g }, '#,##0.00'], ['Saldo (USD)', { formula: `Reportes!K${rT}`, result: tots.s }, NUM]];
+    const k1 = res.addRow(kp.flatMap(k => [k[0], ''])), k2 = res.addRow(kp.flatMap(k => [k[1], '']));
+    kp.forEach((k, i) => { const c = 1 + i * 2; res.mergeCells(k1.number, c, k1.number, c + 1); res.mergeCells(k2.number, c, k2.number, c + 1);
+      const a = k1.getCell(c), b = k2.getCell(c); a.font = fnt({ size: 9, color: { argb: 'FF5E6763' } }); b.font = fnt({ bold: true, size: 14 }); b.numFmt = k[2];
+      [a, b].forEach(x => { x.alignment = { horizontal: 'center' }; x.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: SOFT } }; }); });
+    res.addRow([]); res.addRow(['GASTADO POR PERSONA Y CATEGORÍA (USD)']).font = fnt({ bold: true, size: 11 });
+    const hP = res.addRow(['Persona', ...V_CATS, 'TOTAL']); head(hP);
+    const pers = [...new Set(Ls.map(v => v.persona))], hr = hP.number;
+    const val = (fP, fC) => filasG.filter(x => (!fP || x.v.persona === fP) && (!fC || x.g.categoria === fC)).reduce((a, x) => a + (vUsd(x.g.moneda, x.g.monto, x.g.tasa) || 0), 0);
+    const L2 = n => String.fromCharCode(64 + n);
+    pers.forEach((pn, k) => { const r = hr + 1 + k;
+      const row = res.addRow([pn, ...V_CATS.map((c, j) => ({ formula: `SUMIFS(${GR},${GP},$A${r},${GC},${L2(2 + j)}$${hr})`, result: val(pn, c) })), { formula: `SUM(B${r}:${L2(1 + V_CATS.length)}${r})`, result: V_CATS.reduce((a, c) => a + val(pn, c), 0) }]);
+      row.eachCell({ includeEmpty: true }, (c, ci) => { c.border = borde; c.font = fnt({ bold: ci === V_CATS.length + 2 }); if (ci > 1) c.numFmt = NUM; }); });
+    const pT = res.addRow(['TOTAL', ...V_CATS.map((c, j) => ({ formula: `SUM(${L2(2 + j)}${hr + 1}:${L2(2 + j)}${Math.max(hr + pers.length, hr + 1)})`, result: val(null, c) })), { formula: `SUM(${L2(2 + V_CATS.length)}${hr + 1}:${L2(2 + V_CATS.length)}${Math.max(hr + pers.length, hr + 1)})`, result: V_CATS.reduce((a, c) => a + val(null, c), 0) }]);
+    pT.eachCell({ includeEmpty: true }, (c, ci) => { c.border = borde; c.font = fnt({ bold: true }); c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GRIS } }; if (ci > 1) c.numFmt = NUM; });
+    res.addRow([]); res.addRow(['GASTADO POR PUESTO (USD)']).font = fnt({ bold: true, size: 11 });
+    const hU = res.addRow(['Puesto', 'Gastado (USD)', '% del total']); head(hU);
+    const PU = CECOS.bases.map(b => b.nombre).concat(['Proyecto general']), tg = val(), hu = hU.number;
+    PU.forEach((pn, k) => { const r = hu + 1 + k, vv = filasG.filter(x => vPuestoNom(x.g.puesto || 0) === pn).reduce((a, x) => a + (vUsd(x.g.moneda, x.g.monto, x.g.tasa) || 0), 0);
+      const row = res.addRow([pn, { formula: `SUMIFS(${GR},${GPU},A${r})`, result: vv }, { formula: `IF($B$${hu + PU.length + 1}>0,B${r}/$B$${hu + PU.length + 1},0)`, result: tg ? vv / tg : 0 }]);
+      row.eachCell({ includeEmpty: true }, (c, ci) => { c.border = borde; c.font = fnt(); if (ci === 2) c.numFmt = NUM; if (ci === 3) c.numFmt = '0.0%;-0.0%;"–"'; }); });
+    const uT = res.addRow(['TOTAL', { formula: `SUM(B${hu + 1}:B${hu + PU.length})`, result: tg }, { formula: `SUM(C${hu + 1}:C${hu + PU.length})`, result: tg ? 1 : 0 }]);
+    uT.eachCell(c => { c.border = borde; c.font = fnt({ bold: true }); c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GRIS } }; }); uT.getCell(2).numFmt = NUM; uT.getCell(3).numFmt = '0.0%;-0.0%;"–"';
+    res.getColumn(1).width = 26; for (let c = 2; c <= 9; c++) res.getColumn(c).width = 15;
+    [res, rp, gs].forEach(ws => { ws.pageSetup = { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 }; });
+    const buf = await wb.xlsx.writeBuffer();
+    const r = await deliver({ name: `Viaticos_${today()}.xlsx`, blob: new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }) });
+    if (r === 'declined') toast('Descarga cancelada');
+  } catch (e) { toast('No se pudo generar el Excel'); console.error(e); } finally { if (boton) boton.disabled = false; }
+}
+$('#vtXlsx').onclick = () => { const d1 = $('#vtDesde').value, d2 = $('#vtHasta').value, pe = $('#vtPersona'), pu = $('#vtPuesto');
+  const f = [d1 || d2 ? `Período: ${d1 ? fmt(d1) : 'inicio'} al ${d2 ? fmt(d2) : 'hoy'}` : 'Todo el período', pe.value ? pe.options[pe.selectedIndex].text : 'Todas las personas', pu.value !== '' ? pu.options[pu.selectedIndex].text : 'Todos los puestos'].join(' · ');
+  vXlsx(vtFiltrados(), f, $('#vtXlsx')); };
+$('#vmXlsx').onclick = () => vXlsx(vtLista.filter(v => (v.datos.gastos || []).length), `Reportes de ${me.nombre}`, $('#vmXlsx'));
+function abrirViatico(numero){ setMod('via', veViaticos() ? 'vtodos' : 'vmis'); setTimeout(() => { const v = vtTodos.concat(vtLista).find(x => x.numero === numero); if (v) vAbrir(v, veViaticos() ? 'vtodos' : 'vmis'); }, 900); }
+
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.26.0';
+const APP_VERSION = '4.27.0';
 const NOVEDADES = [
+  { v: '4.27.0', fecha: '2026-10-05', titulo: 'Viáticos', items: [
+    { r: ['gerente_operaciones','gerente_general','master'], t: 'Nuevo módulo Viáticos: reporta en qué gastaste el viático de cada viaje. Pones fechas, puestos visitados, motivo y lo que te entregaron, y agregas cada gasto con la foto o el PDF de su factura, que se guarda en Google Drive. La app calcula el total en USD (convierte los Bs con la tasa del día) y el saldo.' },
+    { r: ['gerente_general','costos','master'], t: 'En Viáticos → Todos ves los reportes enviados por las Gerencias, filtras por período, persona y puesto, y descargas el Excel con el resumen, los reportes y cada gasto con el enlace a su factura.' }
+  ] },
   { v: '4.26.0', fecha: '2026-10-05', titulo: 'Presupuestos de obra a requisición', items: [
     { r: ['contratista','logistica','costos','gerente_general','gerente_operaciones','master'], t: 'Ahora "Cargar PDF o foto de la requisición" también lee presupuestos de obra de proveedores (Partida, Descripción, Unidad, Cantidad, P.U. y Total). Cada partida queda con su precio unitario y su total, la app revisa que la suma cuadre con el total del presupuesto, sugiere el tipo de gasto Servicios y pone en las notas el proveedor, el objeto, la obra, el total y las condiciones de pago.' },
     { r: ['gerente_operaciones','gerente_general','compras','costos','master'], t: 'En el detalle de una requisición que viene de un presupuesto verás el total según el presupuesto y, debajo de cada partida, su precio unitario y su total.' }
@@ -3935,6 +4328,7 @@ function abrirDestino(d){
   if (d === 'recordatorio') { if (canReport()) setMod('rep', 'rnuevo'); return; }
   if (d === 'accion:push') { abrirAjuste('pushBlock'); return; }
   if (d.startsWith('tarea:')) { if (canTareas()) { setMod('tar', 'tar'); abrirTarea(null, d.slice(6)); } return; }
+  if (d.startsWith('viatico:')) { if (canViaticos() || veViaticos()) abrirViatico(d.slice(8)); return; }
   if (d.startsWith('rep:')) { setMod('rep', soloSemanal() ? 'rsem' : 'rarch'); openReport(d.slice(4)); return; }
   openDetail(d);
 }
@@ -4959,7 +5353,8 @@ function syncNewRep(t){ t = t || activeTab(); $('#newRepBar').hidden = !(me && c
 function showTab(t){
   if (t === 'rnuevo') { const a = activeTab(), ab = a && document.querySelector(`#mainTabs [data-tab="${a}"]`); repDesde = ab && ab.dataset.mod === 'rep' && tabAllowed(a) ? a : 'rarch'; }
   if (t !== 'rpf' && !$('#memEd').hidden && mem) { memGuardar(); cerrarMemEd(); }
-  const sel = t === 'rnuevo' ? repDesde : t;
+  if (t !== 'vedit' && vt && vEditable()) { vLeerForm(); vGuardar(); vt = null; }
+  const sel = t === 'rnuevo' ? repDesde : t === 'vedit' ? vtDesdeTab : t;
   $$('#mainTabs button').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === sel));
   $$('#mainView section.panel').forEach(p => p.classList.toggle('on', p.id === 'p-'+t));
   $('#dock').hidden = t !== 'nueva'; $('#dockRep').hidden = t !== 'rnuevo'; $('#dockLog').hidden = t !== 'rlog';
@@ -4972,6 +5367,9 @@ function showTab(t){
   if (t === 'rlogl') loadLgl();
   if (t === 'tar') loadTareas();
   if (t === 'dot') loadDot();
+  if (t === 'vmis') loadVMis();
+  if (t === 'vtodos') loadVTodos();
+  if (t === 'vedit') pintarVEdit();
   if (t === 'rsem') loadWeek();
   if (t === 'verif') loadVerif();
   if (t === 'aprob') loadAprob();
@@ -4991,6 +5389,8 @@ function tabAllowed(t){
   if (t === 'rlog') return esLogistica();
   if (t === 'rlogl') return esLogistica() || veLogistica();
   if (t === 'tar') return canTareas();
+  if (t === 'vmis' || t === 'vedit') return canViaticos() || (t === 'vedit' && veViaticos());
+  if (t === 'vtodos') return veViaticos();
   return true;
 }
 function applyTabVisibility(){ $$('#mainTabs button').forEach(b => { b.hidden = !((b.dataset.mod === curMod || b.dataset.mod === 'both') && tabAllowed(b.dataset.tab)); }); }
