@@ -605,6 +605,12 @@ nav.tabs button{flex:0 0 auto}
 #dtxPu button{border-radius:10px;text-align:left;padding:6px 10px;line-height:1.15;font-size:13.5px}
 #dtxPu button i{display:block;margin:2px 0 0}
 .dtxres{margin:14px 0 10px;padding:10px 12px;border-radius:10px;background:var(--sunk);font-size:14.5px;line-height:1.4}
+/* v4.24.0: listas de materiales por capítulo, materiales agrupados */
+.mdet{font-size:12.5px;line-height:1.35;color:var(--muted);border-left:2px solid var(--rule);padding-left:7px;margin:3px 0}
+.wzag{display:block;margin:6px 0;padding:8px 10px;border-radius:8px;background:var(--green-soft);color:var(--ink)}
+.wzrep{margin:6px 0 0;font-size:13.5px}.wzrep summary{cursor:pointer;font-weight:600;padding:4px 0}
+.wzrep ul{list-style:none;margin:4px 0 0;padding:0;max-height:240px;overflow-y:auto}
+.wzrep li{padding:6px 0;border-bottom:1px solid var(--rule);display:grid;gap:2px}.wzrep li span{color:var(--muted);font-size:12.5px}
 </style>
 </head>
 <body>
@@ -1751,7 +1757,7 @@ function renderItems(){
     if (it.espec==='si') tags.push('<span class="tag">Con especificación</span>');
     if (draft.general ? !it.tipo : !it.ceco) tags.push(`<span class="tag bad">${draft.general ? 'Falta tipo de gasto' : 'Falta puesto o tipo de gasto'}</span>`);
     li.innerHTML = `<div class="num">${i+1}</div>
-      <div role="button" tabindex="0" data-edit="${i}" style="cursor:pointer"><div class="qty">${esc(it.cant)} ${esc(it.und)}</div><div class="d">${esc(it.desc)}</div>${meta?`<div class="m">${esc(meta)}</div>`:''}${it.ceco?`<div class="m" style="font-weight:600;color:var(--green)">${esc(it.ceco)}</div>`:''}${tags.length?`<div class="tags">${tags.join('')}</div>`:''}</div>
+      <div role="button" tabindex="0" data-edit="${i}" style="cursor:pointer"><div class="qty">${esc(it.cant)} ${esc(it.und)}</div><div class="d">${esc(it.desc)}</div>${it.det?`<div class="m mdet">${esc(it.det)}</div>`:''}${meta?`<div class="m">${esc(meta)}</div>`:''}${it.ceco?`<div class="m" style="font-weight:600;color:var(--green)">${esc(it.ceco)}</div>`:''}${tags.length?`<div class="tags">${tags.join('')}</div>`:''}</div>
       <div class="ia"><button data-edit="${i}" aria-label="Editar material ${i+1}">Editar</button><button data-dup="${i}" aria-label="Copiar material ${i+1}">Copiar</button></div>`;
     ul.appendChild(li);
   });
@@ -2001,10 +2007,18 @@ function resolverCeco(it){
   return { base, tipo };
 }
 function aplicarLectura(r, modo){
-  const items = (r.items || []).slice(0, MAX).map(it => { const { base, tipo } = resolverCeco(it);
+  let items = (r.items || []).slice(0, MAX).map(it => { const { base, tipo } = resolverCeco(it);
     return { desc: String(it.desc || '').trim(), cant: String(it.cant || '').trim(), und: String(it.und || '').trim().toLowerCase(), equipo: String(it.equipo || '').trim(),
       locacion: String(it.locacion || '').trim() || (base ? baseName(base) : ''), base: base || '', tipo: tipo || '', ceco: base && tipo ? cecoFor(base, tipo) : '',
       espec: ['si','no'].includes(it.espec) ? it.espec : '', stock: ['si','no','com'].includes(it.stock) ? it.stock : '' }; });
+  // v4.24.0: materiales repetidos (misma descripción, unidad y CeCo) se agrupan sumando la cantidad.
+  const gm = new Map(); let unidos = 0; const agr = [];
+  items.forEach((it, i) => { const num = parseFloat(it.cant.replace(',', '.')), ok = it.cant !== '' && !isNaN(num);
+    const key = [_norm(it.desc).replace(/[^A-Z0-9]/g, ''), _norm(it.und).replace(/[^A-Z0-9]/g, ''), it.base, it.tipo, _norm(it.locacion)].join('|');
+    const g = ok ? gm.get(key) : null;
+    if (g) { g._t += num; g._p.push(`Renglón ${i + 1}: ${it.cant}`); unidos++; return; }
+    const ng = Object.assign({}, it, { _t: ok ? num : null, _p: [`Renglón ${i + 1}: ${it.cant}`] }); if (ok) gm.set(key, ng); agr.push(ng); });
+  items = agr.map(g => { const { _t, _p, ...it } = g; if (_p.length > 1) { it.cant = fmtCant(_t); it.det = _p.join(' · '); } return it; });
   if (items.length) draft.items = items;
   if (r.area) draft.area = r.area; if (r.coordinacion) draft.coordinacion = r.coordinacion;
   if (r.fechaSolicitud && r.fechaSolicitud <= today()) draft.fechaSolicitud = r.fechaSolicitud;
@@ -2012,7 +2026,7 @@ function aplicarLectura(r, modo){
   if (r.notas) draft.notas = r.notas;
   saveDraft(); fillForm();
   const sinCeco = items.filter(i => !i.ceco).length;
-  return { n: items.length, sinCeco };
+  return { n: items.length, sinCeco, unidos };
 }
 function renderAdjunto(){
   const a = draft.adjunto;
@@ -2058,7 +2072,7 @@ $('#pdfFile').addEventListener('change', async e => {
   await subirAdjunto(file, r ? modo : 'manual');
   if (r) {
     const x = aplicarLectura(r, modo);
-    $('#pdfState').insertAdjacentHTML('beforeend', `<div class="histsum ${x.sinCeco ? '' : 'ok'}" style="margin-bottom:0"><b>Leí ${x.n} material${x.n === 1 ? '' : 'es'}${r.area ? ', el área' : ''}${r.fechaSolicitud ? ' y las fechas' : ''}.</b>
+    $('#pdfState').insertAdjacentHTML('beforeend', `<div class="histsum ${x.sinCeco ? '' : 'ok'}" style="margin-bottom:0"><b>Leí ${x.n} material${x.n === 1 ? '' : 'es'}${r.area ? ', el área' : ''}${r.fechaSolicitud ? ' y las fechas' : ''}.</b>${x.unidos ? `<span>Agrupé ${x.unidos} renglón${x.unidos === 1 ? '' : 'es'} repetido${x.unidos === 1 ? '' : 's'} sumando sus cantidades; el desglose queda en cada material.</span>` : ''}
       <span>Revisa todo antes de enviar${x.sinCeco ? `. ${x.sinCeco} material${x.sinCeco === 1 ? '' : 'es'} no trae${x.sinCeco === 1 ? '' : 'n'} puesto o tipo de gasto: tócalo${x.sinCeco === 1 ? '' : 's'} para completarlo${x.sinCeco === 1 ? '' : 's'}` : ''}.</span>
       ${modo === 'ia' && r.confianza ? `<span>Lectura con IA, confianza ${esc(r.confianza)}.${nota ? ' ' + esc(nota) : ''}</span>` : ''}</div>`);
     toast('Formulario llenado desde el documento');
@@ -2066,29 +2080,43 @@ $('#pdfFile').addEventListener('change', async e => {
     $('#pdfState').insertAdjacentHTML('beforeend', `<div class="drvwarn" style="margin:10px 0 0">No pude leer los datos automáticamente${nota ? ': ' + esc(nota) : '.'} El documento quedó adjunto; llena el formulario a mano.</div>`);
   }
 });
-// Lector de "Solicitud de materiales" (Item · Descripción · Und · Cantidad), varias páginas.
+// Lector de "Solicitud de materiales" (Item · Descripción · Und · Cantidad) y, desde v4.24.0, de "Lista de materiales"
+// por capítulos (Nº · Descripción · Unidad · Cantidad, p. ej. Romveca), varias páginas.
 const _norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
 const UND_MAP = { UND:'und', UNID:'und', UNIDAD:'und', UNIDADES:'und', ROLLO:'rollo', ROLLOS:'rollo', KG:'kg', KGS:'kg', CUNETE:'cuñete', CUNETES:'cuñete', PARES:'par', PAR:'par',
   M2:'m²', 'M²':'m²', M:'m', ML:'m', M3:'m³', 'M³':'m³', SACOS:'sco', SACO:'sco', SCO:'sco', GALON:'gal', GALONES:'gal', GAL:'gal', VIAJE:'viaje', VIAJES:'viaje', PLIEGO:'pliego', PLIEGOS:'pliego',
-  L:'l', LT:'l', LTS:'l', LITROS:'l', JGO:'jgo', JUEGO:'jgo', PZA:'pza', PIEZA:'pza', CAJA:'caja', CAJAS:'caja', TUBO:'tubo', BOLSA:'bolsa', BOLSAS:'bolsa', LAMINA:'lámina', LAMINAS:'lámina' };
+  GLN:'gal', GLNS:'gal', L:'l', LT:'l', LTS:'l', LITROS:'l', JGO:'jgo', JUEGO:'jgo', PZA:'pza', PIEZA:'pza', CAJA:'caja', CAJAS:'caja', TUBO:'tubo', BOLSA:'bolsa', BOLSAS:'bolsa', LAMINA:'lámina', LAMINAS:'lámina' };
 const parseNum = s => { const t = String(s || '').trim(); if (!t) return ''; const n = t.includes(',') ? parseFloat(t.replace(/\./g, '').replace(',', '.')) : parseFloat(t);
   return isNaN(n) ? t : String(Math.round(n * 1000) / 1000); };
 function parseSolicitud(T){
   const N = t => _norm(t.s), cx = t => t.x + t.w / 2;
   // quitar duplicados exactos (algunos PDF repiten cada texto)
   const seen = new Set(); T = T.filter(t => { const k = t.p + '|' + Math.round(t.x) + '|' + Math.round(t.y) + '|' + t.s; if (seen.has(k)) return false; seen.add(k); return true; });
-  const out = { items: [], titulos: [], notas: '', fecha: '', sol: '', paginas: 0 };
+  const out = { items: [], titulos: [], notas: '', fecha: '', sol: '', paginas: 0, lista: false, proyecto: '', fase: '', solicitante: '', capitulos: 0 };
+  let capPrev = '';
   const pages = [...new Set(T.map(t => t.p))].sort((a, b) => a - b);
   for (const pg of pages) {
     const P = T.filter(t => t.p === pg);
-    const hItem = P.find(t => N(t) === 'ITEM' || N(t) === 'RENG'), hDesc = P.find(t => N(t).startsWith('DESCRIPCION'));
+    const hDesc = P.find(t => N(t).startsWith('DESCRIPCION'));
+    const hItem = hDesc && P.find(t => /^(ITEM|RENG|N|NO|N[°º]|NRO\.?)$/.test(N(t)) && Math.abs(t.y - hDesc.y) <= 4 && t.x < hDesc.x);
     const hUnd = P.find(t => /^(UND|UNIDAD|UNID)\.?$/.test(N(t))), hCant = P.find(t => /^CANT(IDAD|\.)?$/.test(N(t)));
     if (!hItem || !hDesc || !hUnd || !hCant || Math.abs(hItem.y - hDesc.y) > 4) continue;
     out.paginas++;
-    const f = P.find(t => /^FECHA\b/.test(N(t))); if (f && !out.fecha) { const m = N(f).match(/(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/); if (m) out.fecha = `${m[3].length === 2 ? '20' + m[3] : m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`; }
+    const derecha = t => P.filter(o => o !== t && Math.abs(o.y - t.y) < 4 && o.x > t.x).sort((a, b) => a.x - b.x)[0];
+    const f = P.find(t => /^FECHA\b/.test(N(t))); if (f && !out.fecha) { const fd = derecha(f); const m = (N(f) + ' ' + (fd ? N(fd) : '')).match(/(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/); if (m) out.fecha = `${m[3].length === 2 ? '20' + m[3] : m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`; }
     const so = P.find(t => /^SOL(ICITUD)?\.?\s*(N[°º]?\s*)?\d+$/.test(N(t))); if (so && !out.sol) out.sol = (N(so).match(/(\d+)$/) || [])[1] || '';
+    if (P.some(t => /^LISTA DE MATERIALES$/.test(N(t)))) out.lista = true;
+    const mo = P.find(t => /^M\.?\s?O\.?[-\s]/.test(N(t))); if (mo && !out.sol) { const md = derecha(mo); out.sol = (mo.s + (md && /^\d+$/.test(md.s.trim()) ? md.s.trim() : '')).replace(/\s+/g, ''); }
+    const pr = P.find(t => /^PROYECTO:?$/.test(N(t))); if (pr && !out.proyecto) { const pd = derecha(pr); if (pd) out.proyecto = pd.s.trim(); }
+    const fa = P.find(t => /^FASE\s*#?\s*\d+/.test(N(t))); if (fa && !out.fase) out.fase = fa.s.trim();
     const yH = hItem.y, undC = cx(hUnd), cantX = hCant.x;
-    const body = P.filter(t => t.y < yH - 3 && !/^SOLICITUD DE MATERIALES$/.test(N(t)));
+    const abajo = /^(N|NO|N[°º]|NRO\.?)$/.test(N(hItem)) || P.some(t => /^LISTA DE MATERIALES$/.test(N(t)));
+    // Capítulos ("CAPITULO #5 BOHIO") y pie ("Solicitado por: …") no son materiales.
+    const esCap = t => /^CAP[IÍ]TULO\b/.test(N(t)), esPie = t => /^(SOLICITADO|ELABORADO|REVISADO|APROBADO) POR\b/.test(N(t));
+    const caps = P.filter(t => t.y < yH - 3 && esCap(t)).map(t => ({ y: t.y, s: t.s.trim() })).sort((a, b) => b.y - a.y);
+    out.capitulos += caps.length;
+    P.filter(esPie).forEach(t => { const v = t.s.replace(/^[^:]*:\s*/, '').trim(); if (/^SOLICITADO/.test(N(t)) && v && !out.solicitante) out.solicitante = v; });
+    const body = P.filter(t => t.y < yH - 3 && !/^(SOLICITUD|LISTA) DE MATERIALES$/.test(N(t)) && !esCap(t) && !esPie(t));
     const obs = body.find(t => /^OBSERVACION/.test(N(t)));
     const yObs = obs ? obs.y : -1e9;
     const tabla = body.filter(t => t.y > yObs + 2);
@@ -2101,18 +2129,24 @@ function parseSolicitud(T){
     tabla.forEach(t => {
       if (anclas.includes(t)) return;
       const esCant = /^[\d.]+(,\d+)?$/.test(t.s.trim()) && t.x >= cantX - 25;
-      const esUnd = !esCant && Math.abs(cx(t) - undC) < 40 && t.s.trim().length <= 10;
+      const esUnd = !esCant && Math.abs(cx(t) - undC) < 40 && t.s.trim().length <= 16;
       if (!esCant && !esUnd && t.y > primera + 6) { out.titulos.push(t.s.trim()); return; }
       if (!filas.length) return;
       let best = null, bd = 1e9; filas.forEach(fl => { const d = Math.abs(fl.y - t.y) - (fl.y >= t.y ? 0.01 : 0); if (d < bd) { bd = d; best = fl; } });
+      // Listas exportadas de Excel (encabezado "Nº"): el número va en la última línea de una descripción larga,
+      // así que una línea suelta de descripción pertenece a la fila de abajo.
+      if (abajo && !esCant && !esUnd && bd >= 3) { const deb = filas.filter(fl => fl.y < t.y - 3 && t.y - fl.y <= 32).sort((a, b) => b.y - a.y)[0]; if (deb) { best = deb; bd = t.y - deb.y; } }
       if (bd > 24) return;
       (esCant ? best.cant : esUnd ? best.und : best.desc).push(t);
     });
     filas.forEach(fl => {
       const ord = L => L.sort((a, b) => b.y - a.y || a.x - b.x).map(t => t.s.trim()).join(' ').replace(/\s+/g, ' ').trim();
       const und = ord(fl.und), cant = ord(fl.cant);
-      out.items.push({ n: fl.n, desc: ord(fl.desc), und: UND_MAP[_norm(und).replace(/[.\s]/g, '')] || und.toLowerCase(), undOrig: und, cant: parseNum(cant) });
+      const cap = caps.filter(c => c.y > fl.y).pop();   // el capítulo más cercano por encima de la fila
+      const capS = cap ? cap.s : capPrev;
+      out.items.push({ n: fl.n, desc: ord(fl.desc), und: UND_MAP[_norm(und).replace(/[.\s]/g, '')] || und.toLowerCase(), undOrig: und, cant: parseNum(cant), cap: capS });
     });
+    if (caps.length) capPrev = caps[caps.length - 1].s; else if (out.items.length) capPrev = out.items[out.items.length - 1].cap || capPrev;
     if (obs) out.notas = [out.notas, P.filter(t => t.y <= obs.y + 1 && t.y > 30 && !/^SOLICITUD DE MATERIALES$/.test(N(t))).sort((a, b) => b.y - a.y || a.x - b.x).map(t => t.s.trim()).join(' ')].filter(Boolean).join(' ').trim();
   }
   out.items.sort((a, b) => a.n - b.n);
@@ -2121,14 +2155,50 @@ function parseSolicitud(T){
 }
 
 
+/* Agrupa materiales repetidos (misma descripción y unidad) y suma sus cantidades (v4.24.0).
+   Deja en "det" de dónde sale cada cantidad (capítulo o renglón) para que Compras vea el desglose. */
+const capCorto = c => { const m = String(c || '').match(/^CAP[IÍ]TULO\s*#?\s*(\d+)\s*(.*)$/i); if (!m) return String(c || '').trim();
+  const r = m[2].toLowerCase().replace(/\s+/g, ' ').trim(); return `Cap. ${m[1]}${r ? ' ' + r.charAt(0).toUpperCase() + r.slice(1) : ''}`; };
+const fmtCant = n => String(Math.round(n * 1000) / 1000);
+function agruparMateriales(items){
+  const map = new Map(), out = []; let unidos = 0;
+  items.forEach(it => {
+    const num = parseFloat(String(it.cant).replace(',', '.')), okNum = String(it.cant).trim() !== '' && !isNaN(num);
+    const key = _norm(it.desc).replace(/[^A-Z0-9]/g, '') + '|' + _norm(it.und).replace(/[^A-Z0-9]/g, '');
+    const parte = { cap: it.cap || '', n: it.n, cant: it.cant };
+    const g = okNum && key.length > 2 ? map.get(key) : null;
+    if (g) { g.total += num; g.partes.push(parte); g.renglones.push(it.n); unidos++; return; }
+    const ng = { desc: it.desc, und: it.und, cant: it.cant, total: okNum ? num : null, partes: [parte], renglones: [it.n] };
+    if (okNum && key.length > 2) map.set(key, ng); out.push(ng);
+  });
+  return { unidos, items: out.map(g => {
+    const multi = g.partes.length > 1, conCap = g.partes.some(p => p.cap);
+    const det = multi ? g.partes.map(p => `${p.cap ? capCorto(p.cap) : 'Renglón ' + p.n}: ${p.cant}`).join(' · ') : (conCap ? capCorto(g.partes[0].cap) : '');
+    return { desc: g.desc, und: g.und, cant: g.total != null ? fmtCant(g.total) : g.cant, det, veces: g.partes.length, renglones: g.renglones };
+  }) };
+}
+// Coincidencia aproximada de la base (p. ej. "Duluvio" por "Diluvio"): una letra de diferencia en palabras largas.
+function matchBaseAprox(texto){
+  const dist = (a, b) => { if (Math.abs(a.length - b.length) > 1) return 9; const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+    for (let j = 1; j <= b.length; j++) d[0][j] = j;
+    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+    return d[a.length][b.length]; };
+  const words = _norm(texto).split(/[^A-Z0-9]+/).filter(w => w.length >= 5);
+  const hits = CECOS.bases.filter(b => { const bw = _norm(b.nombre.replace(/^B\.?P\.?F\.?\s*/i, '')).split(/[^A-Z0-9]+/).filter(w => w.length >= 5);
+    return bw.length && bw.every(x => words.some(w => dist(w, x) <= 1)); });
+  return hits.length === 1 ? hits[0].n : null;
+}
+
 /* Asistente: completa lo que la solicitud del contratista no trae (locación, CeCo, faltantes y firma) */
 let wz = null;
 function abrirAsistente(sol, nombreArchivo){
-  const texto = [...sol.titulos, nombreArchivo.replace(/[_-]+/g, ' ')].join(' ');
-  let base = null; for (const t of sol.titulos) { base = matchBase(t); if (base) break; }
+  const texto = [...sol.titulos, sol.proyecto, sol.sol, nombreArchivo.replace(/[_-]+/g, ' ')].filter(Boolean).join(' ');
+  let base = null; for (const t of [...sol.titulos, sol.proyecto].filter(Boolean)) { base = matchBase(t); if (base) break; }
   if (!base) base = matchBase(texto.replace(/\bEL MEDI\b/i, 'DEL MEDIO'));
+  if (!base) base = matchBaseAprox(texto);
+  const ag = agruparMateriales(sol.items); sol.renglones = sol.items.length; sol.unidos = ag.unidos;
   wz = { sol, base: base || '', baseDetectada: base, tipo: '', prioridad: draft.prioridad || '', varias: false, area: draft.area || me.area || '', coordinacion: draft.coordinacion || me.coordinacion || '', fechaReq: draft.fechaRequerida || '',
-    items: sol.items.map(it => ({ desc: it.desc, cant: it.cant, und: it.und })) };
+    items: ag.items.map(it => ({ desc: it.desc, cant: it.cant, und: it.und, det: it.det, veces: it.veces })) };
   wzSig = draft.firma || null;
   pintarAsistente(); $('#wzDlg').showModal(); requestAnimationFrame(() => { if (!draft.firma) wzPad().load(); });
   $('#pdfState').insertAdjacentHTML('beforeend', '<button class="btn block100" id="wzReabrir" style="margin-top:10px">Completar datos de la solicitud</button>');
@@ -2136,7 +2206,11 @@ function abrirAsistente(sol, nombreArchivo){
 }
 function pintarAsistente(){
   const s = wz.sol, falt = wz.items.map((it, i) => [it, i]).filter(([it]) => !it.cant || !it.und || !it.desc);
-  $('#wzResumen').innerHTML = `<b>Leí ${s.items.length} material${s.items.length === 1 ? '' : 'es'}${s.sol ? ` de la solicitud N° ${esc(s.sol)}` : ''}${s.fecha ? ` del ${fmt(s.fecha)}` : ''}</b><span>${s.paginas} página${s.paginas === 1 ? '' : 's'} en el PDF · la requisición saldrá en ${Math.ceil(s.items.length / 13)} hoja${s.items.length > 13 ? 's' : ''} del formato.${s.titulos.length ? ' Título: ' + esc(s.titulos.join(' ')) : ''}</span>`;
+  const nI = wz.items.length, rep = wz.items.filter(it => it.veces > 1);
+  $('#wzResumen').innerHTML = `<b>Leí ${s.renglones} ${s.renglones === 1 ? 'renglón' : 'renglones'}${s.lista ? ' de la lista de materiales' : ''}${s.sol ? (s.lista ? ' ' + esc(s.sol) : ` de la solicitud N° ${esc(s.sol)}`) : ''}${s.fecha ? ` del ${fmt(s.fecha)}` : ''}</b>`
+    + (s.unidos ? `<span class="wzag">Agrupé los materiales repetidos y sumé sus cantidades: quedan <b>${nI} materiales</b> (${rep.length} se repetían en ${s.capitulos ? 'varios capítulos' : 'varios renglones'}). El desglose queda en cada material.</span>` : '')
+    + `<span>${s.paginas} página${s.paginas === 1 ? '' : 's'} en el PDF${s.capitulos ? ` · ${s.capitulos} capítulos` : ''} · la requisición saldrá en ${Math.ceil(nI / 13)} hoja${nI > 13 ? 's' : ''} del formato.${s.proyecto ? ' Proyecto: ' + esc(s.proyecto) : s.titulos.length ? ' Título: ' + esc(s.titulos.join(' ')) : ''}</span>`
+    + (rep.length ? `<details class="wzrep"><summary>Ver los ${rep.length} materiales agrupados</summary><ul>${rep.map(it => `<li><b>${esc(it.cant)} ${esc(it.und)} · ${esc(it.desc)}</b><span>${esc(it.det)}</span></li>`).join('')}</ul></details>` : '');
   const ceco = wz.base && wz.tipo ? cecoFor(wz.base, wz.tipo) : '';
   $('#wzBody').innerHTML = `
     <div class="wzq ${wz.base || wz.varias ? 'ok' : ''}"><b>1. ¿Para qué puesto fronterizo es? (locación)</b>
@@ -2178,11 +2252,16 @@ $('#wzListo').onclick = () => {
   const inc = wz.items.filter(it => !String(it.cant || '').trim() || !String(it.und || '').trim()); if (inc.length) return err(`Faltan cantidad o unidad en ${inc.length} material${inc.length === 1 ? '' : 'es'}.`);
   if (!draft.firma && !wzSig) return err('Firma para poder enviar la requisición.');
   const s = wz.sol;
-  draft.items = wz.items.map(it => ({ desc: it.desc, cant: String(it.cant).trim(), und: String(it.und).trim(), equipo: '', espec: '', stock: '',
+  draft.items = wz.items.map(it => ({ desc: it.desc, cant: String(it.cant).trim(), und: String(it.und).trim(), equipo: '', espec: '', stock: '', det: it.det || '',
     base: wz.varias ? '' : wz.base, tipo: wz.tipo, locacion: wz.varias ? '' : baseName(wz.base), ceco: wz.varias ? '' : cecoFor(wz.base, wz.tipo) }));
   draft.prioridad = wz.prioridad; draft.area = wz.area.trim(); draft.coordinacion = wz.coordinacion.trim(); if (wz.fechaReq) draft.fechaRequerida = wz.fechaReq;
   if (s.fecha && s.fecha <= today()) draft.fechaSolicitud = s.fecha;
-  draft.notas = [s.sol ? `Solicitud de materiales N° ${s.sol} del contratista${s.fecha ? ' (' + fmt(s.fecha) + ')' : ''}.` : 'Solicitud de materiales del contratista.', s.titulos.join(' '), s.notas].filter(Boolean).join(' ').slice(0, 1500);
+  draft.notas = (s.lista
+    ? [`Lista de materiales${s.sol ? ' ' + s.sol : ''}${s.fase ? ', ' + s.fase.toLowerCase().replace(/^fase/, 'fase') : ''}${s.fecha ? ' (' + fmt(s.fecha) + ')' : ''}${s.solicitante ? ', solicitada por ' + s.solicitante : ''}.`,
+       s.proyecto ? 'Proyecto: ' + s.proyecto.replace(/[.\s]+$/, '') + '.' : '',
+       s.unidos ? `${s.renglones} renglones agrupados en ${wz.items.length} materiales (cantidades sumadas por capítulo).` : '', s.notas]
+    : [s.sol ? `Solicitud de materiales N° ${s.sol} del contratista${s.fecha ? ' (' + fmt(s.fecha) + ')' : ''}.` : 'Solicitud de materiales del contratista.', s.titulos.join(' '),
+       s.unidos ? `${s.renglones} renglones agrupados en ${wz.items.length} materiales.` : '', s.notas]).filter(Boolean).join(' ').slice(0, 1500);
   if (!draft.firma && wzSig) draft.firma = wzSig;
   saveDraft(); fillForm(); $('#wzDlg').close();
   const r = $('#wzReabrir'); if (r) r.remove();
@@ -2334,7 +2413,7 @@ function renderDetail(){
   { const B = [...new Set((d.items || []).map(i => +i.base).filter(n => n >= 1 && n <= 13))]; const bt = d.general ? 'Proyecto general' : B.length === 1 ? baseName(B[0]) : B.length > 1 ? `Varias bases (${B.length})` : '';
     $('#dTitle').innerHTML = `${esc(r.control)}${bt ? ` <small class="bpf">${esc(bt)}</small>` : ''}`; }
   const fdate = ts => fmt(isoLocal(ts));
-  const items = (d.items || []).map((it, i) => `<li class="item" style="grid-template-columns:32px 1fr"><div class="num">${i+1}</div><div><div class="qty">${esc(it.cant)} ${esc(it.und)}</div><div class="d">${esc(it.desc)}</div><div class="m">${esc([it.locacion, it.equipo].filter(Boolean).join(', '))}</div>${it.ceco ? `<div class="m" style="font-weight:600;color:var(--green)">${esc(it.ceco)}</div>` : ''}<div class="tags">${it.stock === 'com' ? '<span class="tag com">A compras</span>' : it.stock === 'si' ? '<span class="tag ok">En almacén</span>' : it.stock === 'no' ? '<span class="tag">Sin stock</span>' : ''}${it.espec === 'si' ? '<span class="tag">Con especificación</span>' : ''}</div></div></li>`).join('');
+  const items = (d.items || []).map((it, i) => `<li class="item" style="grid-template-columns:32px 1fr"><div class="num">${i+1}</div><div><div class="qty">${esc(it.cant)} ${esc(it.und)}</div><div class="d">${esc(it.desc)}</div>${it.det ? `<div class="m mdet">${esc(it.det)}</div>` : ''}<div class="m">${esc([it.locacion, it.equipo].filter(Boolean).join(', '))}</div>${it.ceco ? `<div class="m" style="font-weight:600;color:var(--green)">${esc(it.ceco)}</div>` : ''}<div class="tags">${it.stock === 'com' ? '<span class="tag com">A compras</span>' : it.stock === 'si' ? '<span class="tag ok">En almacén</span>' : it.stock === 'no' ? '<span class="tag">Sin stock</span>' : ''}${it.espec === 'si' ? '<span class="tag">Con especificación</span>' : ''}</div></div></li>`).join('');
   const cambios = (r.cambios || []).map(c => `${esc(c.nombre)} (${esc(c.etapa)}, ${fdate(c.fecha)})`).join('; ');
   const step = (ok, txt, pend) => `<div class="${ok ? 'ok' : ''}">${ok ? txt : pend}</div>`;
   $('#dBody').innerHTML = `
@@ -2430,7 +2509,7 @@ function renderEditItems(){
   const ul = $('#eItems'); ul.innerHTML = '';
   editData.items.forEach((it, i) => {
     const li = document.createElement('li'); li.className = 'item';
-    li.innerHTML = `<div class="num">${i+1}</div><div role="button" tabindex="0" data-eedit="${i}" style="cursor:pointer"><div class="qty">${esc(it.cant)} ${esc(it.und)}</div><div class="d">${esc(it.desc)}</div><div class="m">${esc(it.locacion || '')}</div>${it.ceco ? `<div class="m" style="font-weight:600;color:var(--green)">${esc(it.ceco)}</div>` : ''}</div><div class="ia"><button data-eedit="${i}">Editar</button></div>`;
+    li.innerHTML = `<div class="num">${i+1}</div><div role="button" tabindex="0" data-eedit="${i}" style="cursor:pointer"><div class="qty">${esc(it.cant)} ${esc(it.und)}</div><div class="d">${esc(it.desc)}</div>${it.det ? `<div class="m mdet">${esc(it.det)}</div>` : ''}<div class="m">${esc(it.locacion || '')}</div>${it.ceco ? `<div class="m" style="font-weight:600;color:var(--green)">${esc(it.ceco)}</div>` : ''}</div><div class="ia"><button data-eedit="${i}">Editar</button></div>`;
     ul.appendChild(li);
   });
   $('#eCount').textContent = `${editData.items.length} material${editData.items.length === 1 ? '' : 'es'}${hojasTxt(editData.items.length)}`;
@@ -3561,8 +3640,12 @@ $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mo
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.23.0';
+const APP_VERSION = '4.24.0';
 const NOVEDADES = [
+  { v: '4.24.0', fecha: '2026-10-04', titulo: 'Listas de materiales por capítulo', items: [
+    { r: ['contratista','logistica','costos','gerente_general','gerente_operaciones','master'], t: 'Ahora "Cargar PDF o foto de la requisición" también reconoce las listas de materiales por capítulo (como las de Romveca: Nº, descripción, unidad y cantidad). Los materiales repetidos en varios capítulos se agrupan en uno solo con la cantidad sumada, y el desglose por capítulo queda debajo de cada material.' },
+    { r: ['gerente_operaciones','gerente_general','compras','costos','master'], t: 'En el detalle de la requisición, debajo de un material agrupado verás de qué capítulos sale su cantidad (por ejemplo: Cap. 1 Cerca perimetral: 108 · Cap. 5 Bohio: 32).' }
+  ] },
   { v: '4.23.0', fecha: '2026-09-30', titulo: 'Dotación: Excel más directo', items: [
     { r: ['gerente_operaciones','gerente_general','compras','costos','master'], t: 'Las cuatro pestañas del Excel de dotación (Consolidado, Tabla global, Por puesto y Por ambiente) ahora muestran solo Por adquirir, Por instalar e Instalado. La tabla global queda más angosta.' }
   ] },
