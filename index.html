@@ -631,6 +631,7 @@ nav.tabs button{flex:0 0 auto}
 .vfpend{background:var(--sunk);border:1.5px dashed var(--rule)}
 .vfst{padding:14px;border-radius:12px;background:var(--sunk);margin-bottom:12px;text-align:center;font-weight:600}
 .chips button:disabled{opacity:.6;cursor:default}
+.wchk{display:flex;gap:10px;align-items:center;margin:4px 0 12px;font-weight:600;font-size:15px;cursor:pointer}.wchk input{width:22px;height:22px;accent-color:var(--amber)}
 </style>
 </head>
 <body>
@@ -1066,7 +1067,7 @@ nav.tabs button{flex:0 0 auto}
   <section class="panel" id="p-rsem">
     <div class="block">
       <h2>Reporte semanal</h2>
-      <p class="hint" style="margin-top:-6px">PDF con los reportes y las fotos de la semana, desglosado día por día, con el resumen de avance de cada base. Las estadísticas se descargan aparte, en el módulo Estadísticas.</p>
+      <p class="hint" style="margin-top:-6px">PDF con el resumen de cada base: avance total en porcentaje, avance por fase, actividades ejecutadas en la semana y una galería con todas las fotos. Las estadísticas se descargan aparte, en el módulo Estadísticas.</p>
       <div class="weeknav"><button class="btn" id="w-prev" aria-label="Semana anterior">‹</button><b id="w-label"></b><button class="btn" id="w-next" aria-label="Semana siguiente">›</button></div>
       <div id="w-verWrap" hidden>
         <span class="lbl">Versión del reporte</span>
@@ -1075,6 +1076,7 @@ nav.tabs button{flex:0 0 auto}
       </div>
       <label class="f"><span>Base</span><select class="in" id="w-base"><option value="">Todo el proyecto (13 bases)</option></select></label>
       <div id="w-sum"></div>
+      <label class="wchk"><input type="checkbox" id="w-det"> <span>Agregar al final el detalle día por día</span></label>
       <p class="err" id="w-err" hidden></p>
       <button class="btn primary block100" id="w-btn">Generar PDF semanal</button>
       <p class="hint" id="w-prog" style="text-align:center;margin-top:8px"></p>
@@ -3550,7 +3552,7 @@ function pintarSemana(){
     const rows = filasVersion().filter(r => wVer === 'cliente' || soloSemanal() || !pu || r.puesto === pu);
     const days = [...Array(7)].map((_, i) => addDays(wStart, i));
     $('#w-sum').innerHTML = `<ul class="wdays">${days.map(d => { const L = rows.filter(r => r.fecha === d), f = L.reduce((a, r) => a + (r.archivos || []).filter(x => x.tipo === 'foto').length, 0);
-      return `<li class="${L.length ? 'has' : ''}"><b>${DIAS_C[isoParts(d).wd]} ${fmt(d)}</b><span>${L.length ? `${L.length} reporte${L.length === 1 ? '' : 's'} · ${[...new Set(L.map(r => r.puesto_nombre.replace('B.P.F ', '')))].join(', ')} · ${f} foto${f === 1 ? '' : 's'}` : 'Sin reportes'}</span></li>`; }).join('')}</ul>`;
+      return `<li class="${L.length ? 'has' : ''}"><b>${DIAS_C[isoParts(d).wd]} ${fmt(d)}</b><span>${L.length ? `${L.length} reporte${L.length === 1 ? '' : 's'} · ${[...new Set(L.map(r => (r.puesto_nombre || 'Proyecto general').replace('B.P.F ', '')))].join(', ')} · ${f} foto${f === 1 ? '' : 's'}` : 'Sin reportes'}</span></li>`; }).join('')}</ul>`;
     $('#w-btn').disabled = !rows.length;
     $('#w-btn').textContent = rows.length ? `Generar PDF ${esCliente() ? 'para el cliente' : 'interno'} (${rows.length} reporte${rows.length === 1 ? '' : 's'})` : 'No hay reportes esta semana';
     wFilas = rows;
@@ -3562,7 +3564,8 @@ $('#w-btn').onclick = async () => {
     if (!window.jspdf) throw new Error('No se pudo cargar el generador de PDF. Revisa la conexión.');
     const puesto = $('#w-base').value ? +$('#w-base').value : null;
     const cli = esCliente();
-    const blob = await buildWeeklyPdf(wFilas, wStart, puesto, t => { $('#w-prog').textContent = t; }, { cliente: cli });
+    const vista = cli ? (puesto || me.rol === 'comandante_base' ? 'comandante' : 'reporte_general') : null;
+    const blob = await buildWeeklyPdf(wFilas, wStart, puesto, t => { $('#w-prog').textContent = t; }, { cliente: cli, vista, detalle: $('#w-det').checked });
     const name = `Reporte_semanal_${cli ? 'cliente' : 'interno'}_${wStart}_al_${addDays(wStart, 6)}${puesto ? '_' + baseName(puesto).replace('B.P.F ', '').replace(/\s+/g, '_') : ''}.pdf`;
     $('#w-prog').textContent = 'Listo: ' + name + ' (' + fileSize(blob.size) + ')';
     const r = await deliver({ name, blob }); if (r === 'declined') toast('Descarga cancelada');
@@ -3604,31 +3607,48 @@ async function buildWeeklyPdf(rows, ws, puesto, prog, opts){
   font(11); doc.text(pdfTxt(weekLabel(ws)), W - M, 30, { align:'right' });
   font(9); color([185,179,166]); doc.text(pdfTxt(scope + ' · ' + (cliente ? 'Informe para el cliente' : 'Informe interno')), W - M, 37, { align:'right' });
   y = 56;
-  const tot = { rep: rows.length, fotos: 0, vids: 0 }; rows.forEach(r => (r.archivos || []).forEach(a => a.tipo === 'foto' ? tot.fotos++ : tot.vids++));
-  const kpis = [['Reportes', tot.rep], ['Bases con reporte', new Set(rows.map(r => r.puesto)).size], ['Fotos', tot.fotos], ['Videos', tot.vids]];
-  const kw = (CW - 9) / 4;
-  kpis.forEach(([l, v], i) => { const x = M + i * (kw + 3); fill(C.pale); draw(C.line); doc.roundedRect(x, y, kw, 20, 2, 2, 'FD'); font(18, 'bold'); color(C.olive); doc.text(String(v), x + 4, y + 10); font(8.5); color(C.grey); doc.text(pdfTxt(l), x + 4, y + 16); });
-  y += 28;
-  // Resumen por base
-  font(11, 'bold'); color(C.olive); doc.text('RESUMEN POR BASE', M, y); y += 3;
-  const cols = [['Base', 58], ['Reportes', 20], ['Avance inicio', 25], ['Avance fin', 23], ['Variación', 22], ['Fotos', 16], ['Videos', 18]];
+  // ----- Avance por base (v4.28.0): avance total al cierre de la semana, aunque la base no haya reportado -----
+  prog('Calculando el avance de cada base…');
+  let est = null; try { est = await rpc('rq_estadisticas', { p_desde: ws, p_hasta: we, p_vista: opts.vista || null }); } catch (e) {}
+  const estB = n => ((est && est.bases) || []).find(x => x.n === n) || {};
+  const bases = puesto ? CECOS.bases.filter(b => b.n === puesto) : CECOS.bases;
+  const repDe = n => rows.filter(r => r.puesto === n).slice().sort((a, c) => (a.fecha + a.creado).localeCompare(c.fecha + c.creado));
+  const avFin = n => { const L = repDe(n).filter(r => r.avance != null); return estB(n).avance != null ? +estB(n).avance : L.length ? +L[L.length - 1].avance : null; };
+  const avIni = n => { const e = estB(n); if (e.avance_ini != null) return +e.avance_ini; const L = repDe(n).filter(r => r.avance != null); return L.length ? +L[0].avance : null; };
+  const pts = v => (v >= 0 ? '+' : '') + (Math.round(v * 10) / 10).toString().replace('.', ',') + ' pts';
+  const pc = v => (Math.round(v * 10) / 10).toString().replace('.', ',') + '%';
+  const conAv = bases.filter(b => avFin(b.n) != null), obra = conAv.length ? conAv.reduce((a, b) => a + avFin(b.n), 0) / (puesto ? 1 : 13) : null;
+  const obraIni = conAv.length ? conAv.reduce((a, b) => a + (avIni(b.n) || 0), 0) / (puesto ? 1 : 13) : null;
+  const tot = { rep: rows.length, fotos: 0, vids: 0 }; rows.forEach(r => (r.archivos || []).forEach(a => a.tipo === 'foto' ? tot.fotos++ : a.tipo === 'video' ? tot.vids++ : 0));
+  // bloque grande del avance
+  fill(C.pale); draw(C.line); doc.roundedRect(M, y, CW, 30, 2, 2, 'FD');
+  font(9); color(C.grey); doc.text(pdfTxt(puesto ? 'AVANCE TOTAL DE LA BASE' : 'AVANCE TOTAL DE LA OBRA (13 BASES)'), M + 5, y + 7);
+  font(30, 'bold'); color(C.olive); doc.text(obra != null ? pc(obra) : '—', M + 5, y + 21);
+  if (obra != null) { font(10, 'bold'); color(obra - obraIni >= 0 ? C.green : C.orange); doc.text(pdfTxt(`${pts(obra - obraIni)} esta semana`), M + 52, y + 15); font(8.5); color(C.grey); doc.text(pdfTxt(`Al inicio de la semana: ${pc(obraIni)}`), M + 52, y + 20.5);
+    fill([225,228,215]); doc.rect(M + 5, y + 24.5, CW - 10, 2.6, 'F'); fill(C.green); doc.rect(M + 5, y + 24.5, (CW - 10) * Math.min(100, obra) / 100, 2.6, 'F'); }
+  const kx = M + 118; [['Reportes', tot.rep], ['Bases con reporte', new Set(rows.filter(r => r.puesto != null).map(r => r.puesto)).size], ['Fotos', tot.fotos]].forEach(([l, v], i) => { font(13, 'bold'); color(C.dark); doc.text(String(v), kx + i * 22, y + 13); font(7.5); color(C.grey); doc.splitTextToSize(pdfTxt(l), 20).forEach((t, k) => doc.text(t, kx + i * 22, y + 17.5 + k * 3)); });
+  y += 37;
+  font(11, 'bold'); color(C.olive); doc.text('AVANCE POR BASE', M, y); y += 3;
+  const cols = [['Base', 52], ['Avance total', 54], ['Variación semana', 30], ['Reportes', 20], ['Fotos', 26]];
   const th = () => { fill(C.olive2); doc.rect(M, y, CW, 8, 'F'); font(8.5, 'bold'); color(C.cream); let x = M; cols.forEach(([t, w]) => { doc.text(pdfTxt(t), x + 2, y + 5.3); x += w; }); y += 8; };
   th();
-  const bases = puesto ? CECOS.bases.filter(b => b.n === puesto) : CECOS.bases;
   bases.forEach((b, k) => {
-    const L = rows.filter(r => r.puesto === b.n).slice().sort((a, c) => (a.fecha + a.creado).localeCompare(c.fecha + c.creado));
-    const av = L.filter(r => r.avance != null), ini = av.length ? +av[0].avance : null, fin = av.length ? +av[av.length - 1].avance : null;
-    const f = L.reduce((a, r) => a + (r.archivos || []).filter(x => x.tipo === 'foto').length, 0), v = L.reduce((a, r) => a + (r.archivos || []).filter(x => x.tipo === 'video').length, 0);
-    need(7); if (y === M) th();
-    if (k % 2) { fill(C.pale); doc.rect(M, y, CW, 7, 'F'); }
+    const L = repDe(b.n), fin = avFin(b.n), ini = avIni(b.n), f = L.reduce((a, r) => a + (r.archivos || []).filter(x => x.tipo === 'foto').length, 0);
+    need(8); if (y === M) th();
+    if (k % 2) { fill(C.pale); doc.rect(M, y, CW, 8, 'F'); }
     font(8.5, L.length ? 'bold' : 'normal'); color(L.length ? C.dark : C.grey);
-    const vals = [b.n + '. ' + b.nombre.replace('B.P.F ', ''), L.length || '—', ini != null ? ini + '%' : '—', fin != null ? fin + '%' : '—', ini != null ? ((fin - ini) >= 0 ? '+' : '') + (Math.round((fin - ini) * 10) / 10) + ' pts' : '—', L.length ? f : '—', L.length ? v : '—'];
-    let x = M; vals.forEach((t, i) => { doc.text(pdfTxt(String(t)), x + 2, y + 4.8); x += cols[i][1]; });
-    draw(C.line); doc.line(M, y + 7, M + CW, y + 7); y += 7;
+    let x = M; doc.text(pdfTxt(b.n + '. ' + b.nombre.replace('B.P.F ', '')), x + 2, y + 5.3); x += cols[0][1];
+    if (fin != null) { fill([225,228,215]); doc.rect(x + 2, y + 2.6, 34, 2.8, 'F'); fill(C.green); doc.rect(x + 2, y + 2.6, 34 * Math.min(100, fin) / 100, 2.8, 'F'); font(8.5, 'bold'); color(C.dark); doc.text(pc(fin), x + 39, y + 5.3); } else { doc.text('—', x + 2, y + 5.3); }
+    x += cols[1][1]; font(8.5); color(C.dark);
+    doc.text(fin != null && ini != null ? pdfTxt(pts(fin - ini)) : '—', x + 2, y + 5.3); x += cols[2][1];
+    doc.text(String(L.length || '—'), x + 2, y + 5.3); x += cols[3][1];
+    doc.text(String(L.length ? f : '—'), x + 2, y + 5.3);
+    draw(C.line); doc.line(M, y + 8, M + CW, y + 8); y += 8;
   });
   const nGen = rows.filter(r => r.puesto == null).length;
   if (nGen) { need(8); font(9, 'bold'); color(C.dark); doc.text(pdfTxt(`Reportes de temas generales del proyecto: ${nGen}`), M + 2, y + 5); y += 7; }
-  y += 6;
+  { font(7.5); color(C.grey); const nota = doc.splitTextToSize(pdfTxt('Avance total: el último avance reportado de cada base hasta el cierre de la semana.' + (puesto ? '' : ` El de la obra es el promedio de las 13 bases; las que todavía no reportan avance cuentan 0%.${conAv.length && conAv.length < 13 ? ` Promedio de las ${conAv.length} bases con avance reportado: ${pc(conAv.reduce((a, b) => a + avFin(b.n), 0) / conAv.length)}.` : ''}`)), CW);
+    need(nota.length * 3.4 + 3); nota.forEach(l => { doc.text(l, M, y + 4); y += 3.4; }); y += 3; }
 
   // ----- Antes de la intervención (solo cuando el PDF es de una base) -----
   if (puesto) {
@@ -3650,16 +3670,100 @@ async function buildWeeklyPdf(rows, ws, puesto, prog, opts){
       }
     }
   }
-  // ----- Detalle día por día -----
-  const days = [...Array(7)].map((_, i) => addDays(ws, i)).filter(d => rows.some(r => r.fecha === d));
-  const allPhotos = rows.flatMap(r => (r.archivos || []).filter(a => a.tipo === 'foto').slice(0, PHOTOS_PER).map(a => a.path));
+  // ----- Fotos de la semana (para las galerías y el detalle) -----
+  const fotosDe = L => L.flatMap(r => (r.archivos || []).filter(a => a.tipo === 'foto').map(a => ({ a, r })));
+  const allPhotos = [...new Set(fotosDe(rows).map(x => x.a.path))];
   prog('Preparando ' + allPhotos.length + ' fotos…');
   const url = await signed(allPhotos);
-  const imgs = new Map(); let done = 0;
-  const queue = allPhotos.slice();
-  await Promise.all([...Array(4)].map(async () => { while (queue.length) { const p = queue.shift(); try { imgs.set(p, await loadPdfImage(url(p), 1000)); } catch (e) {} done++; prog(`Cargando fotos ${done} de ${allPhotos.length}…`); } }));
+  const imgs = new Map(); let done = 0; const queue = allPhotos.slice();
+  await Promise.all([...Array(4)].map(async () => { while (queue.length) { const p = queue.shift(); try { imgs.set(p, await loadPdfImage(url(p), 1100)); } catch (e) {} done++; prog(`Cargando fotos ${done} de ${allPhotos.length}…`); } }));
   prog('Armando el PDF…');
-  for (const d of days) {
+  const bandera = (t1, t2) => { fill(C.dark); doc.rect(0, 0, W, 20, 'F'); fill(C.orange); doc.rect(0, 20, W, 1.2, 'F'); font(15, 'bold'); color(C.cream); doc.text(pdfTxt(t1), M, 13); font(9); doc.text(pdfTxt(t2), W - M, 13, { align:'right' }); y = 28; };
+  const titulo = t => { need(14); fill(C.olive); doc.rect(M, y, CW, 8, 'F'); font(10.5, 'bold'); color(C.cream); doc.text(pdfTxt(t), M + 3, y + 5.5); y += 11; };
+  const dcorto = d => `${DIAS_C[isoParts(d).wd].slice(0, 3)} ${fmt(d)}`;
+  const norm = t => String(t || '').toLowerCase().replace(/\s+/g, ' ').replace(/[.\s]+$/, '').trim();
+  const bullets = (items, sz) => items.forEach(([pre, txt]) => { font(sz || 8.8); const pw = pre ? doc.getTextWidth(pdfTxt(pre)) + 2 : 0; const ls = doc.splitTextToSize(pdfTxt(txt), CW - 6 - pw);
+    ls.forEach((l, k) => { need(4.3); if (k === 0) { fill(C.olive); doc.circle(M + 2, y + 2.4, 0.7, 'F'); if (pre) { font(sz || 8.8, 'bold'); color(C.olive); doc.text(pdfTxt(pre), M + 4.5, y + 3.3); } }
+      font(sz || 8.8); color(C.dark); doc.text(l, M + 4.5 + pw, y + 3.3); y += 4.3; }); y += 0.8; });
+  // Galería grande: 2 fotos por fila, con fecha, responsable y fase.
+  const galeria = async (items, sub) => {
+    if (!items.length) return;
+    need(80); titulo(`GALERÍA DE LA SEMANA · ${items.length} FOTO${items.length === 1 ? '' : 'S'}`);
+    if (sub) { font(8.5); color(C.grey); need(5); doc.text(pdfTxt(sub), M, y + 1); y += 4; }
+    const gw = (CW - 4) / 2, cap = 7.5;
+    for (let i = 0; i < items.length; i += 2) {
+      const fila = items.slice(i, i + 2).map(x => ({ ...x, im: imgs.get(x.a.path) }));
+      const rh = Math.min(gw * 0.75, Math.max(...fila.map(x => x.im ? gw * x.im.h / x.im.w : gw * 0.6)));
+      need(rh + cap + 3);
+      fila.forEach((x, k) => { const xx = M + k * (gw + 4);
+        fill([238,238,232]); doc.rect(xx, y, gw, rh, 'F');
+        if (x.im) { const s2 = Math.min(gw / x.im.w, rh / x.im.h), iw = x.im.w * s2, ih = x.im.h * s2; doc.addImage(x.im.data, 'JPEG', xx + (gw - iw) / 2, y + (rh - ih) / 2, iw, ih, undefined, 'FAST'); }
+        else { font(8); color(C.grey); doc.text('Foto no disponible', xx + gw / 2, y + rh / 2, { align:'center' }); }
+        const fs = (x.r.fases || []).filter(f => f.obs).map(f => f.fase).slice(0, 2).join(', ');
+        font(7.5, 'bold'); color(C.dark); doc.text(pdfTxt(doc.splitTextToSize(`${dcorto(x.r.fecha)} · ${x.r.puesto == null ? (x.r.tema || 'Proyecto general') : x.r.autor_nombre}`, gw)[0]), xx, y + rh + 3.4);
+        font(7); color(C.grey); const sub2 = [x.r.empresa, fs].filter(Boolean).join(' · '); if (sub2) doc.text(pdfTxt(doc.splitTextToSize(sub2, gw)[0]), xx, y + rh + 6.6); });
+      y += rh + cap + 3;
+    }
+  };
+  // ----- Una sección por base: avance total, actividades ejecutadas y galería -----
+  for (const b of bases) {
+    const L = repDe(b.n); if (!L.length) continue;
+    newPage(); bandera(b.nombre, `${L.length} reporte${L.length === 1 ? '' : 's'} · ${weekLabel(ws).replace('Semana del ', '')}`);
+    const fin = avFin(b.n), ini = avIni(b.n);
+    // avance total
+    fill(C.pale); draw(C.line); doc.roundedRect(M, y, CW, 24, 2, 2, 'FD');
+    font(8.5); color(C.grey); doc.text('AVANCE TOTAL DE LA BASE', M + 5, y + 6.5);
+    font(26, 'bold'); color(C.olive); doc.text(fin != null ? pc(fin) : '—', M + 5, y + 18);
+    if (fin != null) { font(10, 'bold'); color(fin - (ini || 0) >= 0 ? C.green : C.orange); doc.text(pdfTxt(ini != null ? `${pts(fin - ini)} esta semana` : 'Primer avance reportado'), M + 48, y + 11);
+      font(8.5); color(C.grey); doc.text(pdfTxt(ini != null ? `De ${pc(ini)} a ${pc(fin)}` : ''), M + 48, y + 16.5);
+      fill([225,228,215]); doc.rect(M + 100, y + 9, CW - 106, 4, 'F'); fill(C.green); doc.rect(M + 100, y + 9, (CW - 106) * Math.min(100, fin) / 100, 4, 'F'); }
+    const per = L.filter(r => r.personal != null), emp = [...new Set(L.map(r => r.empresa).filter(Boolean))];
+    font(8); color(C.grey); doc.text(pdfTxt([`${new Set(L.map(r => r.fecha)).size} día${new Set(L.map(r => r.fecha)).size === 1 ? '' : 's'} con reporte`, per.length ? `personal promedio ${Math.round(per.reduce((a, r) => a + +r.personal, 0) / per.length)}` : '', emp.length ? emp.join(', ') : ''].filter(Boolean).join(' · ')).slice(0, 110), M + 100, y + 19);
+    y += 30;
+    // avance por fase: primera y última medición de la semana
+    const conF = L.filter(r => (r.fases || []).some(f => f.pct != null));
+    const primero = conF[0], ultimo = conF[conF.length - 1];
+    const filasF = FASES.map((fz, i) => { const g = r => r && (r.fases || []).find(f => f.fase === fz) || (r && (r.fases || [])[i]) || {}; const a2 = g(primero).pct, z = g(ultimo).pct;
+      const obs = []; const vistos = new Set(); L.forEach(r => (r.fases || []).filter(f => f.fase === fz && f.obs).forEach(f => { const k = norm(f.obs); if (k && !vistos.has(k)) { vistos.add(k); obs.push([dcorto(r.fecha) + ':', f.obs.trim()]); } }));
+      return { fz, a: a2, z, obs }; }).filter(f => f.z != null || f.obs.length);
+    if (filasF.length) {
+      titulo('AVANCE POR FASE');
+      fill(C.pale); doc.rect(M, y, CW, 6, 'F'); font(8, 'bold'); color(C.olive); doc.text('Fase', M + 2, y + 4.2); doc.text('Avance', M + 60, y + 4.2); doc.text('Semana', M + 150, y + 4.2); y += 6;
+      filasF.forEach(f => { need(6.5); font(8.5, 'bold'); color(C.dark); doc.text(pdfTxt(f.fz), M + 2, y + 4.4);
+        if (f.z != null) { fill([225,228,215]); doc.rect(M + 60, y + 2, 70, 3, 'F'); fill(C.green); doc.rect(M + 60, y + 2, 70 * Math.min(100, +f.z) / 100, 3, 'F'); doc.text(f.z + '%', M + 133, y + 4.4);
+          font(8.5); color(f.a != null && +f.z > +f.a ? C.green : C.grey); doc.text(f.a != null && f.a !== f.z ? pdfTxt(pts(+f.z - +f.a)) : 'sin cambio', M + 150, y + 4.4); }
+        draw(C.line); doc.line(M, y + 6.5, M + CW, y + 6.5); y += 6.5; });
+      y += 4;
+    }
+    // actividades ejecutadas: lo que se hizo en cada fase y el resumen de cada día
+    titulo('ACTIVIDADES EJECUTADAS');
+    const conObs = filasF.filter(f => f.obs.length);
+    for (const f of conObs) { need(10); font(9, 'bold'); color(C.olive); doc.text(pdfTxt(f.fz + (f.z != null ? ` (${f.z}%)` : '')), M, y + 3.5); y += 5; bullets(f.obs); y += 1; }
+    need(10); font(9, 'bold'); color(C.olive); doc.text(conObs.length ? 'Trabajos por día' : 'Trabajos de la semana', M, y + 3.5); y += 5;
+    const vistosD = new Set();
+    bullets(L.filter(r => { const k = norm(r.descripcion); if (!k || vistosD.has(k)) return false; vistosD.add(k); return true; }).map(r => [dcorto(r.fecha) + ':', r.descripcion.trim()]));
+    if (!cliente) { const ob = L.filter(r => r.observaciones && r.observaciones.trim());
+      if (ob.length) { y += 1; need(10); font(9, 'bold'); color(C.orange); doc.text('Observaciones e incidencias', M, y + 3.5); y += 5; bullets(ob.map(r => [dcorto(r.fecha) + ':', r.observaciones.trim()])); } }
+    y += 3;
+    const vids = L.reduce((a, r) => a + (r.archivos || []).filter(x => x.tipo === 'video').length, 0);
+    await galeria(fotosDe(L), vids ? `Además hay ${vids} video${vids === 1 ? '' : 's'} en la plataforma.` : '');
+  }
+  // ----- Temas generales del proyecto -----
+  const gen = rows.filter(r => r.puesto == null).sort((a, c) => (a.fecha + a.creado).localeCompare(c.fecha + c.creado));
+  if (gen.length) {
+    newPage(); bandera('PROYECTO GENERAL', `${gen.length} reporte${gen.length === 1 ? '' : 's'}`);
+    titulo('ACTIVIDADES EJECUTADAS');
+    const temas = [...new Set(gen.map(r => r.tema || 'Sin tema'))];
+    for (const t of temas) { need(10); font(9, 'bold'); color(C.olive); doc.text(pdfTxt(t), M, y + 3.5); y += 5;
+      bullets(gen.filter(r => (r.tema || 'Sin tema') === t).map(r => [dcorto(r.fecha) + ':', r.descripcion.trim() + (!cliente && r.observaciones ? ' Observaciones: ' + r.observaciones.trim() : '')])); y += 1; }
+    y += 3; await galeria(fotosDe(gen), '');
+  }
+  // ----- Detalle día por día (opcional, v4.28.0) -----
+  if (opts.detalle) {
+  prog('Armando el detalle día por día…');
+  const dias7 = [...Array(7)].map((_, i) => addDays(ws, i)).filter(d => rows.some(r => r.fecha === d));
+  prog('Armando el PDF…');
+  for (const d of dias7) {
     newPage();
     fill(C.dark); doc.rect(0, 0, W, 20, 'F'); fill(C.orange); doc.rect(0, 20, W, 1.2, 'F');
     font(15, 'bold'); color(C.cream); doc.text(pdfTxt(`${DIAS_C[isoParts(d).wd].toUpperCase()} ${fmt(d)}`), M, 13);
@@ -3701,6 +3805,7 @@ async function buildWeeklyPdf(rows, ws, puesto, prog, opts){
       if (extra > 0 || vids.length || npdf) { para([extra > 0 ? `${extra} foto${extra === 1 ? '' : 's'} más` : '', vids.length ? `${vids.length} video${vids.length === 1 ? '' : 's'}` : '', npdf ? `${npdf} PDF adjunto${npdf === 1 ? '' : 's'}` : ''].filter(Boolean).join(' y ') + ` disponible${(extra + vids.length + npdf) === 1 ? '' : 's'} en Reportes → Diario de la plataforma.`, 8.5, 'italic', C.grey, 4.2); }
       y += 7;
     }
+  }
   }
   footer();
   return doc.output('blob');
@@ -4085,8 +4190,11 @@ function abrirViatico(numero){ setMod('via', veViaticos() ? 'vtodos' : 'vmis'); 
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.27.0';
+const APP_VERSION = '4.28.0';
 const NOVEDADES = [
+  { v: '4.28.0', fecha: '2026-10-13', titulo: 'Nuevo reporte semanal por base', items: [
+    { r: ['gerente_operaciones','gerente_general','compras','costos','comandante_base','reporte_general','master'], t: 'El PDF semanal ahora es un resumen por base: el avance total en porcentaje (y cuánto subió en la semana), el avance de cada fase, las actividades ejecutadas y una galería grande con todas las fotos de la semana. La portada trae el avance total de la obra y una tabla con el avance de las 13 bases. Si necesitas el detalle día por día, márcalo antes de generar el PDF.' }
+  ] },
   { v: '4.27.0', fecha: '2026-10-05', titulo: 'Viáticos', items: [
     { r: ['gerente_operaciones','gerente_general','master'], t: 'Nuevo módulo Viáticos: reporta en qué gastaste el viático de cada viaje. Pones fechas, puestos visitados, motivo y lo que te entregaron, y agregas cada gasto con la foto o el PDF de su factura, que se guarda en Google Drive. La app calcula el total en USD (convierte los Bs con la tasa del día) y el saldo.' },
     { r: ['gerente_general','costos','master'], t: 'En Viáticos → Todos ves los reportes enviados por las Gerencias, filtras por período, persona y puesto, y descargas el Excel con el resumen, los reportes y cada gasto con el enlace a su factura.' }
