@@ -668,6 +668,7 @@ nav.tabs button{flex:0 0 auto}
 .prlib{margin:4px 0 10px;font-size:13.5px}.prlib summary{cursor:pointer;font-weight:600}.prlib ul{margin:6px 0 0;padding-left:18px;color:var(--muted)}
 .prup .btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:54px}
 .prdocs{list-style:none;margin:0;padding:0}.prdocs li{padding:6px 0;border-bottom:1px solid var(--rule);display:grid;gap:2px}.prdocs .lnk{background:none;border:0;padding:0;font-weight:700;text-decoration:underline;color:var(--ink);text-align:left;cursor:pointer}.prdocs small{color:var(--muted)}
+.dteq.vacio .dtnm b{color:var(--muted);font-weight:600}
 </style>
 </head>
 <body>
@@ -1169,24 +1170,28 @@ nav.tabs button{flex:0 0 auto}
     <button class="btn block100 dtxbtn" id="dtxBtn"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6 7.2V19l-4-2v-4.8z"/></svg>Exportar Excel por puesto y equipo</button>
     <div id="dtLev">
       <div class="block">
-        <div class="esth"><h2 style="margin:0">Ambientes</h2><span id="dtAmbCount"></span></div>
+        <div class="esth"><h2 style="margin:0">Equipos del puesto</h2><span id="dtUniSt"></span></div>
+        <p class="hint" style="margin:-2px 0 10px">Una sola lista para todo el puesto. Elige qué vas a contar y llena cada equipo.</p>
+        <div class="seg" id="dtMode2" style="margin-bottom:6px"><button type="button" data-v="n" aria-pressed="true">Necesario</button><button type="button" data-v="e" aria-pressed="false">Existente</button><button type="button" data-v="i" aria-pressed="false">Instalado</button></div>
+        <p class="hint" id="dtModeHint2" style="margin:0 0 8px"></p>
         <div class="dtprog"><i id="dtProgBar"></i></div><p class="hint" id="dtProgTxt" style="margin:4px 0 10px"></p>
-        <ul class="dtambs" id="dtAmbList"></ul>
-        <div class="empty" id="dtAmbEmpty" hidden>Este puesto no tiene ambientes todavía.<br><button class="btn" id="dtTipicos" style="margin-top:10px">Cargar los 12 ambientes típicos</button></div>
-        <button class="btn primary block100" id="dtNuevo" style="margin-top:10px">Agregar ambiente</button>
+        <ul class="dteqs" id="dtUniList"></ul>
+        <div class="addrow" id="dtUniOtro" style="margin-top:10px"><input class="in" id="dtUniOtroNom" placeholder="Otro equipo (ej. cocina industrial)"><button class="btn" id="dtUniOtroBtn">Agregar</button></div>
+        <label class="f" style="margin-top:10px"><span>Notas del puesto</span><textarea class="in" id="dtUniNota" placeholder="Observaciones, marcas, estado de los equipos…"></textarea></label>
+        <button class="btn primary block100" id="dtUniRev" style="margin-top:6px">Marcar el puesto como revisado</button>
+        <p class="hint" id="dtUniUpd" style="margin:8px 0 0;text-align:center"></p>
       </div>
     </div>
     <div id="dtRes" hidden>
-      <div class="tkkpis" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div><b id="dtRev">0</b><span>ambientes revisados</span></div><div class="venc"><b id="dtBuy">0</b><span>a adquirir</span></div><div class="pronto"><b id="dtPend">0</b><span>por instalar</span></div></div>
+      <div class="tkkpis" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div><b id="dtRev">—</b><span>levantamiento</span></div><div class="venc"><b id="dtBuy">0</b><span>a adquirir</span></div><div class="pronto"><b id="dtPend">0</b><span>por instalar</span></div></div>
       <div class="block"><h2 id="dtResTit">Resumen</h2><p class="hint" style="margin-top:-6px">A adquirir = necesario − existente. Por instalar = necesario − instalado.</p><div class="dttw"><table class="dtt" id="dtResTable"></table></div></div>
-      <div class="block"><h2>Necesario por ambiente</h2><div class="dttw"><table class="dtt" id="dtResAmb"></table></div></div>
     </div>
     <div id="dtCon" hidden>
       <div class="block">
         <h2>Consolidado de la obra</h2><p class="hint" id="dtConSub" style="margin-top:-6px"></p>
         <div class="seg" id="dtConSeg" style="margin-bottom:10px"><button type="button" data-v="buy" aria-pressed="true">A adquirir</button><button type="button" data-v="n" aria-pressed="false">Necesario</button><button type="button" data-v="e" aria-pressed="false">Existente</button><button type="button" data-v="pend" aria-pressed="false">Por instalar</button></div>
         <div class="dttw"><table class="dtt" id="dtConTable"></table></div>
-        <button class="btn dark block100" id="dtXlsx" style="margin-top:12px">Descargar Excel (consolidado, tabla global, por puesto y por ambiente)</button>
+        <button class="btn dark block100" id="dtXlsx" style="margin-top:12px">Descargar Excel (consolidado, tabla global y por puesto)</button>
       </div>
     </div>
   </section>
@@ -1221,7 +1226,7 @@ nav.tabs button{flex:0 0 auto}
     <div class="block"><h2>Novedades <span class="st" id="appVer"></span></h2><button class="btn block100" id="verNovedades">Ver las novedades de la app</button></div>
     <div class="block" id="dotBlock" hidden>
       <h2>Dotación de equipos (13 B.P.F)</h2>
-      <p class="hint" style="margin-top:-6px">Levantamiento por ambiente, puesto por puesto: por cada equipo se cuenta lo necesario, lo existente en buen estado y lo instalado. Resumen por puesto (a adquirir y por instalar), consolidado de la obra y Excel.</p>
+      <p class="hint" style="margin-top:-6px">Una lista de equipos por puesto fronterizo: por cada equipo se cuenta lo necesario, lo existente en buen estado y lo instalado. Resumen por puesto (a adquirir y por instalar), consolidado de la obra y Excel.</p>
       <div id="dotMini" class="hint"></div>
       <button class="btn dark block100" id="dotAbrir">Abrir dotación de equipos</button>
     </div>
@@ -1502,7 +1507,7 @@ nav.tabs button{flex:0 0 auto}
 <dialog id="dtxDlg">
   <div class="sheet"><div class="grab"></div>
     <h3>Exportar Excel<button class="btn ghost" id="dtxClose" style="min-height:40px">Cerrar</button></h3>
-    <p class="hint" style="margin-top:-6px">Elige los puestos y los equipos. El Excel trae el consolidado, la tabla global de los puestos por equipo, el detalle por puesto y por ambiente (por adquirir, por instalar e instalado), solo con lo que marques.</p>
+    <p class="hint" style="margin-top:-6px">Elige los puestos y los equipos. El Excel trae el consolidado, la tabla global de los puestos por equipo, el detalle por puesto (por adquirir, por instalar e instalado), solo con lo que marques.</p>
     <div class="dtxh"><span class="sec" style="margin:0">Puestos <small id="dtxPuN"></small></span><span class="dtxq"><button type="button" data-q="pu:all">Todos</button><button type="button" data-q="pu:con">Con levantamiento</button><button type="button" data-q="pu:none">Ninguno</button></span></div>
     <div class="chips dtxchips" id="dtxPu"></div>
     <div class="dtxh"><span class="sec" style="margin:0">Equipos <small id="dtxEqN"></small></span><span class="dtxq"><button type="button" data-q="eq:all">Todos</button><button type="button" data-q="eq:con">Con cantidades</button><button type="button" data-q="eq:none">Ninguno</button></span></div>
@@ -1551,36 +1556,9 @@ nav.tabs button{flex:0 0 auto}
 </dialog>
 
 <!-- Dotación: ambiente -->
-<dialog id="dtAmbDlg">
-  <div class="sheet"><div class="grab"></div>
-    <h3><span class="dtsw" id="dtaSw"></span><span id="dtaName" style="flex:1"></span><button class="btn ghost" id="dtaClose" style="min-height:40px">Cerrar</button></h3>
-    <p class="hint" id="dtaTipo" style="margin:-6px 0 4px"></p><p class="hint" id="dtaRef" style="margin:0 0 8px"></p>
-    <div class="seg" id="dtMode"><button type="button" data-v="n" aria-pressed="true">Necesario</button><button type="button" data-v="e" aria-pressed="false">Existente</button><button type="button" data-v="i" aria-pressed="false">Instalado</button></div>
-    <p class="hint" id="dtModeHint" style="margin:6px 0 8px"></p>
-    <ul class="dteqs" id="dtEqList"></ul>
-    <div id="dtEdit">
-      <div class="addrow"><select class="in" id="dtAddSel"></select><button class="btn" id="dtAddBtn">Agregar</button></div>
-      <div class="addrow" id="dtOtroRow" hidden><input class="in" id="dtOtroNom" placeholder="Nombre del equipo (ej. Lavadora)"><button class="btn" id="dtOtroBtn">Crear</button></div>
-      <label class="f" style="margin-top:10px"><span>Notas del ambiente</span><textarea class="in" id="dtaNota" rows="2"></textarea></label>
-      <details class="tkhist"><summary>Nombre, uso y eliminar</summary>
-        <label class="f"><span>Nombre</span><input class="in" id="dtaRename"></label>
-        <div class="chips" id="dtaTipoChips"></div>
-        <button class="btn ghost" id="dtaDel" style="color:var(--red)">Eliminar ambiente</button>
-      </details>
-    </div>
-    <div class="memnav" style="margin-top:12px"><button class="btn" id="dtaPrev">Anterior</button><button class="btn primary" id="dtaRev">Marcar revisado</button></div>
-  </div>
-</dialog>
+
 <!-- Dotación: nuevo ambiente -->
-<dialog id="dtNewDlg">
-  <div class="sheet"><div class="grab"></div>
-    <h3>Nuevo ambiente<button class="btn ghost" id="dtnClose" style="min-height:40px">Cerrar</button></h3>
-    <label class="f"><span>Nombre</span><input class="in" id="dtnName" placeholder="Ej. Dormitorio de tropa"></label>
-    <span class="lbl">Uso</span><div class="chips" id="dtnTipo"></div>
-    <p class="hint" id="dtnHint"></p>
-    <button class="btn primary block100" id="dtnSave">Crear ambiente</button>
-  </div>
-</dialog>
+
 
 <!-- Novedades -->
 <dialog id="novDlg">
@@ -4738,8 +4716,12 @@ $('#prXlsx').onclick = async () => {
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.30.0';
+const APP_VERSION = '4.31.0';
 const NOVEDADES = [
+  { v: '4.31.0', fecha: '2026-10-13', titulo: 'Dotación de equipos más sencilla', items: [
+    { r: ['gerente_operaciones','gerente_general','compras','costos','master'], t: 'La dotación de equipos ya no va por ambiente: cada puesto fronterizo tiene una sola lista con todos los equipos (necesario, existente e instalado). Lo que estaba cargado por ambiente se sumó en la lista de su puesto. Los contratistas ahora también pueden llenarla.' },
+    { r: ['contratista'], t: 'Nuevo en Ajustes → Dotación de equipos: elige tu puesto fronterizo y llena, equipo por equipo, cuántos hacen falta (Necesario), cuántos hay en buen estado (Existente) y cuántos están instalados. Se guarda solo. Al terminar, toca "Marcar el puesto como revisado".' }
+  ] },
   { v: '4.30.0', fecha: '2026-10-13', titulo: 'Confirmación del pago al proveedor', items: [
     { r: ['compras','costos','master'], t: 'Las cotizaciones ya no se escriben a mano: toca "Subir la cotización del proveedor" y sube su PDF, Excel o foto. La app lee el proveedor, el RIF, el IVA y los precios, los empareja con los materiales de la requisición y tú solo revisas (puedes cambiar el renglón emparejado; si ajustas un precio queda marcado). El archivo queda guardado con la cotización.' },
     { r: ['compras','costos','master'], t: 'En Procura hay un paso nuevo después del pago: "Confirmar que el proveedor recibió el pago", con quién lo confirmó y el N° de factura. Hasta confirmarlo no se puede marcar el despacho. Si el proveedor no lo recibió, marca "No / hay un problema" y la requisición vuelve a Gerencia General.' },
@@ -5756,15 +5738,19 @@ const DT_TIPOS = {
   exteriores:{n:'Exteriores y perímetro', c:'#E8E000', eq:['reflectores']}, otro:{n:'Otro', c:'#A9B1AD', eq:['bombillos']} };
 const DT_TIPICOS = [['Dormitorio de tropa','dormitorio'],['Hab. tropas profesionales','dormitorio'],['Baños y duchas','banos'],['Cocina','cocina'],['Comedor','comedor'],['Despensa','despensa'],['Depósito','deposito'],['Depósito de armas','armas'],['Enfermería','enfermeria'],['Sala de operaciones','operaciones'],['Servicios generales','servicios'],['Exteriores y perímetro','exteriores']];
 const DT_MODES = { n:'Necesario', e:'Existente', i:'Instalado' };
-const DT_HINT = { n:'Cuántos equipos debe tener este ambiente según la dotación.', e:'Cuántos hay hoy en buen estado. Los dañados no cuentan.', i:'Cuántos quedaron instalados y probados.' };
-const canDotacion = () => me && (me.es_master || ['gerente_operaciones','gerente_general','compras','costos'].includes(me.rol));
+const DT_HINT = { n:'Cuántos equipos debe tener el puesto completo según la dotación.', e:'Cuántos hay hoy en buen estado en el puesto. Los dañados no cuentan.', i:'Cuántos quedaron instalados y probados.' };
+const canDotacion = () => me && (me.es_master || ['gerente_operaciones','gerente_general','compras','costos','contratista'].includes(me.rol));
 let dt = { amb: {}, extras: [], edita: false, puesto: LS.get('dtPuesto', 13), tab: 'lev', mode: 'n', con: 'buy', open: null, pend: LS.get('dtPend', {}), newTipo: 'dormitorio', timers: {} };
 const dnum = v => Math.max(0, Math.floor(Number(v) || 0));
 const dtCat = () => DT_EQUIPOS.concat(dt.extras || []);
 const dtName = k => (dtCat().find(e => e.k === k) || { n: k }).n;
 const dtOrder = k => { const i = dtCat().findIndex(e => e.k === k); return i < 0 ? 999 : i; };
 const dtCode = n => { const b = CECOS.bases.find(x => x.n === n); return b ? b.nombre.replace('B.P.F ', '').split(' ').map(w => w.slice(0, 4)).join(' ').slice(0, 6) : n; };
+// v4.31.0: un solo registro por puesto ('bpf-<n>') con todos los equipos.
 const dtAmbs = pu => Object.values(dt.amb).filter(a => a.puesto === pu).sort((a, b) => (a.orden || 0) - (b.orden || 0) || String(a.nombre).localeCompare(b.nombre));
+const dtUniId = pu => 'bpf-' + pu;
+const dtUni = pu => { const id = dtUniId(pu); if (!dt.amb[id]) dt.amb[id] = { id, puesto: pu, nombre: 'Puesto completo', tipo: 'otro', orden: 0, eq: {}, revisado: false, nota: '', ref: '', nuevo: true }; return dt.amb[id]; };
+const dtTiene = pu => { const a = dt.amb[dtUniId(pu)]; return !!a && Object.values(a.eq || {}).some(q => dnum(q.n) || dnum(q.e) || dnum(q.i)); };
 function dtSum(list){ const t = {}; list.forEach(a => { for (const k in (a.eq || {})) { const q = a.eq[k]; t[k] = t[k] || { n:0, e:0, i:0 }; t[k].n += dnum(q.n); t[k].e += dnum(q.e); t[k].i += dnum(q.i); } });
   for (const k in t) { t[k].buy = Math.max(0, t[k].n - t[k].e); t[k].pend = Math.max(0, t[k].n - t[k].i); } return t; }
 const dtKeys = t => Object.keys(t).sort((a, b) => dtOrder(a) - dtOrder(b));
@@ -5778,29 +5764,23 @@ async function loadDot(){
 }
 function pintarDot(){
   $('#dtPuesto').value = String(dt.puesto); $('#dtCode').textContent = baseName(dt.puesto).replace('B.P.F ', '');
-  $('#dtPuesto').querySelectorAll('option').forEach(o => { const n = dtAmbs(+o.value).length; o.textContent = `${o.value}. ${baseName(+o.value).replace('B.P.F ', '')}${n ? ' · ' + n + ' amb.' : ''}`; });
+  $('#dtPuesto').querySelectorAll('option').forEach(o => { const a = dt.amb[dtUniId(+o.value)]; o.textContent = `${o.value}. ${baseName(+o.value).replace('B.P.F ', '')}${a && a.revisado ? ' · revisado' : dtTiene(+o.value) ? ' · con datos' : ''}`; });
   $$('#dtTabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === dt.tab));
   $('#dtLev').hidden = dt.tab !== 'lev'; $('#dtRes').hidden = dt.tab !== 'res'; $('#dtCon').hidden = dt.tab !== 'con';
-  $('#dtNuevo').hidden = !dt.edita; $('#dtTipicos').hidden = !dt.edita;
-  const list = dtAmbs(dt.puesto), rev = list.filter(a => a.revisado).length;
-  $('#dtProgBar').style.width = list.length ? (rev / list.length * 100) + '%' : '0%'; $('#dtProgTxt').textContent = `${rev} de ${list.length} ambientes revisados`;
-  $('#dtAmbCount').textContent = list.length ? list.length + ' ambientes' : ''; $('#dtAmbEmpty').hidden = list.length > 0;
-  $('#dtAmbList').innerHTML = list.map(a => { const tp = DT_TIPOS[a.tipo] || DT_TIPOS.otro; const t = dtSum([a]); const ks = dtKeys(t).filter(k => t[k].n || t[k].e || t[k].i);
-    const res = ks.length ? ks.slice(0, 4).map(k => `${dtName(k)} ${t[k].n}`).join(' · ') + (ks.length > 4 ? ` · +${ks.length - 4}` : '') : 'Sin cantidades todavía';
-    return `<li><button class="dtrow" data-dt="${esc(a.id)}"><span class="dtsw" style="background:${esc(a.color || tp.c)}"></span><span class="dtrt"><b>${esc(a.nombre)}</b><span>${esc(res)}</span></span><span class="tag ${a.revisado ? 'ok' : ''}">${a.revisado ? 'Revisado' : 'Pendiente'}</span></button></li>`; }).join('');
+  pintarDtUni();
+  const list = dtAmbs(dt.puesto), uni = dt.amb[dtUniId(dt.puesto)];
   // Resumen del puesto
   const t = dtSum(list), ks = dtKeys(t); let buy = 0, pend = 0; ks.forEach(k => { buy += t[k].buy; pend += t[k].pend; });
-  $('#dtRev').textContent = `${rev}/${list.length}`; $('#dtBuy').textContent = buy; $('#dtPend').textContent = pend; $('#dtResTit').textContent = baseName(dt.puesto);
+  $('#dtRev').textContent = uni && uni.revisado ? 'Revisado' : dtTiene(dt.puesto) ? 'En curso' : 'Sin datos'; $('#dtBuy').textContent = buy; $('#dtPend').textContent = pend; $('#dtResTit').textContent = baseName(dt.puesto);
   const c = v => `<td class="${v ? '' : 'z'}">${v}</td>`;
-  if (!ks.length) { $('#dtResTable').innerHTML = '<tbody><tr><td class="z" style="white-space:normal">Aún no hay equipos cargados en este puesto.</td></tr></tbody>'; $('#dtResAmb').innerHTML = ''; }
+  if (!ks.length) { $('#dtResTable').innerHTML = '<tbody><tr><td class="z" style="white-space:normal">Aún no hay equipos cargados en este puesto.</td></tr></tbody>'; }
   else { const tot = { n:0, e:0, buy:0, i:0, pend:0 }; ks.forEach(k => { for (const f in tot) tot[f] += t[k][f]; });
     $('#dtResTable').innerHTML = `<thead><tr><th>Equipo</th><th>Necesario</th><th>Existente</th><th>A adquirir</th><th>Instalado</th><th>Por instalar</th></tr></thead><tbody>` +
       ks.map(k => `<tr><td>${esc(dtName(k))}</td>${c(t[k].n)}${c(t[k].e)}<td class="${t[k].buy ? 'hot' : 'z'}">${t[k].buy}</td>${c(t[k].i)}${c(t[k].pend)}</tr>`).join('') +
       `</tbody><tfoot><tr><td>Total</td><td>${tot.n}</td><td>${tot.e}</td><td>${tot.buy}</td><td>${tot.i}</td><td>${tot.pend}</td></tr></tfoot>`;
-    $('#dtResAmb').innerHTML = `<thead><tr><th>Ambiente</th>${ks.map(k => `<th>${esc(dtName(k))}</th>`).join('')}</tr></thead><tbody>` +
-      list.map(a => `<tr><td>${esc(a.nombre)}</td>${ks.map(k => { const v = a.eq && a.eq[k] ? dnum(a.eq[k].n) : 0; return `<td class="${v ? '' : 'z'}">${v || '·'}</td>`; }).join('')}</tr>`).join('') + '</tbody>'; }
+  }
   // Consolidado
-  const per = {}, all = {}; CECOS.bases.forEach(b => { const l = dtAmbs(b.n); per[b.n] = { t: dtSum(l), has: l.length > 0 }; for (const k in per[b.n].t) all[k] = 1; });
+  const per = {}, all = {}; CECOS.bases.forEach(b => { const l = dtAmbs(b.n); per[b.n] = { t: dtSum(l), has: dtTiene(b.n) }; for (const k in per[b.n].t) all[k] = 1; });
   const ck = dtKeys(all), m = dt.con; $('#dtConSub').textContent = `${CECOS.bases.filter(b => per[b.n].has).length} de 13 puestos con levantamiento`;
   $$('#dtConSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === m));
   if (!ck.length) $('#dtConTable').innerHTML = '<tbody><tr><td class="z" style="white-space:normal">Todavía no hay equipos cargados en ningún puesto.</td></tr></tbody>';
@@ -5808,7 +5788,7 @@ function pintarDot(){
     const rows = ck.map(k => { let s = 0; const cells = CECOS.bases.map((b, j) => { const v = per[b.n].t[k] ? per[b.n].t[k][m] : 0; s += v; foot[j] += v; return `<td class="${v ? '' : 'z'}">${per[b.n].has ? (v || '·') : '–'}</td>`; }).join(''); gt += s;
       return `<tr><td>${esc(dtName(k))}</td>${cells}<td><b>${s}</b></td></tr>`; }).join('');
     $('#dtConTable').innerHTML = `<thead><tr><th>Equipo</th>${CECOS.bases.map(b => `<th title="${esc(b.nombre)}" style="${per[b.n].has ? '' : 'opacity:.5'}">${b.n}</th>`).join('')}<th>Total</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td>Total</td>${foot.map(v => `<td>${v}</td>`).join('')}<td>${gt}</td></tr></tfoot>`; }
-  dtConn(); if (dt.open) pintarDtAmb();
+  dtConn();
 }
 function dtPatch(id, cambios){
   const a = dt.amb[id]; if (!a || !dt.edita) return;
@@ -5818,8 +5798,9 @@ function dtPatch(id, cambios){
 }
 async function dtGuardar(id){
   const a = dt.amb[id]; if (!a) return;
-  try { await rpc('rq_dotacion_guardar', { p_id: id, p_datos: { puesto: a.puesto, nombre: a.nombre, tipo: a.tipo, color: a.color, orden: a.orden || 0, ref: a.ref || '', nota: a.nota || '', revisado: !!a.revisado, eq: a.eq || {} } });
-    if (dt.pend[id] === a) { delete dt.pend[id]; LS.set('dtPend', dt.pend); } }
+  try { a.nuevo = false; const sv = await rpc('rq_dotacion_guardar', { p_id: id, p_datos: { puesto: a.puesto, nombre: a.nombre, tipo: a.tipo, color: a.color, orden: a.orden || 0, ref: a.ref || '', nota: a.nota || '', revisado: !!a.revisado, eq: a.eq || {} } });
+    if (sv) { a.actualizado = sv.actualizado; a.actualizado_por = sv.actualizado_por; }
+    if (dt.pend[id] === a) { delete dt.pend[id]; LS.set('dtPend', dt.pend); } if (id === dtUniId(dt.puesto) && dt.tab === 'lev') $('#dtUniUpd').textContent = `Actualizado por ${a.actualizado_por} hace un momento`; }
   catch (e) { $('#dtConn').textContent = 'Sin conexión: los cambios quedan en el teléfono'; return; }
   dtConn();
 }
@@ -5828,75 +5809,38 @@ $('#dtTabs').addEventListener('click', e => { const b = e.target.closest('[data-
 $('#dtConSeg').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; dt.con = b.dataset.v; pintarDot(); });
 $('#dtVolver').onclick = () => showTab('ajustes');
 $('#dotAbrir').onclick = () => showTab('dot');
-$('#dtAmbList').addEventListener('click', e => { const b = e.target.closest('[data-dt]'); if (b) dtAbrir(b.dataset.dt); });
-function dtAbrir(id){ dt.open = id; pintarDtAmb(); if (!$('#dtAmbDlg').open) $('#dtAmbDlg').showModal(); }
-$('#dtaClose').onclick = () => $('#dtAmbDlg').close();
-$('#dtAmbDlg').addEventListener('close', () => { dt.open = null; });
-function pintarDtAmb(){
-  const a = dt.amb[dt.open]; if (!a) { $('#dtAmbDlg').close(); return; }
-  const tp = DT_TIPOS[a.tipo] || DT_TIPOS.otro, ro = !dt.edita;
-  $('#dtaSw').style.background = a.color || tp.c; $('#dtaName').textContent = a.nombre; $('#dtaTipo').textContent = tp.n + ' · ' + baseName(a.puesto);
-  $('#dtaRef').hidden = !a.ref; $('#dtaRef').textContent = a.ref ? 'Plano de usos: ' + a.ref : '';
-  $$('#dtMode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === dt.mode)); $('#dtModeHint').textContent = DT_HINT[dt.mode];
-  const ks = Object.keys(a.eq || {}).sort((x, y) => dtOrder(x) - dtOrder(y));
-  const foco = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.dk;
-  $('#dtEqList').innerHTML = ks.length ? ks.map(k => { const q = a.eq[k];
-    const otros = Object.keys(DT_MODES).filter(x => x !== dt.mode).map(x => `${DT_MODES[x]} <b>${dnum(q[x])}</b>`).join(' · ');
-    let fix = '';
-    if (!ro && k === 'colchones' && dt.mode === 'n' && a.eq.literas && dnum(a.eq.literas.n) && dnum(q.n) !== dnum(a.eq.literas.n) * 2) fix = `<button class="btn ghost dtfix" data-dfix="1">Igualar a 2 por litera (${dnum(a.eq.literas.n) * 2})</button>`;
-    if (!ro && !dnum(q.n) && !dnum(q.e) && !dnum(q.i)) fix += `<button class="btn ghost dtfix" data-drm="${k}">Quitar de este ambiente</button>`;
-    return `<li class="dteq"><div class="dtnm"><b>${esc(dtName(k))}</b><span>${otros}</span>${fix}</div>
-      <div class="dtstep"><button data-dd="-1" data-dk="${k}" aria-label="Restar ${esc(dtName(k))}" ${ro ? 'disabled' : ''}>−</button><input data-dk="${k}" inputmode="numeric" value="${dnum(q[dt.mode])}" aria-label="${DT_MODES[dt.mode]}: ${esc(dtName(k))}" ${ro ? 'readonly' : ''}><button data-dd="1" data-dk="${k}" aria-label="Sumar ${esc(dtName(k))}" ${ro ? 'disabled' : ''}>+</button></div></li>`; }).join('')
-    : '<li class="empty" style="list-style:none">Sin equipos. Agrega el primero abajo.</li>';
-  if (foco) { const el = $('#dtEqList').querySelector(`input[data-dk="${foco}"]`); if (el) { el.focus(); const l = el.value.length; try { el.setSelectionRange(l, l); } catch (e) {} } }
-  $('#dtEdit').hidden = ro;
-  const have = new Set(ks);
-  $('#dtAddSel').innerHTML = '<option value="">Agregar equipo…</option>' + dtCat().filter(e => !have.has(e.k)).map(e => `<option value="${e.k}">${esc(e.n)}</option>`).join('') + '<option value="__otro">Otro equipo…</option>';
-  if (document.activeElement !== $('#dtaNota')) $('#dtaNota').value = a.nota || '';
-  if (document.activeElement !== $('#dtaRename')) $('#dtaRename').value = a.nombre;
-  $('#dtaTipoChips').innerHTML = Object.entries(DT_TIPOS).map(([k, v]) => `<button type="button" data-dt2="${k}" aria-pressed="${a.tipo === k}"><span class="dtsw sm" style="background:${v.c}"></span>${esc(v.n)}</button>`).join('');
-  const rb = $('#dtaRev'); rb.hidden = ro; rb.textContent = a.revisado ? 'Revisado · siguiente' : 'Marcar revisado'; rb.className = 'btn ' + (a.revisado ? 'ok' : 'primary');
-  const list = dtAmbs(a.puesto); $('#dtaPrev').disabled = list.findIndex(x => x.id === dt.open) <= 0;
+// ---- Levantamiento unificado por puesto (v4.31.0) ----
+function pintarDtUni(){
+  const a = dt.amb[dtUniId(dt.puesto)], eq = (a && a.eq) || {}, ro = !dt.edita, m = dt.mode;
+  $$('#dtMode2 button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === m)); $('#dtModeHint2').textContent = DT_HINT[m];
+  const cat = dtCat(), keys = cat.map(e => e.k).concat(Object.keys(eq).filter(k => !cat.some(e => e.k === k)));
+  const con = keys.filter(k => eq[k] && (dnum(eq[k].n) || dnum(eq[k].e) || dnum(eq[k].i))).length;
+  $('#dtProgBar').style.width = (con / keys.length * 100) + '%'; $('#dtProgTxt').textContent = `${con} de ${keys.length} equipos con cantidades`;
+  $('#dtUniSt').innerHTML = a && a.revisado ? '<span class="tag ok">Revisado</span>' : '';
+  const foco = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.uk;
+  $('#dtUniList').innerHTML = keys.map(k => { const q = eq[k] || { n: 0, e: 0, i: 0 };
+    const otros = Object.keys(DT_MODES).filter(x => x !== m).map(x => `${DT_MODES[x]} <b>${dnum(q[x])}</b>`).join(' · ');
+    return `<li class="dteq ${dnum(q.n) || dnum(q.e) || dnum(q.i) ? '' : 'vacio'}"><div class="dtnm"><b>${esc(dtName(k))}</b><span>${otros}</span></div>
+      <div class="dtstep"><button data-ud="-1" data-uk="${k}" aria-label="Restar ${esc(dtName(k))}" ${ro ? 'disabled' : ''}>−</button><input data-uk="${k}" inputmode="numeric" value="${dnum(q[m])}" aria-label="${DT_MODES[m]}: ${esc(dtName(k))}" ${ro ? 'readonly' : ''}><button data-ud="1" data-uk="${k}" aria-label="Sumar ${esc(dtName(k))}" ${ro ? 'disabled' : ''}>+</button></div></li>`; }).join('');
+  if (foco) { const el = $('#dtUniList').querySelector(`input[data-uk="${foco}"]`); if (el) { el.focus(); const l = el.value.length; try { el.setSelectionRange(l, l); } catch (e) {} } }
+  $('#dtUniOtro').hidden = ro; $('#dtUniNota').readOnly = ro; if (document.activeElement !== $('#dtUniNota')) $('#dtUniNota').value = (a && a.nota) || '';
+  const rb = $('#dtUniRev'); rb.hidden = ro; rb.textContent = a && a.revisado ? 'Revisado ✓ (tocar para reabrir)' : 'Marcar el puesto como revisado'; rb.className = 'btn block100 ' + (a && a.revisado ? 'ok' : 'primary');
+  $('#dtUniUpd').textContent = a && a.actualizado_por ? `Actualizado por ${a.actualizado_por}${a.actualizado ? ' el ' + new Date(a.actualizado).toLocaleString('es-VE', { day: '2-digit', month: 'short', hour: 'numeric', minute: '2-digit' }) : ''}` : '';
 }
-$('#dtMode').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; dt.mode = b.dataset.v; pintarDtAmb(); });
-const dtSetQty = (k, v) => { const a = dt.amb[dt.open]; if (!a || !a.eq[k]) return; dtPatch(dt.open, { eq: { [k]: { [dt.mode]: dnum(v) } } }); };
-$('#dtEqList').addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b || !dt.edita) return; const a = dt.amb[dt.open];
-  if (b.dataset.drm) { delete a.eq[b.dataset.drm]; dtPatch(dt.open, {}); return; }
-  if (b.dataset.dfix) { dtPatch(dt.open, { eq: { colchones: { n: dnum(a.eq.literas.n) * 2 } } }); return; }
-  if (b.dataset.dd) { const k = b.dataset.dk; dtSetQty(k, dnum(a.eq[k][dt.mode]) + Number(b.dataset.dd)); }
-});
-$('#dtEqList').addEventListener('input', e => { if (e.target.matches('input[data-dk]') && dt.edita) { const v = e.target.value.replace(/\D/g, ''); if (v !== e.target.value) e.target.value = v; if (v !== '') dtSetQty(e.target.dataset.dk, v); } });
-$('#dtEqList').addEventListener('focusin', e => { if (e.target.matches('input[data-dk]')) e.target.select(); });
-$('#dtEqList').addEventListener('focusout', e => { if (e.target.matches('input[data-dk]') && e.target.value === '' && dt.edita) dtSetQty(e.target.dataset.dk, 0); });
-$('#dtAddSel').onchange = () => { $('#dtOtroRow').hidden = $('#dtAddSel').value !== '__otro'; };
-$('#dtAddBtn').onclick = () => { const k = $('#dtAddSel').value; if (!k || k === '__otro') return; dtPatch(dt.open, { eq: { [k]: { n:0, e:0, i:0 } } }); toast(dtName(k) + ' agregado'); };
-$('#dtOtroBtn').onclick = async () => {
-  const n = $('#dtOtroNom').value.trim(); if (!n) return;
-  const k = 'x-' + n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+const dtUniSet = (k, v) => { if (!dt.edita) return; const a = dtUni(dt.puesto); a.eq[k] = a.eq[k] || { n: 0, e: 0, i: 0 }; dtPatch(a.id, { eq: { [k]: { [dt.mode]: dnum(v) } } }); };
+$('#dtMode2').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; dt.mode = b.dataset.v; pintarDtUni(); });
+$('#dtUniList').addEventListener('click', e => { const b = e.target.closest('button[data-ud]'); if (!b || !dt.edita) return; const k = b.dataset.uk, a = dtUni(dt.puesto); dtUniSet(k, dnum((a.eq[k] || {})[dt.mode]) + Number(b.dataset.ud)); });
+$('#dtUniList').addEventListener('input', e => { if (e.target.matches('input[data-uk]') && dt.edita) { const v = e.target.value.replace(/\D/g, ''); if (v !== e.target.value) e.target.value = v; if (v !== '') dtUniSet(e.target.dataset.uk, v); } });
+$('#dtUniList').addEventListener('focusin', e => { if (e.target.matches('input[data-uk]')) e.target.select(); });
+$('#dtUniList').addEventListener('focusout', e => { if (e.target.matches('input[data-uk]') && e.target.value === '' && dt.edita) dtUniSet(e.target.dataset.uk, 0); });
+$('#dtUniNota').addEventListener('change', () => { if (dt.edita) dtPatch(dtUni(dt.puesto).id, { nota: $('#dtUniNota').value.trim() }); });
+$('#dtUniRev').onclick = () => { const a = dtUni(dt.puesto); dtPatch(a.id, { revisado: !a.revisado }); toast(a.revisado ? baseName(dt.puesto) + ' revisado' : 'Levantamiento reabierto'); };
+$('#dtUniOtroBtn').onclick = async () => {
+  const n = $('#dtUniOtroNom').value.trim(); if (!n || !dt.edita) return;
+  const k = 'x-' + n.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
   if (!dtCat().some(e => e.k === k)) { dt.extras.push({ k, n }); try { await rpc('rq_dotacion_extras', { p_extras: dt.extras }); } catch (e) { toast(e.message); } }
-  $('#dtOtroNom').value = ''; $('#dtOtroRow').hidden = true; dtPatch(dt.open, { eq: { [k]: { n:0, e:0, i:0 } } }); toast(n + ' agregado al catálogo');
+  $('#dtUniOtroNom').value = ''; const a = dtUni(dt.puesto); a.eq[k] = a.eq[k] || { n: 0, e: 0, i: 0 }; dtPatch(a.id, {}); toast(n + ' agregado');
 };
-$('#dtaNota').addEventListener('change', () => dtPatch(dt.open, { nota: $('#dtaNota').value.trim() }));
-$('#dtaRename').addEventListener('change', () => { const v = $('#dtaRename').value.trim(); if (v) dtPatch(dt.open, { nombre: v }); });
-$('#dtaTipoChips').addEventListener('click', e => { const b = e.target.closest('[data-dt2]'); if (!b) return; dtPatch(dt.open, { tipo: b.dataset.dt2, color: DT_TIPOS[b.dataset.dt2].c }); });
-$('#dtaDel').onclick = async () => { if (!confirm('¿Eliminar este ambiente y sus cantidades?')) return; const id = dt.open; $('#dtAmbDlg').close();
-  try { await rpc('rq_dotacion_borrar', { p_id: id }); delete dt.amb[id]; delete dt.pend[id]; LS.set('dtPend', dt.pend); pintarDot(); toast('Ambiente eliminado'); } catch (e) { toast(e.message); } };
-$('#dtaRev').onclick = () => { const a = dt.amb[dt.open]; const list = dtAmbs(a.puesto); const i = list.findIndex(x => x.id === dt.open);
-  if (!a.revisado) { dtPatch(dt.open, { revisado: true }); toast('Ambiente revisado'); }
-  const next = list.slice(i + 1).find(x => !x.revisado) || list.find(x => !x.revisado && x.id !== dt.open);
-  if (next) dtAbrir(next.id); else { $('#dtAmbDlg').close(); toast('Todos los ambientes de este puesto están revisados'); } };
-$('#dtaPrev').onclick = () => { const a = dt.amb[dt.open]; const list = dtAmbs(a.puesto); const i = list.findIndex(x => x.id === dt.open); if (i > 0) dtAbrir(list[i - 1].id); };
-function dtNuevoAmb(nombre, tipo, orden){ const eq = {}; DT_TIPOS[tipo].eq.forEach(k => eq[k] = { n:0, e:0, i:0 }); const id = 'b' + dt.puesto + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  dt.amb[id] = { id, puesto: dt.puesto, nombre, tipo, color: DT_TIPOS[tipo].c, orden, eq, revisado: false, nota: '', ref: '' }; dtPatch(id, {}); return id; }
-function pintarDtNew(){ $('#dtnTipo').innerHTML = Object.entries(DT_TIPOS).map(([k, v]) => `<button type="button" data-t="${k}" aria-pressed="${dt.newTipo === k}"><span class="dtsw sm" style="background:${v.c}"></span>${esc(v.n)}</button>`).join('');
-  $('#dtnHint').textContent = 'Arranca con: ' + DT_TIPOS[dt.newTipo].eq.map(dtName).join(', ') + '. Puedes agregar o quitar después.'; }
-$('#dtNuevo').onclick = () => { $('#dtnName').value = ''; dt.newTipo = 'dormitorio'; pintarDtNew(); $('#dtNewDlg').showModal(); };
-$('#dtnClose').onclick = () => $('#dtNewDlg').close();
-$('#dtnTipo').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (!b) return; dt.newTipo = b.dataset.t; pintarDtNew(); });
-$('#dtnSave').onclick = () => { const nombre = $('#dtnName').value.trim() || DT_TIPOS[dt.newTipo].n; const orden = dtAmbs(dt.puesto).reduce((m, a) => Math.max(m, a.orden || 0), 0) + 1;
-  const id = dtNuevoAmb(nombre, dt.newTipo, orden); $('#dtNewDlg').close(); dtAbrir(id); };
-$('#dtTipicos').onclick = () => { DT_TIPICOS.forEach(([n, t], i) => dtNuevoAmb(n, t, i + 1)); toast('12 ambientes cargados. Ajusta nombres y cantidades.'); };
 // Excel de dotación. P: puestos (bases de CECOS), E: claves de equipo (null = todos). Sin filtros sale igual que siempre.
 async function dotXlsx(P, E, boton){
   if (!window.ExcelJS) return toast('No se pudo cargar el generador de Excel');
@@ -5959,11 +5903,6 @@ async function dotXlsx(P, E, boton){
     head(s.addRow(['Puesto','Equipo','Por adquirir','Por instalar','Instalado']));
     P.forEach(p => dtKeys(per[p.n].t).filter(incl).forEach(k => { const t = per[p.n].t[k]; s.addRow([p.nombre, dtName(k), t.buy, t.pend, t.i]); }));
     s.columns.forEach((col, i) => col.width = i === 0 ? 26 : i === 1 ? 24 : 13); s.autoFilter = { from:'A1', to:'E1' };
-    const d = wb.addWorksheet('Por ambiente', { views:[{ state:'frozen', ySplit:1 }] });
-    head(d.addRow(['Puesto','Ambiente','Uso','Equipo','Por adquirir','Por instalar','Instalado','Revisado','Notas']));
-    P.forEach(p => per[p.n].l.forEach(a => Object.keys(a.eq || {}).filter(incl).sort((x, y) => dtOrder(x) - dtOrder(y)).forEach(k => { const q = a.eq[k];
-      d.addRow([p.nombre, a.nombre, (DT_TIPOS[a.tipo] || DT_TIPOS.otro).n, dtName(k), Math.max(0, dnum(q.n) - dnum(q.e)), Math.max(0, dnum(q.n) - dnum(q.i)), dnum(q.i), a.revisado ? 'Sí' : 'No', a.nota || '']); })));
-    [26,26,20,24,12,12,11,10,40].forEach((w, i) => d.getColumn(i + 1).width = w); d.autoFilter = { from:'A1', to:'I1' };
     const buf = await wb.xlsx.writeBuffer();
     const sufijo = !filtrado ? 'BPF' : (P.length === 1 ? cod(P[0]).replace(/\s+/g, '_') : P.length + '_puestos') + (E ? (E.size === 1 ? '_' + dtName([...E][0]).replace(/\s+/g, '_') : '_' + E.size + '_equipos') : '');
     const r = await deliver({ name: `Dotacion_equipos_${sufijo}_${today()}.xlsx`, blob: new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }) }); if (r === 'declined') toast('Descarga cancelada');
@@ -5979,15 +5918,15 @@ function dtxAbrir(){
   $('#dtxErr').hidden = true; dtxPintar(); $('#dtxDlg').showModal();
 }
 function dtxPintar(){
-  const conAmb = n => dtAmbs(n).length;
+  const conAmb = n => dtTiene(n);
   $('#dtxPu').innerHTML = CECOS.bases.map(b => `<button type="button" data-xpu="${b.n}" aria-pressed="${dtx.pu.has(b.n)}">${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}${conAmb(b.n) ? '' : '<i>sin datos</i>'}</button>`).join('');
   const P = CECOS.bases.filter(b => dtx.pu.has(b.n)), t = dtSum(P.flatMap(b => dtAmbs(b.n)));
   $('#dtxEq').innerHTML = dtCat().map(e => `<button type="button" data-xeq="${esc(e.k)}" aria-pressed="${dtx.eq.has(e.k)}">${esc(e.n)}${t[e.k] && t[e.k].n ? `<i>${t[e.k].n}</i>` : ''}</button>`).join('');
   $('#dtxPuN').textContent = `${dtx.pu.size} de ${CECOS.bases.length}`; $('#dtxEqN').textContent = `${dtx.eq.size} de ${dtCat().length}`;
-  let filas = 0, buy = 0, pend = 0, ins = 0; P.forEach(b => dtAmbs(b.n).forEach(a => Object.keys(a.eq || {}).forEach(k => { if (dtx.eq.has(k)) filas++; })));
+  let filas = 0, buy = 0, pend = 0, ins = 0; P.forEach(b => { const tb = dtSum(dtAmbs(b.n)); Object.keys(tb).forEach(k => { if (dtx.eq.has(k) && (tb[k].n || tb[k].e || tb[k].i)) filas++; }); });
   Object.keys(t).filter(k => dtx.eq.has(k)).forEach(k => { buy += t[k].buy; pend += t[k].pend; ins += t[k].i; });
   $('#dtxRes').innerHTML = !dtx.pu.size || !dtx.eq.size ? 'Marca al menos un puesto y un equipo.'
-    : `<b>${dtx.pu.size === 13 ? 'Los 13 puestos' : dtx.pu.size + ' puesto' + (dtx.pu.size === 1 ? '' : 's')} · ${dtx.eq.size === dtCat().length ? 'todos los equipos' : dtx.eq.size + ' equipo' + (dtx.eq.size === 1 ? '' : 's')}</b><br>Por adquirir ${buy} · por instalar ${pend} · instalado ${ins} · ${filas} fila${filas === 1 ? '' : 's'} por ambiente`;
+    : `<b>${dtx.pu.size === 13 ? 'Los 13 puestos' : dtx.pu.size + ' puesto' + (dtx.pu.size === 1 ? '' : 's')} · ${dtx.eq.size === dtCat().length ? 'todos los equipos' : dtx.eq.size + ' equipo' + (dtx.eq.size === 1 ? '' : 's')}</b><br>Por adquirir ${buy} · por instalar ${pend} · instalado ${ins} · ${filas} fila${filas === 1 ? '' : 's'} en el detalle por puesto`;
   $('#dtxGo').disabled = !dtx.pu.size || !dtx.eq.size;
 }
 $('#dtxBtn').onclick = dtxAbrir;
@@ -6013,7 +5952,8 @@ async function pintarDotMini(){
   $('#dotBlock').hidden = !canDotacion(); if (!canDotacion()) return;
   try { const r = await rpc('rq_dotacion_listar'); const A = r.ambientes || []; const pu = new Set(A.map(a => a.puesto));
     const t = dtSum(A); let buy = 0; Object.values(t).forEach(x => buy += x.buy);
-    $("#dotMini").textContent = `${A.length} ambientes en ${pu.size} de 13 puestos · ${A.filter(a => a.revisado).length} revisados · ${buy} equipos a adquirir.`; } catch (e) {}
+    const conD = A.filter(a => Object.values(a.eq || {}).some(q => dnum(q.n) || dnum(q.e) || dnum(q.i)));
+    $("#dotMini").textContent = `${conD.length} de 13 puestos con datos · ${A.filter(a => a.revisado).length} revisados · ${buy} equipos a adquirir.`; } catch (e) {}
 }
 
 /* ---------- Pestañas ---------- */
