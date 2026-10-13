@@ -635,11 +635,11 @@ nav.tabs button{flex:0 0 auto}
 /* v4.29.0: procura */
 .tag.prt{border-color:transparent;font-weight:700}
 .tag.pr-sin,.pfil i.pr-sin{background:var(--sunk);color:var(--muted)}.tag.pr-cotizando{background:#FFF1C7;color:#6B4A00}.tag.pr-por_pagar{background:#F7DEDB;color:#8A1F17}
-.tag.pr-pagada{background:#DDE7F6;color:#1F4E8C}.tag.pr-en_despacho{background:#E7DDF3;color:#5B3F86}.tag.pr-despachada{background:#DCE9E3;color:#2E5E4F}
+.tag.pr-pagada{background:#DDE7F6;color:#1F4E8C}.tag.pr-pago_confirmado{background:#D3EEF0;color:#14636B}.pfil i.pr-pago_confirmado{--pc:#14636B}.tag.pr-en_despacho{background:#E7DDF3;color:#5B3F86}.tag.pr-despachada{background:#DCE9E3;color:#2E5E4F}
 .pfil i.pr-cotizando{--pc:#E0A800}.pfil i.pr-por_pagar{--pc:#B3261E}.pfil i.pr-pagada{--pc:#1F4E8C}.pfil i.pr-en_despacho{--pc:#5B3F86}.pfil i.pr-despachada{--pc:#2E5E4F}
 .prlist li.prli{cursor:pointer}.prnext{color:var(--muted);font-size:13px}
-.prsteps{list-style:none;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:10px 0 0;padding:0;counter-reset:s}
-.prsteps li{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:var(--muted);text-align:center}
+.prsteps{list-style:none;display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin:10px 0 0;padding:0;counter-reset:s}
+.prsteps li{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;line-height:1.15;color:var(--muted);text-align:center}
 .prsteps li span{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--rule);font-weight:700;background:var(--surface)}
 .prsteps li.ok{color:var(--green)}.prsteps li.ok span{background:var(--green);border-color:var(--green);color:#fff}
 .prsteps li.now{color:var(--ink);font-weight:700}.prsteps li.now span{border-color:var(--amber);background:var(--amber);color:var(--amber-ink)}
@@ -661,6 +661,13 @@ nav.tabs button{flex:0 0 auto}
 .prpu{list-style:none;margin:0 0 10px;padding:0}.prpu li{display:grid;grid-template-columns:1fr 104px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--rule);font-size:13.5px}
 .prhist{list-style:none;margin:0;padding:0}.prhist li{padding:8px 0;border-bottom:1px solid var(--rule);font-size:13.5px}.prhist li span{color:var(--muted)}
 .prseg .prsteps{margin:4px 0 6px}
+.prfile{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}.prfile .lnk{background:none;border:0;padding:0;font-weight:700;text-decoration:underline;color:var(--ink);cursor:pointer;text-align:left}
+.prwarn{background:#FFF1C7;color:#6B4A00;padding:8px 10px;border-radius:8px}
+.prpu li{grid-template-columns:1fr 96px}.prpu li.nc>div>b{opacity:.6}.prsel{margin-top:4px;min-height:38px;font-size:13px;padding:4px 8px}
+.prdudo{display:block;color:#8A5A00;font-weight:600}.prajus{display:block;color:var(--red);font-weight:600}
+.prlib{margin:4px 0 10px;font-size:13.5px}.prlib summary{cursor:pointer;font-weight:600}.prlib ul{margin:6px 0 0;padding-left:18px;color:var(--muted)}
+.prup .btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:54px}
+.prdocs{list-style:none;margin:0;padding:0}.prdocs li{padding:6px 0;border-bottom:1px solid var(--rule);display:grid;gap:2px}.prdocs .lnk{background:none;border:0;padding:0;font-weight:700;text-decoration:underline;color:var(--ink);text-align:left;cursor:pointer}.prdocs small{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -1795,6 +1802,8 @@ const ERRS = {
   solo_compras:'Solo Compras firma el recibido.', no_aprobada:'Todavía no está aprobada.', ya_recibida:'Compras ya firmó el recibido.',
   ya_verificada:'Ya fue verificada.', propia:'No puedes verificar una requisición que hiciste tú. La verifica otro Gerente de Operaciones.', falta_verificar:'Primero la verifica el Gerente de Operaciones.', misma_persona:'Quien verificó no puede aprobar.',
   no_pendiente:'Esta requisición ya está cerrada.', no_existe:'No se encontró la requisición.', firma_invalida:'Falta la firma.',
+  cotizacion_sin_archivo:'Cada cotización debe venir del archivo del proveedor (PDF, Excel o foto).',
+  procura_pago_sin_confirmar:'Primero confirma con el proveedor que recibió el pago.', procura_no_pagada:'La requisición todavía no está pagada.', falta_motivo:'Escribe qué pasó.',
   prioridad_invalida:'Elige la prioridad: urgente, media o compra planificada.', prioridad_cerrada:'Esta requisición ya está cerrada (rechazada o recibida): su prioridad no se puede cambiar.',
   sin_motivo:'Escribe el motivo del rechazo.', sin_materiales:'Agrega al menos un material.', max_materiales:'Una requisición admite máximo 150 materiales.',
   demasiado_grande:'La requisición es muy pesada. Borra la firma y vuelve a firmar.', datos_invalidos:'Los datos no son válidos.',
@@ -2305,7 +2314,7 @@ function parseSolicitud(T){
         pz.condiciones = lineas(des ? des.y + 2 : -1e9, fin.y - 2).filter(l => !/^TOTAL\b/i.test(l.trim())).join(' ').replace(/\s+/g, ' ').trim(); }
     }
     // columna de descripción: la x más común del texto no numérico a la izquierda de Und
-    const xs = {}; tabla.filter(t => cx(t) < undC - 30 && !/^\d{1,3}$/.test(t.s.trim())).forEach(t => { const k = Math.round(t.x); xs[k] = (xs[k] || 0) + 1; });
+    const xs = {}; tabla.filter(t => cx(t) < undC - 30 && t.x > hItem.x + (hItem.w || 0) + 2 && !/^\d{1,3}$/.test(t.s.trim())).forEach(t => { const k = Math.round(t.x); xs[k] = (xs[k] || 0) + 1; });
     const xDesc = +Object.entries(xs).sort((a, b) => b[1] - a[1])[0]?.[0] || hDesc.x;
     const anclas = tabla.filter(t => /^\d{1,3}$/.test(t.s.trim()) && t.x < xDesc - 3).sort((a, b) => b.y - a.y);
     const filas = anclas.map(a => ({ n: +a.s.trim(), y: a.y, desc: [], und: [], cant: [] }));
@@ -4259,8 +4268,12 @@ function abrirViatico(numero){ setMod('via', veViaticos() ? 'vtodos' : 'vmis'); 
 const canProcura = () => me && (me.es_master || ['compras','costos'].includes(me.rol));
 const veProcura = () => me && (me.es_master || ['compras','costos','gerente_general','gerente_operaciones'].includes(me.rol));
 const pagaProcura = () => me && (me.es_master || me.rol === 'gerente_general');
-const PR_EST = { sin: 'Por cotizar', cotizando: 'Cotizando', por_pagar: 'Por pagar', pagada: 'Pagada', en_despacho: 'En despacho', despachada: 'Recibida en obra' };
-const PR_ORD = ['sin', 'cotizando', 'por_pagar', 'pagada', 'en_despacho', 'despachada'];
+const PR_EST = { sin: 'Por cotizar', cotizando: 'Cotizando', por_pagar: 'Por pagar', pagada: 'Pagada, por confirmar', pago_confirmado: 'Pago confirmado', en_despacho: 'En despacho', despachada: 'Recibida en obra' };
+const PR_ORD = ['sin', 'cotizando', 'por_pagar', 'pagada', 'pago_confirmado', 'en_despacho', 'despachada'];
+// pasos del proceso y en cuál va cada estado (v4.30.0: confirmación del pago por el proveedor)
+const PR_PASOS = ['Cotizar', 'Ganador', 'Pago', 'Confirmación', 'Despacho', 'En obra'];
+const PR_AHORA = { sin: 1, cotizando: 1, por_pagar: 3, pagada: 4, pago_confirmado: 5, en_despacho: 6, despachada: 7 };
+const prPasos = (e, cls) => `<ol class="prsteps ${cls || ''}">${PR_PASOS.map((t, i) => { const n = i + 1, a = PR_AHORA[e] || 1; return `<li class="${n < a ? 'ok' : n === a ? 'now' : ''}"><span>${n}</span>${t}</li>`; }).join('')}</ol>`;
 const prEst = x => (x && x.procura && (x.procura.estado || x.procura)) || 'sin';
 const prTag = e => `<span class="tag prt pr-${e}">${PR_EST[e] || e}</span>`;
 const prNum = x => { const t = String(x == null ? '' : x).trim(); if (!t) return null; const n = t.includes(',') ? parseFloat(t.replace(/\./g, '').replace(',', '.')) : parseFloat(t); return isNaN(n) ? null : n; };
@@ -4291,7 +4304,7 @@ function pintarProc(){
       return _norm([r.control, r.area, r.solicitante, pv, (r.items || []).map(i => i.desc).join(' ')].join(' ')).includes(q); })
     .sort((a, b) => prioRank(a.prioridad) - prioRank(b.prioridad) || PR_ORD.indexOf(prEst(a)) - PR_ORD.indexOf(prEst(b)) || String(b.creado).localeCompare(String(a.creado)));
   $('#prList').innerHTML = L.map(r => { const x = r.procura || {}, e = prEst(r), cots = (x.cotizaciones || []).filter(c => c.proveedor), gan = cots.find(c => c.id === x.ganador);
-    const nxt = { sin: 'Cargar cotizaciones', cotizando: `${cots.length} cotización${cots.length === 1 ? '' : 'es'} · elegir ganador`, por_pagar: 'Esperando el pago de Gerencia General', pagada: 'Falta marcar el despacho', en_despacho: x.despacho && x.despacho.llegada ? `Llegada estimada ${fmt(x.despacho.llegada)}` : 'Esperando confirmación en obra', despachada: x.entrega && x.entrega.completo === false ? 'Llegó incompleta' : 'Completa' }[e];
+    const nxt = { sin: 'Cargar cotizaciones', cotizando: `${cots.length} cotización${cots.length === 1 ? '' : 'es'} · elegir ganador`, por_pagar: x.confirmacion && x.confirmacion.recibido === false ? 'El proveedor no confirmó el pago: revisar' : 'Esperando el pago de Gerencia General', pagada: 'Confirmar con el proveedor que recibió el pago', pago_confirmado: 'Falta marcar el despacho', en_despacho: x.despacho && x.despacho.llegada ? `Llegada estimada ${fmt(x.despacho.llegada)}` : 'Esperando confirmación en obra', despachada: x.entrega && x.entrega.completo === false ? 'Llegó incompleta' : 'Completa' }[e];
     return `<li data-prc="${esc(r.control)}" role="button" tabindex="0" class="prli pr-${PRIO[r.prioridad] ? r.prioridad : 'sin'}">
       <div class="ctlb"><b>${esc(r.control)}</b><small class="bpf">${esc(prBases(r))}</small><span class="when">${fmt(isoLocal(r.creado))}</span></div>
       <div class="tags" style="margin:4px 0 2px">${prioTag(r.prioridad)}${prTag(e)}${x.entrega && x.entrega.completo === false ? '<span class="tag bad">Incompleta</span>' : ''}</div>
@@ -4305,10 +4318,9 @@ $('#prRefresh').onclick = loadProc;
 $('#prList').addEventListener('click', e => { const li = e.target.closest('[data-prc]'); if (li) prAbrir(li.dataset.prc); });
 function prAbrir(control){ const r = prLista.find(x => x.control === control); if (!r) return toast('No encontré la requisición ' + control + ' en procura');
   prRow = JSON.parse(JSON.stringify(r)); if (!prRow.procura) prRow.procura = { estado: 'cotizando', cotizaciones: [], hist: [], nueva: true };
-  if (!prRow.procura.cotizaciones.length && canProcura() && prEst(r) !== 'por_pagar') prRow.procura.cotizaciones.push(prNuevaCot());
   showTab('pedit'); }
 const prNuevaCot = () => ({ id: uuid().slice(0, 8), proveedor: '', rif: '', contacto: '', moneda: 'USD', precios: [], flete: '', iva_pct: '16', entrega: '', pago: '', validez: '', notas: '' });
-const prEditable = () => canProcura() && prRow && prEst(prRow) === 'cotizando' || (canProcura() && prRow && prRow.procura.nueva);
+const prEditable = () => canProcura() && prRow && (prEst(prRow) === 'cotizando' || prEst(prRow) === 'sin' || prRow.procura.nueva);
 function pintarPEdit(){
   if (!prRow) return showTab('proc');
   const r = prRow, x = r.procura, e = prEst(r), items = r.items || [], ed = prEditable(), cots = x.cotizaciones || [];
@@ -4318,12 +4330,11 @@ function pintarPEdit(){
   const maxN = validas.length ? Math.max(...validas.map(k => tots[k].n)) : 0;
   const mejorTot = validas.filter(k => tots[k].n === maxN).reduce((a, k) => a < 0 || tots[k].total < tots[a].total ? k : a, -1);
   const minPU = items.map((it, i) => { const v = cots.map(c => c.proveedor ? prNum((c.precios || [])[i]) : null).filter(v => v != null); return v.length ? Math.min(...v) : null; });
-  const paso = k => { const i = PR_ORD.indexOf(e); return e === 'despachada' || i > k ? 'ok' : i === k ? 'now' : ''; };
   const gan = cots.find(c => c.id === x.ganador);
   let h = `<div class="block"><div class="tags" style="margin:0 0 8px">${prioTag(r.prioridad)}${prTag(e)}</div>
     <dl class="dl"><dt>Base</dt><dd>${esc(prBases(r))}</dd><dt>Área</dt><dd>${esc(r.area || '')}</dd><dt>Pidió</dt><dd>${esc(r.solicitante || '')}</dd>
     ${r.fechaRequerida ? `<dt>Para el</dt><dd>${fmt(r.fechaRequerida)}</dd>` : ''}<dt>Recibida</dt><dd>${r.recibido ? fmt(isoLocal(r.recibido)) : ''} por Compras</dd></dl>
-    <ol class="prsteps">${[['Cotizar', 1], ['Ganador', 2], ['Pago', 3], ['Despacho', 4], ['En obra', 5]].map(([t, k]) => `<li class="${paso(k)}"><span>${k}</span>${t}</li>`).join('')}</ol>
+    ${prPasos(e)}
     <button class="btn block100" id="peDet" style="margin-top:8px">Ver la requisición completa</button></div>`;
   // ---- estado posterior a la adjudicación ----
   if (gan) {
@@ -4331,12 +4342,16 @@ function pintarPEdit(){
       <p class="prwtot">${prMon(x.monto, x.moneda)}</p><p class="hint" style="margin:0">${tots[cots.indexOf(gan)].n} de ${items.length} materiales cotizados${gan.entrega ? ' · entrega ' + esc(gan.entrega) : ''}${gan.pago ? ' · ' + esc(gan.pago) : ''}</p>
       ${x.adjudicado ? `<p class="hint">Adjudicada por ${esc(x.adjudicado.por)} el ${fmt(isoLocal(x.adjudicado.fecha))}${x.adjudicado.motivo ? ': ' + esc(x.adjudicado.motivo) : ''}</p>` : ''}
       ${x.pago ? `<div class="prbox ok"><b>Pagada</b> el ${fmt(x.pago.fecha)} por ${esc(x.pago.por)}${x.pago.forma ? ' · ' + esc(x.pago.forma) : ''}${x.pago.referencia ? ' · Ref. ' + esc(x.pago.referencia) : ''}${x.pago.monto ? ' · ' + prMon(x.pago.monto, x.moneda) : ''}${x.pago.notas ? '<br>' + esc(x.pago.notas) : ''}</div>` : `<div class="prbox pend"><b>Pago pendiente.</b> Se le avisó a Gerencia General.</div>`}
+      ${x.confirmacion && x.confirmacion.recibido !== false ? `<div class="prbox ok"><b>El proveedor confirmó el pago</b> el ${fmt(x.confirmacion.fecha)} (registró ${esc(x.confirmacion.por)})${x.confirmacion.contacto ? ' · confirmó ' + esc(x.confirmacion.contacto) : ''}${x.confirmacion.factura ? ' · Factura ' + esc(x.confirmacion.factura) : ''}${x.confirmacion.notas ? '<br>' + esc(x.confirmacion.notas) : ''}</div>` : ''}
+      ${x.confirmacion && x.confirmacion.recibido === false ? `<div class="prbox bad"><b>El proveedor no confirmó el pago</b> (${fmt(x.confirmacion.fecha)}, ${esc(x.confirmacion.por)}): ${esc(x.confirmacion.notas || '')}. Hay que registrar el pago de nuevo.</div>` : ''}
+      ${e === 'pagada' ? '<div class="prbox pend"><b>Falta confirmar con el proveedor</b> que recibió el pago.</div>' : ''}
       ${x.despacho ? `<div class="prbox ok"><b>Despachada</b> el ${fmt(x.despacho.fecha)}${x.despacho.transportista ? ' · ' + esc(x.despacho.transportista) : ''}${x.despacho.guia ? ' · Guía ' + esc(x.despacho.guia) : ''}${x.despacho.llegada ? ' · llegada estimada ' + fmt(x.despacho.llegada) : ''}${x.despacho.notas ? '<br>' + esc(x.despacho.notas) : ''}</div>` : ''}
       ${x.entrega ? `<div class="prbox ${x.entrega.completo === false ? 'bad' : 'ok'}"><b>${x.entrega.completo === false ? 'Llegó incompleta' : 'Llegó a la obra completa'}</b>, confirmó ${esc(x.entrega.por)} el ${fmt(isoLocal(x.entrega.fecha))}${x.entrega.notas ? ': ' + esc(x.entrega.notas) : ''}</div>` : ''}
       <div class="pracc">
         ${e === 'por_pagar' && pagaProcura() ? '<button class="btn primary block100" data-pa="pagar">Registrar el pago</button>' : ''}
         ${e === 'por_pagar' && canProcura() ? '<button class="btn block100" data-pa="reabrir">Volver a cotizar</button>' : ''}
-        ${e === 'pagada' && canProcura() ? '<button class="btn primary block100" data-pa="despachar">Marcar en despacho</button>' : ''}
+        ${e === 'pagada' && canProcura() ? '<button class="btn primary block100" data-pa="confirmar">Confirmar que el proveedor recibió el pago</button>' : ''}
+        ${e === 'pago_confirmado' && canProcura() ? '<button class="btn primary block100" data-pa="despachar">Marcar en despacho</button>' : ''}
         ${e === 'en_despacho' && (canProcura() || pagaProcura() || (me.rol === 'gerente_operaciones')) ? '<button class="btn block100" data-pa="obra">Confirmar llegada a la obra</button>' : ''}
       </div></div>`;
   }
@@ -4354,40 +4369,183 @@ function pintarPEdit(){
       </tbody></table></div>`;
     if (new Set(validas.map(k => cots[k].moneda || 'USD')).size > 1) h += '<p class="hint" style="color:var(--red)">Hay cotizaciones en monedas distintas: compara los totales con la tasa del día.</p>';
     if (ed && !x.ganador) h += `<div class="pracc">${validas.map(k => `<button class="btn ${k === mejorTot ? 'primary' : ''} block100" data-gan="${esc(cots[k].id)}">Adjudicar a ${esc(cots[k].proveedor)} · ${prMon(tots[k].total, cots[k].moneda)}</button>`).join('')}</div>`;
-  } else h += '<p class="hint">Carga al menos una cotización con proveedor y precios para ver el comparativo.</p>';
+  } else h += '<p class="hint">Sube la cotización de cada proveedor (PDF, Excel o foto) y el cuadro se arma solo.</p>';
+  const docs = cots.map((c, k) => c.archivo ? `<li><button type="button" class="lnk" data-cver="${k}">📎 ${esc(c.proveedor || c.archivo.nombre)}</button><small>${esc(c.archivo.nombre)}</small></li>` : '').join('');
+  if (docs) h += `<div class="sec" style="margin-top:12px">Documentos de los proveedores</div><ul class="prdocs">${docs}</ul>`;
   h += `<button class="btn block100" id="peXlsx" style="margin-top:10px" ${validas.length ? '' : 'disabled'}>Exportar cuadro comparativo (Excel)</button></div>`;
-  // ---- cotizaciones editables ----
+  // ---- cotizaciones: se cargan subiendo el archivo del proveedor (v4.30.0) ----
   if (ed) {
-    h += cots.map((c, k) => `<div class="block prcot" data-ck="${k}"><div class="memtop"><h2 style="margin:0">Cotización ${k + 1}</h2>${cots.length > 1 ? `<button class="btn ghost" data-cdel="${k}" style="color:var(--red)">Quitar</button>` : ''}</div>
-      <label class="f"><span>Proveedor</span><input class="in" data-cf="proveedor" value="${esc(c.proveedor)}" placeholder="Nombre del proveedor"></label>
-      <div class="row2"><label class="f"><span>RIF</span><input class="in" data-cf="rif" value="${esc(c.rif)}"></label><label class="f"><span>Contacto</span><input class="in" data-cf="contacto" value="${esc(c.contacto)}" placeholder="Teléfono o persona"></label></div>
-      <div class="row2"><label class="f"><span>Moneda</span><select class="in" data-cf="moneda"><option ${c.moneda !== 'Bs' ? 'selected' : ''}>USD</option><option ${c.moneda === 'Bs' ? 'selected' : ''}>Bs</option></select></label><label class="f"><span>IVA %</span><input class="in" data-cf="iva_pct" inputmode="decimal" value="${esc(c.iva_pct)}"></label></div>
-      <div class="sec">Precio unitario de cada material <small>(vacío = no lo cotiza)</small></div>
-      <ul class="prpu">${items.map((it, i) => `<li><div><b>${esc(it.cant)} ${esc(it.und)}</b> ${esc(it.desc)}</div><input class="in" data-pu="${i}" inputmode="decimal" placeholder="P.U." value="${esc((c.precios || [])[i] == null ? '' : String((c.precios || [])[i]).replace('.', ','))}"></li>`).join('')}</ul>
-      <div class="row2"><label class="f"><span>Flete</span><input class="in" data-cf="flete" inputmode="decimal" value="${esc(c.flete)}" placeholder="0"></label><label class="f"><span>Tiempo de entrega</span><input class="in" data-cf="entrega" value="${esc(c.entrega)}" placeholder="3 días"></label></div>
-      <div class="row2"><label class="f"><span>Condiciones de pago</span><input class="in" data-cf="pago" value="${esc(c.pago)}" placeholder="Contado, 50% anticipo…"></label><label class="f"><span>Validez</span><input class="in" data-cf="validez" value="${esc(c.validez)}" placeholder="5 días"></label></div>
-      <label class="f"><span>Notas</span><input class="in" data-cf="notas" value="${esc(c.notas)}"></label>
-      <p class="hint prtot" style="margin:6px 0 0">Total: <b>${prMon(tots[k].total, c.moneda)}</b> · ${tots[k].n} de ${items.length} materiales</p></div>`).join('')
-      + `<button class="btn block100" id="peAdd" ${cots.length >= 12 ? 'disabled' : ''}>+ Agregar otra cotización</button><p class="hint" id="peSaved" style="text-align:center"></p>`;
+    const MET = { excel: 'Leída del Excel', pdf: 'Leída del PDF', ia: 'Leída con IA' };
+    h += cots.map((c, k) => { const lc = c.lectura || {}, L = lc.lineas || [], usadas = new Set((lc.emp || []).filter(Boolean).map(e => e.linea));
+      const libres = L.map((l, j) => [l, j]).filter(([, j]) => !usadas.has(j));
+      return `<div class="block prcot" data-ck="${k}"><div class="memtop"><h2 style="margin:0">Cotización ${k + 1}</h2><button class="btn ghost" data-cdel="${k}" style="color:var(--red)">Quitar</button></div>
+      <div class="prfile">${c.archivo ? `<button type="button" class="lnk" data-cver="${k}">📎 ${esc(c.archivo.nombre)}</button>` : ''}<span class="tag ${lc.metodo === 'ia' ? 'com' : 'ok'}">${MET[lc.metodo] || 'Leída'}${lc.confianza ? ' · confianza ' + esc(lc.confianza) : ''}</span></div>
+      ${lc.obs ? `<p class="hint prwarn">${esc(lc.obs)}</p>` : ''}
+      <label class="f"><span>Proveedor</span><input class="in" data-cf="proveedor" value="${esc(c.proveedor)}"></label>
+      <div class="row2"><label class="f"><span>RIF</span><input class="in" data-cf="rif" value="${esc(c.rif)}"></label><label class="f"><span>Contacto</span><input class="in" data-cf="contacto" value="${esc(c.contacto)}"></label></div>
+      <div class="row2"><label class="f"><span>Moneda</span><select class="in" data-cf="moneda"><option ${c.moneda !== 'Bs' ? 'selected' : ''}>USD</option><option ${c.moneda === 'Bs' ? 'selected' : ''}>Bs</option></select></label><label class="f"><span>IVA %${lc.iva_leido === false ? ' <small>(no venía, se asumió)</small>' : ''}</span><input class="in" data-cf="iva_pct" inputmode="decimal" value="${esc(c.iva_pct)}"></label></div>
+      <div class="sec">Precios leídos <small>(revisa que cada material quedó con su renglón)</small></div>
+      <ul class="prpu">${items.map((it, i) => { const e = (lc.emp || [])[i], ln = e ? L[e.linea] : null, aj = c.leido && prNum((c.precios || [])[i]) !== prNum(c.leido[i]);
+        return `<li class="${(c.precios || [])[i] == null ? 'nc' : ''}"><div><b>${esc(it.cant)} ${esc(it.und)}</b> ${esc(it.desc)}
+          <select class="in prsel" data-ln="${i}"><option value="">No lo cotiza</option>${L.map((l, j) => `<option value="${j}" ${e && e.linea === j ? 'selected' : ''}>${esc((l.desc || '').slice(0, 70))}${l.cant ? ' · ' + esc(l.cant) + ' ' + esc(l.und || '') : ''}${prPU(l) != null ? ' · ' + prMon(prPU(l), c.moneda) : ''}</option>`).join('')}</select>
+          ${ln && e.score < 0.6 && lc.metodo !== 'ia' ? '<small class="prdudo">Parecido bajo: confírmalo</small>' : ''}${e && e.nota ? `<small class="prdudo">${esc(e.nota)}</small>` : ''}${aj ? '<small class="prajus">Precio ajustado a mano</small>' : ''}</div>
+          <input class="in" data-pu="${i}" inputmode="decimal" placeholder="—" value="${esc((c.precios || [])[i] == null ? '' : String((c.precios || [])[i]).replace('.', ','))}"></li>`; }).join('')}</ul>
+      ${libres.length ? `<details class="prlib"><summary>${libres.length} ${libres.length === 1 ? 'renglón' : 'renglones'} de la cotización sin emparejar</summary><ul>${libres.map(([l]) => `<li>${esc(l.desc)}${l.cant ? ' · ' + esc(l.cant) + ' ' + esc(l.und || '') : ''}${prPU(l) != null ? ' · ' + prMon(prPU(l), c.moneda) : ''}</li>`).join('')}</ul></details>` : ''}
+      <div class="row2"><label class="f"><span>Flete</span><input class="in" data-cf="flete" inputmode="decimal" value="${esc(c.flete)}" placeholder="0"></label><label class="f"><span>Tiempo de entrega</span><input class="in" data-cf="entrega" value="${esc(c.entrega)}"></label></div>
+      <div class="row2"><label class="f"><span>Condiciones de pago</span><input class="in" data-cf="pago" value="${esc(c.pago)}"></label><label class="f"><span>Validez</span><input class="in" data-cf="validez" value="${esc(c.validez)}"></label></div>
+      <p class="hint prtot" style="margin:6px 0 0">Total: <b>${prMon(tots[k].total, c.moneda)}</b> · ${tots[k].n} de ${items.length} materiales</p></div>`; }).join('')
+      + `<div class="block prup"><button class="btn ${cots.length ? '' : 'primary'} block100" id="peSubir" ${cots.length >= 12 ? 'disabled' : ''}><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M11 16V7.8l-3.6 3.6L6 10l6-6 6 6-1.4 1.4L13 7.8V16h-2Zm-6 4v-2h14v2H5Z"/></svg>${cots.length ? 'Subir otra cotización' : 'Subir la cotización del proveedor'}</button>
+        <p class="hint" style="margin:8px 0 0;text-align:center">PDF, Excel (.xlsx) o foto. La app lee los precios y los empareja con los materiales; tú solo revisas.</p>
+        <p class="hint" id="peUpSt" hidden style="text-align:center;font-weight:700;color:var(--ink)"></p>
+        <input type="file" id="peFile" accept="application/pdf,.pdf,.xlsx,.xls,.csv,image/*" hidden></div><p class="hint" id="peSaved" style="text-align:center"></p>`;
   }
   // ---- historial ----
-  if ((x.hist || []).length) h += `<div class="block"><div class="sec">Historial</div><ul class="prhist">${x.hist.map(t => `<li><b>${{ inicio: 'Inicio de la cotización', adjudicada: 'Adjudicada', reabierta: 'Vuelta a cotizar', pagada: 'Pago registrado', en_despacho: 'En despacho', despachada: 'Llegada a la obra' }[t.accion] || t.accion}</b> · ${esc(t.por)} · ${fmt(isoLocal(t.fecha))}${t.detalle ? '<br><span>' + esc(t.detalle) + '</span>' : ''}</li>`).join('')}</ul></div>`;
+  if ((x.hist || []).length) h += `<div class="block"><div class="sec">Historial</div><ul class="prhist">${x.hist.map(t => `<li><b>${{ inicio: 'Inicio de la cotización', adjudicada: 'Adjudicada', reabierta: 'Vuelta a cotizar', pagada: 'Pago registrado', pago_confirmado: 'Pago confirmado por el proveedor', pago_observado: 'El proveedor no confirmó el pago', en_despacho: 'En despacho', despachada: 'Llegada a la obra' }[t.accion] || t.accion}</b> · ${esc(t.por)} · ${fmt(isoLocal(t.fecha))}${t.detalle ? '<br><span>' + esc(t.detalle) + '</span>' : ''}</li>`).join('')}</ul></div>`;
   $('#peBody').innerHTML = h;
 }
+// ---- Lectura de cotizaciones desde el archivo del proveedor (v4.30.0) ----
+// Excel y PDF con texto se leen en el teléfono; PDF escaneados, fotos o lo que no se pudo leer van a la IA (función leer-cotizacion).
+const PR_STOP = new Set(['DE','DEL','LA','EL','LOS','LAS','CON','PARA','POR','X','Y','EN','A','O','UN','UNA','TIPO','MARCA','MOD','MODELO','SIMILAR']);
+const PR_SIN = { METROS: 'M', METRO: 'M', MTS: 'M', MT: 'M', ML: 'M', MTR: 'M', PULGADAS: 'PULG', PULGADA: 'PULG', '"': 'PULG', CAL: 'CALIBRE', GALVANIZADO: 'GALV', GALVANIZADA: 'GALV', UNIDADES: 'UND', UNIDAD: 'UND', PZA: 'UND', PIEZA: 'UND', PZAS: 'UND' };
+const prTok = t => new Set(_norm(String(t || '')).replace(/(\d+),0+\b/g, '$1').replace(/(\d),(\d)/g, '$1.$2').replace(/(\d)\s*\/\s*(\d)/g, '$1/$2')
+  .replace(/(\d)\s*(METROS|METRO|MTS|MT|ML|M|W|KW|V|HP|MM|CM|KG|L|LTS|GAL|A)\b/g, (m0, d, u) => d + (PR_SIN[u] || u))
+  .replace(/[^A-Z0-9/.]+/g, ' ').split(' ')
+  .map(w => w.replace(/^\.+|\.+$/g, '')).map(w => PR_SIN[w] || w).filter(w => w && !PR_STOP.has(w) && (w.length > 1 || /\d/.test(w))).map(w => w.replace(/^(\d+)\.0+(\D*)$/, '$1$2')));
+// parecido: cuánto del material pedido aparece en el renglón (pesa más) y Dice entre ambos
+function prSim(a, b){ const A = prTok(a), B = prTok(b); if (!A.size || !B.size) return 0; let n = 0; A.forEach(w => { if (B.has(w)) n++; });
+  let s = 0.6 * n / A.size + 0.4 * 2 * n / (A.size + B.size); const nA = [...A].filter(w => /\d/.test(w)), nB = [...B].filter(w => /\d/.test(w));
+  if (nA.length && nB.length && !nA.some(w => B.has(w))) s *= 0.5; return s; }
+// empareja cada material de la requisición con su renglón más parecido (uno a uno)
+function prEmparejar(items, lineas){
+  // misma cantidad pedida y cotizada suma puntos (desempata "cerca de malla 150 m" contra "portón de malla 16 m2")
+  const pares = []; items.forEach((it, i) => lineas.forEach((l, j) => { let sc = prSim(it.desc, l.desc); if (sc < 0.34) return;
+    const q1 = prNum(it.cant), q2 = prNum(l.cant); if (q1 != null && q2 != null && Math.abs(q1 - q2) < 1e-6) sc += 0.15; pares.push([sc, i, j]); }));
+  pares.sort((a, b) => b[0] - a[0]); const ui = new Set(), uj = new Set(), out = items.map(() => null);
+  pares.forEach(([sc, i, j]) => { if (ui.has(i) || uj.has(j)) return; ui.add(i); uj.add(j); out[i] = { linea: j, score: Math.min(1, Math.round(sc * 100) / 100) }; });
+  return out;
+}
+const prPU = l => { const pu = prNum(l.pu), tot = prNum(l.total), q = prNum(l.cant); return pu != null ? pu : tot != null && q ? Math.round(tot / q * 10000) / 10000 : null; };
+const prRIF = txt => { const m = String(txt || '').match(/\b([JVGEP])\s*[-.]?\s*(\d{7,9})\s*[-.]?\s*(\d)\b/i); return m ? `${m[1].toUpperCase()}-${m[2]}-${m[3]}` : ''; };
+const prCelda = v => { if (v == null) return ''; if (typeof v === 'object') { if (v instanceof Date) return v.toISOString().slice(0, 10); if ('result' in v) return prCelda(v.result); if (v.richText) return v.richText.map(t => t.text).join(''); if (v.text) return String(v.text); return ''; } return v; };
+// Excel / CSV → filas de texto por hoja
+async function prHojas(file){
+  if (/\.csv$/i.test(file.name) || file.type === 'text/csv') { const t = await file.text(), sep = (t.split('\n')[0].match(/;/g) || []).length > (t.split('\n')[0].match(/,/g) || []).length ? ';' : ',';
+    return [t.split(/\r?\n/).map(l => l.split(sep).map(c => c.replace(/^"|"$/g, '').trim()))]; }
+  if (/\.xls$/i.test(file.name)) throw new Error('xls_antiguo');
+  if (!window.ExcelJS) throw new Error('No se pudo cargar el lector de Excel');
+  const wb = new ExcelJS.Workbook(); await wb.xlsx.load(await file.arrayBuffer());
+  return wb.worksheets.map(ws => { const R = []; ws.eachRow({ includeEmpty: true }, (row, rn) => { const a = []; row.eachCell({ includeEmpty: true }, (c, cn) => { a[cn - 1] = prCelda(c.value); }); R[rn - 1] = a; }); return R.map(r => (r || []).map(c => c == null ? '' : c)); });
+}
+function prLeerTabla(R){
+  const N = v => _norm(String(v == null ? '' : v)).trim();
+  const rx = { desc: /^(DESCRIPCI|MATERIAL|PRODUCTO|ARTICULO|CONCEPTO|DETALLE|DENOMINACION)/, und: /^(UND|UNID|UNIDAD|U\.?\s?M\.?|MEDIDA)\b/, cant: /^(CANT|CTD)/, pu: /(PRECIO\s*UNIT|P\.?\s?U\b|P\/U|UNITARIO|COSTO\s*UNIT|PRECIO$|PRECIO\s*\()/, tot: /^(TOTAL|IMPORTE|MONTO|SUB\s?TOTAL|PRECIO\s*TOTAL)/ };
+  let h = -1, col = null;
+  for (let r = 0; r < Math.min(R.length, 60) && h < 0; r++) { const row = R[r] || [], c = {};
+    row.forEach((v, i) => { const t = N(v); if (!t) return; for (const k of ['pu', 'desc', 'und', 'cant', 'tot']) if (c[k] == null && rx[k].test(t) && !(k === 'tot' && c.pu === i)) { c[k] = i; break; } });
+    if (c.desc != null && (c.pu != null || c.tot != null)) { h = r; col = c; } }
+  if (h < 0) return null;
+  const lineas = [], extra = {}; let vacias = 0;
+  for (let r = h + 1; r < R.length && vacias < 6; r++) { const row = R[r] || [], d = String(row[col.desc] == null ? '' : row[col.desc]).trim();
+    const etiqueta = N(row.find(v => N(v)) || '');
+    if (/^(SUB\s?TOTAL|BASE IMPONIBLE|TOTAL|IVA|I\.V\.A|FLETE|TRANSPORTE|DESCUENTO)/.test(etiqueta) || /^(SUB\s?TOTAL|TOTAL|IVA|I\.V\.A|FLETE|TRANSPORTE)/.test(N(d))) {
+      const lab = /^(SUB\s?TOTAL|TOTAL|IVA|I\.V\.A|FLETE|TRANSPORTE)/.test(N(d)) ? N(d) : etiqueta, nums = row.map(v => typeof v === 'number' ? v : prNum(v)).filter(v => v != null);
+      if (/^(IVA|I\.V\.A)/.test(lab)) { const m = lab.match(/(\d{1,2}(?:[.,]\d+)?)\s*%/); if (m) extra.iva_pct = m[1].replace(',', '.'); else { const pc = nums.find(v => v > 0 && v <= 30 && Number.isInteger(v)); if (pc) extra.iva_pct = String(pc); } }
+      if (/^(FLETE|TRANSPORTE)/.test(lab) && nums.length) extra.flete = String(nums[nums.length - 1]);
+      continue; }
+    if (!d) { vacias++; continue; } vacias = 0;
+    const g = k => col[k] == null ? '' : row[col[k]];
+    const l = { desc: d, und: String(g('und') || '').trim(), cant: g('cant') === '' ? '' : String(prNum(g('cant')) ?? g('cant')), pu: g('pu') === '' ? '' : String(prNum(g('pu')) ?? ''), total: g('tot') === '' ? '' : String(prNum(g('tot')) ?? '') };
+    if (l.pu || l.total) lineas.push(l); }
+  return lineas.length ? { lineas, extra } : null;
+}
+function prCabecera(texto){
+  const T = String(texto || ''), lin = T.split(/\n/).map(s => s.trim()).filter(Boolean), h = {};
+  h.rif = prRIF(T);
+  const tras = re => { for (let i = 0; i < lin.length; i++) { const m = lin[i].match(re); if (m) { const v = lin[i].slice(m.index + m[0].length).replace(/^[\s:.-]+/, '').trim(); return v || (lin[i + 1] || ''); } } return ''; };
+  h.proveedor = tras(/\b(proveedor|raz[oó]n social|empresa)\b\s*:?/i).slice(0, 80);
+  if (!h.proveedor) { const top = lin.slice(0, 8).map(l => l.replace(/\s*(COTIZACI[OÓ]N|PRESUPUESTO|FECHA|RIF\b|R\.I\.F).*$/i, '').trim()).filter(Boolean); h.proveedor = (top.find(l => /\b(C\.?\s?A\.?|S\.?\s?A\.?|S\.?R\.?L\.?|INVERSIONES|FERRETER|DISTRIBUIDORA|SUMINISTROS|COMERCIAL|MATERIALES)\b/i.test(l) && !/COTIZACI|PRESUPUESTO|CLIENTE|SE[NÑ]OR/i.test(l)) || '').replace(/\s*(RIF|R\.I\.F).*$/i, '').slice(0, 80); }
+  h.validez = tras(/\bvalidez( de la oferta)?\b\s*:?/i).slice(0, 60);
+  h.entrega = tras(/\b(tiempo de entrega|entrega)\b\s*:?/i).slice(0, 60);
+  h.pago = tras(/\b(condiciones de pago|forma de pago|condici[oó]n de pago)\b\s*:?/i).slice(0, 80);
+  const iva = T.match(/I\.?V\.?A\.?\s*\(?\s*(\d{1,2}(?:[.,]\d+)?)\s*%/i); if (iva) h.iva_pct = iva[1].replace(',', '.');
+  if (/\b(bs\.?|bol[ií]vares|ves)\b/i.test(T) && !/\b(usd|\$|d[oó]lares)\b/i.test(T)) h.moneda = 'Bs';
+  return h;
+}
+async function prIA(items, payload){
+  const { data, error } = await sb.functions.invoke('leer-cotizacion', { body: Object.assign({ items: items.map(it => ({ desc: it.desc, und: it.und, cant: it.cant })) }, payload) });
+  if (error || !data || data.error) { let det = data && data.error; try { if (!det && error && error.context) det = (await error.context.json()).error; } catch (e) {} throw new Error(det === 'ia_no_configurada' ? 'la lectura con IA no está activada' : det || (error && error.message) || 'sin respuesta'); }
+  return data;
+}
+// Lee el archivo y devuelve la cotización armada (sin guardar).
+async function prLeerArchivo(file, items, avance){
+  const nm = file.name || 'cotizacion', esPdf = file.type === 'application/pdf' || /\.pdf$/i.test(nm), esImg = /^image\//.test(file.type), esHoja = /\.(xlsx|xls|csv)$/i.test(nm) || /sheet|excel|csv/.test(file.type);
+  if (!esPdf && !esImg && !esHoja) throw new Error('Sube la cotización en PDF, Excel (.xlsx) o foto.');
+  let r = null, metodo = '', obs = '', confianza = '', textoIA = '';
+  if (esHoja) { avance('Leyendo el Excel…'); const H = await prHojas(file); let todo = '';
+    for (const R of H) { const t = prLeerTabla(R); todo += R.map(row => row.join(' ')).join('\n') + '\n'; if (t && (!r || t.lineas.length > r.lineas.length)) r = t; }
+    textoIA = H.map((R, k) => `--- Hoja ${k + 1} ---\n` + R.slice(0, 400).map(row => row.map(c => String(c).replace(/[\n;]/g, ' ')).join(';')).join('\n')).join('\n');
+    if (r) { r.head = Object.assign(prCabecera(todo), r.extra); metodo = 'excel'; } }
+  if (esPdf) { avance('Leyendo el PDF…'); try { const T = await pdfTextItems(await file.arrayBuffer()), sol = parseSolicitud(T);
+      const lin = (sol.items || []).filter(it => it.pu != null || it.tot != null).map(it => ({ desc: it.desc, und: it.undOrig || it.und, cant: String(it.cant), pu: it.pu != null ? String(it.pu) : '', total: it.tot != null ? String(it.tot) : '' }));
+      const texto = [...new Set(T.map(t => Math.round(t.y) + ':' + t.p))].length ? Object.values(T.reduce((a, t) => { const k = t.p + ':' + Math.round(t.y); (a[k] = a[k] || []).push(t); return a; }, {})).map(L => L.sort((a, b) => a.x - b.x).map(t => t.s).join(' ')).join('\n') : '';
+      if (lin.length) { r = { lineas: lin, head: (() => { const hh = prCabecera(texto), pz = sol.presupuesto || {}; if (pz.empresa) hh.proveedor = pz.empresa; if (pz.rif) hh.rif = pz.rif; return hh; })() }; metodo = 'pdf'; } } catch (e) {} }
+  let emp = r ? prEmparejar(items, r.lineas) : [];
+  const pocos = !r || emp.filter(Boolean).length < Math.min(items.length, Math.max(1, Math.ceil(items.length / 2)));
+  if (pocos) { avance('Leyendo con IA…');
+    try { let payload;
+      if (esHoja) payload = { texto: textoIA };
+      else { let blob = file, mime = esPdf ? 'application/pdf' : file.type; if (esImg) { const z = await prepImage({ file, mime }); blob = z.blob; mime = z.mime; } if (blob.size > 9.5 * 1024 * 1024) throw new Error('archivo de más de 9,5 MB'); payload = { data: await b64(blob), media_type: mime }; }
+      const ia = await prIA(items, payload), lineas = (ia.lineas || []).map(l => ({ desc: String(l.desc || ''), und: String(l.und || ''), cant: String(l.cant ?? ''), pu: String(l.pu ?? ''), total: String(l.total ?? '') }));
+      emp = items.map((it, i) => { const e = (ia.emparejados || []).find(x => +x.n === i + 1); return e && lineas[+e.linea] ? { linea: +e.linea, score: 1, nota: e.nota || '' } : null; });
+      r = { lineas, head: { proveedor: ia.proveedor, rif: ia.rif, contacto: ia.contacto, moneda: ia.moneda, iva_pct: ia.iva_pct, flete: ia.flete, entrega: ia.entrega, pago: ia.pago, validez: ia.validez } };
+      metodo = 'ia'; obs = ia.observaciones || ''; confianza = ia.confianza || '';
+      (ia.emparejados || []).forEach(x => { if (x.pu !== '' && x.pu != null && lineas[+x.linea] && !lineas[+x.linea].pu) lineas[+x.linea].pu = String(x.pu); });
+    } catch (e) { if (!r) throw new Error(e.message === 'xls_antiguo' ? 'Guarda el Excel como .xlsx o como PDF y vuelve a subirlo.' : 'No se pudo leer la cotización: ' + e.message); obs = 'La IA no pudo revisar el archivo (' + e.message + '); se usó la lectura directa.'; } }
+  const hd = r.head || {}, precios = items.map((it, i) => emp[i] ? prPU(r.lineas[emp[i].linea]) : null);
+  return { id: uuid().slice(0, 8), proveedor: (hd.proveedor || '').trim() || nm.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' '), rif: hd.rif || '', contacto: hd.contacto || '', moneda: hd.moneda === 'Bs' ? 'Bs' : 'USD',
+    precios, leido: precios.slice(), flete: hd.flete || '', iva_pct: hd.iva_pct || '16', entrega: hd.entrega || '', pago: hd.pago || '', validez: hd.validez || '', notas: '',
+    lectura: { metodo, lineas: r.lineas.slice(0, 200), emp, obs, confianza, fecha: new Date().toISOString(), iva_leido: !!hd.iva_pct } };
+}
+async function prSubirCotizacion(file){
+  if (!prRow) return; const items = prRow.items || [], info = $('#peUpSt');
+  const avance = t => { if (info) { info.hidden = false; info.textContent = t; } };
+  try {
+    const cot = await prLeerArchivo(file, items, avance);
+    avance('Guardando el archivo…');
+    const nombre = file.name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9._-]+/g, '_').slice(-80);
+    const path = `${prRow.control}/${cot.id}_${nombre}`, mime = file.type || (/\.csv$/i.test(file.name) ? 'text/csv' : /\.xlsx$/i.test(file.name) ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'application/octet-stream');
+    const { error } = await sb.storage.from('cotizaciones').upload(path, await file.arrayBuffer(), { contentType: mime, upsert: false });
+    if (error) throw new Error('No se pudo guardar el archivo: ' + error.message);
+    cot.archivo = { path, nombre: file.name, mime, kb: Math.round(file.size / 1024) };
+    prLeer(); prRow.procura.cotizaciones.push(cot); prRow.procura.nueva = false;
+    if (!(await prGuardar())) throw new Error('no se pudo guardar la cotización');
+    const n = cot.precios.filter(v => v != null).length;
+    toast(`Leí la cotización de ${cot.proveedor}: ${n} de ${items.length} materiales con precio`);
+    pintarPEdit(); const L = $$('#peBody .prcot'); if (L.length) L[L.length - 1].scrollIntoView({ behavior: 'smooth' });
+  } catch (e) { avance(''); if (info) info.hidden = true; toast(e.message); }
+}
+async function prVerArchivo(a){ const { data, error } = await sb.storage.from('cotizaciones').createSignedUrl(a.path, 600); if (error || !data) return toast('No se pudo abrir el archivo'); window.open(data.signedUrl, '_blank', 'noopener'); }
+
 // edición de cotizaciones (se guarda sola)
 function prLeer(){
   $$('#peBody .prcot').forEach(card => { const c = prRow.procura.cotizaciones[+card.dataset.ck];
     card.querySelectorAll('[data-cf]').forEach(inp => c[inp.dataset.cf] = inp.value.trim());
-    c.precios = [...card.querySelectorAll('[data-pu]')].map(inp => prNum(inp.value)); });
+    c.precios = [...card.querySelectorAll('[data-pu]')].map(inp => prNum(inp.value));
+    if (c.lectura) c.lectura.emp = [...card.querySelectorAll('[data-ln]')].map(sel => { const prev = (c.lectura.emp || [])[+sel.dataset.ln]; return sel.value === '' ? null : prev && prev.linea === +sel.value ? prev : { linea: +sel.value, score: 1, manual: true }; }); });
 }
 async function prGuardar(){
   clearTimeout(prTimer); if (!prEditable()) return true; prLeer();
+  if (prRow.procura.nueva && !prRow.procura.cotizaciones.length) return true;
   try { const x = await rpc('rq_procura_guardar', { p_control: prRow.control, p_cotizaciones: prRow.procura.cotizaciones });
-    prRow.procura = x; const i = prLista.findIndex(r => r.control === prRow.control); if (i >= 0) prLista[i].procura = JSON.parse(JSON.stringify(x));
+    prRow.procura = x; prRow.procura.nueva = false; const i = prLista.findIndex(r => r.control === prRow.control); if (i >= 0) prLista[i].procura = JSON.parse(JSON.stringify(x));
     const sv = $('#peSaved'); if (sv) sv.textContent = 'Guardado ' + new Date().toLocaleTimeString('es-VE', { hour: 'numeric', minute: '2-digit' }); return true; }
   catch (er) { const sv = $('#peSaved'); if (sv) sv.textContent = 'No se pudo guardar: ' + er.message; return false; }
 }
-$('#peBody').addEventListener('input', e => { if (!e.target.closest('.prcot')) return; prLeer();
+$('#peBody').addEventListener('change', e => { const sel = e.target.closest('[data-ln]'); if (!sel) return;
+  const card = sel.closest('.prcot'), c = prRow.procura.cotizaciones[+card.dataset.ck], i = +sel.dataset.ln, l = sel.value === '' ? null : c.lectura.lineas[+sel.value];
+  const v = l ? prPU(l) : null; card.querySelector(`[data-pu="${i}"]`).value = v == null ? '' : String(v).replace('.', ',');
+  if (c.leido) c.leido[i] = v; card.querySelector('[data-pu]').dispatchEvent(new Event('input', { bubbles: true })); });
+$('#peBody').addEventListener('input', e => { if (!e.target.closest('.prcot') || e.target.matches('select[data-ln]')) return; prLeer();
   const card = e.target.closest('.prcot'), k = +card.dataset.ck, c = prRow.procura.cotizaciones[k], t = prTot(prRow.items, c);
   card.querySelector('.prtot').innerHTML = `Total: <b>${prMon(t.total, c.moneda)}</b> · ${t.n} de ${(prRow.items || []).length} materiales`;
   $('#peSaved').textContent = 'Guardando…'; clearTimeout(prTimer); prTimer = setTimeout(async () => { await prGuardar(); const y = window.scrollY; pintarPEdit(); window.scrollTo(0, y); }, 1200); });
@@ -4395,11 +4553,13 @@ $('#peBody').addEventListener('click', async e => {
   const t = e.target;
   if (t.id === 'peDet') return openDetail(prRow.control);
   if (t.id === 'peXlsx') { prLeer(); return prXlsxCuadro(prRow, t); }
-  if (t.id === 'peAdd') { prLeer(); prRow.procura.cotizaciones.push(prNuevaCot()); pintarPEdit(); const L = $$('#peBody .prcot'); L[L.length - 1].scrollIntoView({ behavior: 'smooth' }); return; }
+  if (t.closest('#peSubir')) { $('#peFile').click(); return; }
+  const cv = t.closest('[data-cver]'); if (cv) return prVerArchivo(prRow.procura.cotizaciones[+cv.dataset.cver].archivo);
   const del = t.closest('[data-cdel]'); if (del) { if (!confirm('¿Quitar esta cotización?')) return; prLeer(); prRow.procura.cotizaciones.splice(+del.dataset.cdel, 1); await prGuardar(); return pintarPEdit(); }
   const g = t.closest('[data-gan]'); if (g) return prAccion('adjudicar', g.dataset.gan);
   const a = t.closest('[data-pa]'); if (a) return prAccion(a.dataset.pa);
 });
+$('#peBody').addEventListener('change', e => { if (e.target.id !== 'peFile') return; const f = e.target.files[0]; e.target.value = ''; if (f) prSubirCotizacion(f); });
 $('#peVolver').onclick = async () => { await prGuardar(); prRow = null; showTab('proc'); };
 // acciones con diálogo
 let prdAct = null;
@@ -4408,11 +4568,16 @@ function prAccion(act, arg){
   const F = (id, lbl, typ, val, ph) => `<label class="f"><span>${lbl}</span>${typ === 'area' ? `<textarea class="in" id="${id}" placeholder="${ph || ''}">${esc(val || '')}</textarea>` : `<input class="in" id="${id}" type="${typ || 'text'}" value="${esc(val || '')}" placeholder="${ph || ''}" ${typ === 'num' ? 'inputmode="decimal"' : ''}>`}</label>`;
   let tit = '', hint = '', body = '', ok = '';
   if (act === 'adjudicar') { const c = cots.find(z => z.id === arg), t = prTot(prRow.items, c); prdAct = { act, arg };
-    tit = 'Adjudicar'; hint = `Ganador: ${c.proveedor} por ${prMon(t.total, c.moneda)} (${t.n} de ${(prRow.items || []).length} materiales).${t.n < (prRow.items || []).length ? ' OJO: este proveedor no cotiza todos los materiales; los que faltan habrá que comprarlos aparte.' : ''} Se le avisará a Gerencia General para el pago y al solicitante.`;
+    tit = 'Adjudicar'; hint = `Ganador: ${c.proveedor} por ${prMon(t.total, c.moneda)} (${t.n} de ${(prRow.items || []).length} materiales).${t.n < (prRow.items || []).length ? ' OJO: este proveedor no cotiza todos los materiales; los que faltan habrá que comprarlos aparte.' : ''}${(() => { const n = c.leido ? (c.precios || []).filter((v, i) => prNum(v) !== prNum(c.leido[i])).length : 0; return n ? ` OJO: ${n} precio${n === 1 ? '' : 's'} de esta cotización se ajustó a mano y no coincide con el archivo del proveedor.` : ''; })()} Se le avisará a Gerencia General para el pago y al solicitante.`;
     body = F('prdMot', 'Motivo de la elección (opcional)', 'area', '', 'Mejor precio, entrega inmediata, stock completo…'); ok = 'Adjudicar y avisar a Gerencia General'; }
   if (act === 'reabrir') { prdAct = { act }; tit = 'Volver a cotizar'; hint = 'Se quita el ganador y la requisición vuelve a cotización. Solo se puede antes del pago.'; body = F('prdMot', 'Motivo', 'area'); ok = 'Volver a cotizar'; }
-  if (act === 'pagar') { prdAct = { act }; tit = 'Registrar el pago'; hint = `${(cots.find(z => z.id === x.ganador) || {}).proveedor || ''} · ${prMon(x.monto, x.moneda)}. Se avisará a Compras para el despacho.`;
+  if (act === 'pagar') { prdAct = { act }; tit = 'Registrar el pago'; hint = `${(cots.find(z => z.id === x.ganador) || {}).proveedor || ''} · ${prMon(x.monto, x.moneda)}. Compras confirmará con el proveedor que lo recibió.`;
     body = `<div class="row2">${F('prdFecha', 'Fecha del pago', 'date', today())}${F('prdMonto', 'Monto pagado', 'num', String(x.monto || '').replace('.', ','))}</div>${F('prdForma', 'Forma de pago', 'text', '', 'Transferencia, Zelle, efectivo…')}${F('prdRef', 'Referencia', 'text', '', 'N° de transferencia o comprobante')}${F('prdNotas', 'Notas (opcional)', 'area')}`; ok = 'Registrar el pago'; }
+  if (act === 'confirmar') { prdAct = { act }; const g = (cots.find(z => z.id === x.ganador) || {}).proveedor || 'el proveedor';
+    tit = 'Confirmar el pago con el proveedor'; hint = `Pago registrado por ${x.pago ? x.pago.por : ''}${x.pago && x.pago.fecha ? ' el ' + fmt(x.pago.fecha) : ''}${x.pago && x.pago.referencia ? ' · Ref. ' + x.pago.referencia : ''} · ${prMon(x.pago && x.pago.monto ? x.pago.monto : x.monto, x.moneda)}. ¿${g} lo recibió?`;
+    body = `<div class="seg" id="prdComp" style="margin-bottom:10px"><button type="button" data-v="si" aria-pressed="true">Sí, lo recibió</button><button type="button" data-v="no" aria-pressed="false">No / hay un problema</button></div>
+      <div class="row2">${F('prdFecha', 'Fecha de la confirmación', 'date', today())}${F('prdFac', 'N° de factura del proveedor', 'text', '', 'Opcional')}</div>${F('prdCont', 'Quién confirmó en el proveedor', 'text', '', 'Nombre y cargo, o "correo de administración"')}${F('prdNotas', 'Notas', 'area', '', 'Si hay un problema: qué pasó (no llegó, monto distinto…)')}`;
+    ok = 'Guardar la confirmación'; }
   if (act === 'despachar') { prdAct = { act }; tit = 'Marcar en despacho'; hint = 'El proveedor ya despachó. Se le avisará al solicitante para que confirme cuando llegue a la obra.';
     body = `<div class="row2">${F('prdFecha', 'Fecha del despacho', 'date', today())}${F('prdLleg', 'Llegada estimada', 'date', '')}</div>${F('prdTrans', 'Transportista', 'text', '', 'Empresa o chofer')}${F('prdGuia', 'N° de guía o nota de entrega', 'text')}${F('prdDest', 'Destino', 'text', prBases(prRow))}${F('prdNotas', 'Notas (opcional)', 'area')}`; ok = 'Marcar en despacho'; }
   if (act === 'obra') { prdAct = { act }; tit = 'Confirmar llegada a la obra'; hint = '¿Llegó todo lo que se pidió?';
@@ -4430,7 +4595,11 @@ $('#prdOk').onclick = async () => {
     if (prdAct.act === 'adjudicar') { await prGuardar(); x = await rpc('rq_procura_adjudicar', { p_control: control, p_cot: prdAct.arg, p_motivo: v('prdMot') }); toast('Adjudicada. Se le avisó a Gerencia General para el pago'); }
     if (prdAct.act === 'reabrir') x = await rpc('rq_procura_reabrir', { p_control: control, p_motivo: v('prdMot') });
     if (prdAct.act === 'pagar') { if (!v('prdRef').trim() && !confirm('No escribiste la referencia del pago. ¿Registrar así?')) { $('#prdOk').disabled = false; return; }
-      const m = prNum(v('prdMonto')); x = await rpc('rq_procura_pagar', { p_control: control, p_datos: { fecha: v('prdFecha'), monto: m == null ? '' : String(m), forma: v('prdForma'), referencia: v('prdRef'), notas: v('prdNotas') } }); toast('Pago registrado. Se le avisó a Compras'); }
+      const m = prNum(v('prdMonto')); x = await rpc('rq_procura_pagar', { p_control: control, p_datos: { fecha: v('prdFecha'), monto: m == null ? '' : String(m), forma: v('prdForma'), referencia: v('prdRef'), notas: v('prdNotas') } }); toast('Pago registrado. Compras confirmará con el proveedor'); }
+    if (prdAct.act === 'confirmar') { const okp = $('#prdComp [aria-pressed="true"]').dataset.v === 'si';
+      if (!okp && !v('prdNotas').trim()) { $('#prdOk').disabled = false; return err('Escribe qué pasó con el pago.'); }
+      x = await rpc('rq_procura_confirmar_pago', { p_control: control, p_datos: { recibido: okp, fecha: v('prdFecha'), factura: v('prdFac'), contacto: v('prdCont'), notas: v('prdNotas') } });
+      toast(okp ? 'Pago confirmado. Ya puedes marcar el despacho' : 'Se le avisó a Gerencia General que el pago no se confirmó'); }
     if (prdAct.act === 'despachar') { x = await rpc('rq_procura_despachar', { p_control: control, p_datos: { fecha: v('prdFecha'), llegada: v('prdLleg'), transportista: v('prdTrans'), guia: v('prdGuia'), destino: v('prdDest'), notas: v('prdNotas') } }); toast('En despacho. Se le avisó al solicitante'); }
     if (prdAct.act === 'obra') { const comp = $('#prdComp [aria-pressed="true"]').dataset.v === 'si';
       if (!comp && !v('prdNotas').trim()) { $('#prdOk').disabled = false; return err('Escribe qué faltó.'); }
@@ -4447,7 +4616,7 @@ function prSeguimiento(r){
   const e = x.estado, k = PR_ORD.indexOf(e), gan = x.proveedor || ((x.cotizaciones || []).find(c => c.id === x.ganador) || {}).proveedor;
   const yo = r.solicitante_id === me.id, puede = e === 'en_despacho' && (yo || me.es_master || ['compras','gerente_operaciones','gerente_general'].includes(me.rol));
   return `<div class="dprio prseg"><div class="dph"><span>Procura</span>${prTag(e)}</div>
-    <ol class="prsteps sm">${[['Cotizar', 1], ['Ganador', 2], ['Pago', 3], ['Despacho', 4], ['En obra', 5]].map(([t, n]) => `<li class="${e === 'despachada' || k > n ? 'ok' : k === n ? 'now' : ''}"><span>${n}</span>${t}</li>`).join('')}</ol>
+    ${prPasos(e, 'sm')}
     ${gan ? `<p class="dpl">Proveedor: <b>${esc(gan)}</b></p>` : ''}
     ${x.despacho ? `<p class="dpl">Despachada el ${fmt(x.despacho.fecha)}${x.despacho.transportista ? ' · ' + esc(x.despacho.transportista) : ''}${x.despacho.guia ? ' · Guía ' + esc(x.despacho.guia) : ''}${x.despacho.llegada ? ' · llegada estimada <b>' + fmt(x.despacho.llegada) + '</b>' : ''}</p>` : ''}
     ${x.entrega ? `<p class="dpl">${x.entrega.completo === false ? '<b style="color:var(--red)">Llegó incompleta</b>' : '<b>Llegó a la obra</b>'}, confirmó ${esc(x.entrega.por)} el ${fmt(isoLocal(x.entrega.fecha))}${x.entrega.notas ? ': ' + esc(x.entrega.notas) : ''}</p>` : ''}
@@ -4492,7 +4661,8 @@ async function prXlsxCuadro(r, boton){
       const row = ws.addRow(vals); const pus = cots.map(c => prNum((c.precios || [])[i])).filter(v => v != null), mn = pus.length > 1 ? Math.min(...pus) : null;
       row.eachCell({ includeEmpty: true }, (c, cI) => { c.font = fnt({ size: 9 }); c.border = B; c.alignment = { vertical: 'top', wrapText: cI === 2 };
         if (cI >= 5) { c.numFmt = '#,##0.00'; const k = Math.floor((cI - 5) / 2); if ((cI - 5) % 2 === 0 && mn != null && prNum((cots[k].precios || [])[i]) === mn) { c.fill = solid('FFDCE9E3'); c.font = fnt({ size: 9, bold: true, color: { argb: 'FF2E5E4F' } }); }
-          if (c.value === 'No cotiza') { c.font = fnt({ size: 8, italic: true, color: { argb: 'FFB3261E' } }); c.alignment = { horizontal: 'center' }; } } }); });
+          if (c.value === 'No cotiza') { c.font = fnt({ size: 8, italic: true, color: { argb: 'FFB3261E' } }); c.alignment = { horizontal: 'center' }; }
+          const ck = cots[k]; if ((cI - 5) % 2 === 0 && ck.leido && prNum((ck.precios || [])[i]) !== prNum(ck.leido[i])) { c.fill = solid('FFFDE2C4'); c.note = 'Precio ajustado a mano: el archivo decía ' + (ck.leido[i] == null ? 'que no lo cotiza' : ck.leido[i]); } } }); });
     const rEnd = r0 + N - 1;
     // filas de totales: el valor va en la primera columna de cada proveedor (col) y se combina con la segunda
     const fila = (lbl, fn, fmt2, bold, fillC) => { const vals = [lbl, '', '', '']; cots.forEach((c, k) => { const col = 5 + k * 2; vals.push(fn(c, k, col), ''); });
@@ -4508,12 +4678,14 @@ async function prXlsxCuadro(r, boton){
     fila('Materiales cotizados', (c, k) => `${tt[k].n} de ${N}`, '@');
     fila('Tiempo de entrega', c => c.entrega || '—', '@'); fila('Condiciones de pago', c => c.pago || '—', '@'); fila('Validez de la oferta', c => c.validez || '—', '@');
     fila('Contacto', c => c.contacto || '—', '@'); fila('Notas', c => c.notas || '', '@');
+    fila('Documento del proveedor', c => c.archivo ? c.archivo.nombre : 'Sin archivo', '@');
+    fila('Lectura', c => ({ excel: 'Del Excel', pdf: 'Del PDF', ia: 'Con IA' + (c.lectura && c.lectura.confianza ? ' (confianza ' + c.lectura.confianza + ')' : '') }[(c.lectura || {}).metodo] || '—') + (c.leido && (c.precios || []).some((v, i) => prNum(v) !== prNum(c.leido[i])) ? ' · con ajustes a mano' : ''), '@');
     cots.forEach((c, k) => { if (c.id !== x.ganador) return; for (let rr = h1; rr <= ws.rowCount; rr++) [5 + k * 2, 6 + k * 2].forEach(cI => { const cl = ws.getCell(rr, cI); cl.border = Object.assign({}, B, { left: cI === 5 + k * 2 ? { style: 'medium', color: { argb: 'FF2E5E4F' } } : thin, right: cI === 6 + k * 2 ? { style: 'medium', color: { argb: 'FF2E5E4F' } } : thin }); }); });
     ws.addRow([]);
     const maxN = Math.max(0, ...tt.map(t => t.n)), best = tt.reduce((a, t, k) => t.n && t.n === maxN && (a < 0 || t.total < tt[a].total) ? k : a, -1), gan = cots.find(c => c.id === x.ganador);
     const nota = ws.addRow([gan ? `Proveedor adjudicado: ${gan.proveedor} por ${prMon(x.monto, x.moneda)}${x.adjudicado ? `, el ${fmt(isoLocal(x.adjudicado.fecha))} por ${x.adjudicado.por}${x.adjudicado.motivo ? '. Motivo: ' + x.adjudicado.motivo : ''}` : ''}.` : best >= 0 ? `Mejor oferta${maxN === N ? ' completa' : ''}: ${cots[best].proveedor} (${prMon(tt[best].total, cots[best].moneda)}, ${tt[best].n} de ${N} materiales). Pendiente de adjudicar.` : '']);
     ws.mergeCells(nota.number, 1, nota.number, nc); nota.getCell(1).font = fnt({ bold: true, color: { argb: 'FF2E5E4F' } });
-    const leg = ws.addRow(['En verde, el menor precio unitario de cada material. "No cotiza": el proveedor no ofertó ese material (no suma al total).']); ws.mergeCells(leg.number, 1, leg.number, nc); leg.getCell(1).font = fnt({ size: 8, italic: true, color: { argb: 'FF5E6763' } });
+    const leg = ws.addRow(['En verde, el menor precio unitario de cada material. En naranja, un precio ajustado a mano respecto al archivo del proveedor (ver la nota de la celda). "No cotiza": el proveedor no ofertó ese material (no suma al total).']); ws.mergeCells(leg.number, 1, leg.number, nc); leg.getCell(1).font = fnt({ size: 8, italic: true, color: { argb: 'FF5E6763' } });
     if (x.pago) { const p2 = ws.addRow([`Pago: ${fmt(x.pago.fecha)} · ${x.pago.forma || ''} · Ref. ${x.pago.referencia || '—'} · registrado por ${x.pago.por}`]); ws.mergeCells(p2.number, 1, p2.number, nc); p2.getCell(1).font = fnt({ size: 9 }); }
     ws.addRow([]); ws.addRow([]);
     const fr = ws.addRow(['', 'Elaborado por (Compras)', '', '', 'Revisado por (Costos)', '', 'Aprobado por (Gerencia General)']);
@@ -4534,21 +4706,22 @@ $('#prXlsx').onclick = async () => {
     const fnt = (o = {}) => Object.assign({ name: 'Arial', size: 9 }, o), solid = c => ({ type: 'pattern', pattern: 'solid', fgColor: { argb: c } }), thin = { style: 'thin', color: { argb: 'FFC9CCC5' } };
     ws.addRow(['CONTROL DE PROCURA · Constructora Rafmor, 13 B.P.F del Zulia']).font = fnt({ bold: true, size: 14 });
     ws.addRow([`Generado ${new Date().toLocaleString('es-VE')} · ${prLista.length} requisiciones recibidas por Compras`]).font = fnt({ color: { argb: 'FF5E6763' } }); ws.addRow([]);
-    const H = ['Requisición', 'Fecha', 'Prioridad', 'Base', 'Área', 'Solicitante', 'Materiales', 'Estado', 'Cotizaciones', 'Proveedor ganador', 'RIF', 'Monto', 'Moneda', 'Adjudicada', 'Pagada', 'Forma de pago', 'Referencia', 'Despachada', 'Transportista', 'Guía', 'Llegada estimada', 'Recibida en obra', 'Completa', 'Notas de llegada', 'Días desde el recibido'];
+    const H = ['Requisición', 'Fecha', 'Prioridad', 'Base', 'Área', 'Solicitante', 'Materiales', 'Estado', 'Cotizaciones', 'Proveedor ganador', 'RIF', 'Monto', 'Moneda', 'Adjudicada', 'Pagada', 'Forma de pago', 'Referencia', 'Pago confirmado', 'Confirmó (proveedor)', 'Factura proveedor', 'Despachada', 'Transportista', 'Guía', 'Llegada estimada', 'Recibida en obra', 'Completa', 'Notas de llegada', 'Días desde el recibido'];
     const hr = ws.addRow(H); hr.height = 30; hr.eachCell(c => { c.font = fnt({ bold: true }); c.fill = solid('FFF2A900'); c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }; c.border = { top: thin, bottom: thin, left: thin, right: thin }; });
     const dt = s2 => s2 ? new Date(String(s2).length === 10 ? s2 + 'T12:00:00' : s2) : null;
-    const ESTC = { sin: 'FFF4F5F2', cotizando: 'FFFFF1C7', por_pagar: 'FFF7DEDB', pagada: 'FFDDE7F6', en_despacho: 'FFE7DDF3', despachada: 'FFDCE9E3' };
+    const ESTC = { sin: 'FFF4F5F2', cotizando: 'FFFFF1C7', por_pagar: 'FFF7DEDB', pagada: 'FFDDE7F6', pago_confirmado: 'FFD3EEF0', en_despacho: 'FFE7DDF3', despachada: 'FFDCE9E3' };
     prLista.slice().sort((a, c) => String(a.control).localeCompare(String(c.control))).forEach(r => { const x = r.procura || {}, e = prEst(r), g = (x.cotizaciones || []).find(c => c.id === x.ganador) || {};
       const fin = x.entrega ? dt(x.entrega.fecha) : new Date(), ini = r.recibido ? new Date(r.recibido) : null;
       const row = ws.addRow([r.control, dt(r.creado), PRIO[r.prioridad] || 'Sin prioridad', prBases(r), r.area || '', r.solicitante || '', r.n, PR_EST[e], (x.cotizaciones || []).filter(c => c.proveedor).length || '',
-        g.proveedor || '', g.rif || '', x.monto != null ? +x.monto : '', x.moneda || '', x.adjudicado ? dt(x.adjudicado.fecha) : '', x.pago ? dt(x.pago.fecha) : '', x.pago ? x.pago.forma || '' : '', x.pago ? x.pago.referencia || '' : '',
+        g.proveedor || '', g.rif || '', x.monto != null ? +x.monto : '', x.moneda || '', x.adjudicado ? dt(x.adjudicado.fecha) : '', x.pago ? dt(x.pago.fecha) : '', x.pago ? x.pago.forma || '' : '', x.pago ? x.pago.referencia || '' : '', x.confirmacion && x.confirmacion.recibido !== false ? dt(x.confirmacion.fecha) : (x.confirmacion ? 'No confirmó' : ''), x.confirmacion ? x.confirmacion.contacto || '' : '', x.confirmacion ? x.confirmacion.factura || '' : '',
         x.despacho ? dt(x.despacho.fecha) : '', x.despacho ? x.despacho.transportista || '' : '', x.despacho ? x.despacho.guia || '' : '', x.despacho && x.despacho.llegada ? dt(x.despacho.llegada) : '',
         x.entrega ? dt(x.entrega.fecha) : '', x.entrega ? (x.entrega.completo === false ? 'No' : 'Sí') : '', x.entrega ? x.entrega.notas || '' : '', ini ? Math.max(0, Math.round((fin - ini) / 864e5)) : '']);
-      row.eachCell({ includeEmpty: true }, (c, cI) => { c.font = fnt(); c.border = { bottom: thin, left: thin, right: thin }; c.alignment = { vertical: 'top', wrapText: [5, 10, 24].includes(cI) }; });
-      [2, 14, 15, 18, 21, 22].forEach(cI => row.getCell(cI).numFmt = 'dd-mm-yyyy'); row.getCell(12).numFmt = '#,##0.00';
+      row.eachCell({ includeEmpty: true }, (c, cI) => { c.font = fnt(); c.border = { bottom: thin, left: thin, right: thin }; c.alignment = { vertical: 'top', wrapText: [5, 10, 19, 27].includes(cI) }; });
+      [2, 14, 15, 18, 21, 24, 25].forEach(cI => row.getCell(cI).numFmt = 'dd-mm-yyyy'); row.getCell(12).numFmt = '#,##0.00';
       row.getCell(8).fill = solid(ESTC[e]); row.getCell(8).font = fnt({ bold: true });
-      if (x.entrega && x.entrega.completo === false) row.getCell(23).font = fnt({ bold: true, color: { argb: 'FFB3261E' } }); });
-    [12, 11, 14, 22, 18, 20, 9, 14, 10, 24, 14, 12, 7, 11, 11, 13, 14, 11, 16, 12, 11, 11, 8, 26, 10].forEach((w, i) => ws.getColumn(i + 1).width = w);
+      if (x.confirmacion && x.confirmacion.recibido === false) row.getCell(18).font = fnt({ bold: true, color: { argb: 'FFB3261E' } });
+      if (x.entrega && x.entrega.completo === false) row.getCell(26).font = fnt({ bold: true, color: { argb: 'FFB3261E' } }); });
+    [12, 11, 14, 22, 18, 20, 9, 16, 10, 24, 14, 12, 7, 11, 11, 13, 14, 12, 20, 12, 11, 16, 12, 11, 11, 8, 26, 10].forEach((w, i) => ws.getColumn(i + 1).width = w);
     if (prLista.length) ws.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4 + prLista.length, column: H.length } };
     // resumen por estado
     const rs = wb.addWorksheet('Resumen'); rs.addRow(['RESUMEN DE PROCURA']).font = fnt({ bold: true, size: 13 }); rs.addRow([]);
@@ -4565,8 +4738,14 @@ $('#prXlsx').onclick = async () => {
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.29.0';
+const APP_VERSION = '4.30.0';
 const NOVEDADES = [
+  { v: '4.30.0', fecha: '2026-10-13', titulo: 'Confirmación del pago al proveedor', items: [
+    { r: ['compras','costos','master'], t: 'Las cotizaciones ya no se escriben a mano: toca "Subir la cotización del proveedor" y sube su PDF, Excel o foto. La app lee el proveedor, el RIF, el IVA y los precios, los empareja con los materiales de la requisición y tú solo revisas (puedes cambiar el renglón emparejado; si ajustas un precio queda marcado). El archivo queda guardado con la cotización.' },
+    { r: ['compras','costos','master'], t: 'En Procura hay un paso nuevo después del pago: "Confirmar que el proveedor recibió el pago", con quién lo confirmó y el N° de factura. Hasta confirmarlo no se puede marcar el despacho. Si el proveedor no lo recibió, marca "No / hay un problema" y la requisición vuelve a Gerencia General.' },
+    { r: ['gerente_general'], t: 'Después de registrar un pago, Compras confirma con el proveedor que lo recibió. Si el proveedor no lo confirma, te llega un aviso y la requisición vuelve a "Por pagar" con el motivo.' },
+    { r: ['gerente_operaciones','contratista','logistica'], t: 'El seguimiento de la compra tiene un paso más: la confirmación del pago por el proveedor, antes del despacho.' }
+  ] },
   { v: '4.29.0', fecha: '2026-10-13', titulo: 'Procura de requisiciones', items: [
     { r: ['compras','costos','master'], t: 'Nuevo módulo Procura: cada requisición recibida por Compras pasa a cotización. Cargas las cotizaciones de los proveedores (precio unitario por material, IVA, flete, entrega y condiciones), ves el cuadro comparativo con el menor precio marcado, lo exportas a Excel y adjudicas al proveedor ganador. Después marcas el despacho y exportas el control de procura completo.' },
     { r: ['gerente_general'], t: 'Nuevo módulo Procura: cuando Compras adjudica una requisición te llega un aviso de pago pendiente. Ábrela, revisa el cuadro comparativo y toca "Registrar el pago" con la fecha, la forma y la referencia.' },
