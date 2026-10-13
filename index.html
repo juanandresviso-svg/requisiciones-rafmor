@@ -632,6 +632,35 @@ nav.tabs button{flex:0 0 auto}
 .vfst{padding:14px;border-radius:12px;background:var(--sunk);margin-bottom:12px;text-align:center;font-weight:600}
 .chips button:disabled{opacity:.6;cursor:default}
 .wchk{display:flex;gap:10px;align-items:center;margin:4px 0 12px;font-weight:600;font-size:15px;cursor:pointer}.wchk input{width:22px;height:22px;accent-color:var(--amber)}
+/* v4.29.0: procura */
+.tag.prt{border-color:transparent;font-weight:700}
+.tag.pr-sin,.pfil i.pr-sin{background:var(--sunk);color:var(--muted)}.tag.pr-cotizando{background:#FFF1C7;color:#6B4A00}.tag.pr-por_pagar{background:#F7DEDB;color:#8A1F17}
+.tag.pr-pagada{background:#DDE7F6;color:#1F4E8C}.tag.pr-en_despacho{background:#E7DDF3;color:#5B3F86}.tag.pr-despachada{background:#DCE9E3;color:#2E5E4F}
+.pfil i.pr-cotizando{--pc:#E0A800}.pfil i.pr-por_pagar{--pc:#B3261E}.pfil i.pr-pagada{--pc:#1F4E8C}.pfil i.pr-en_despacho{--pc:#5B3F86}.pfil i.pr-despachada{--pc:#2E5E4F}
+.prlist li.prli{cursor:pointer}.prnext{color:var(--muted);font-size:13px}
+.prsteps{list-style:none;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:10px 0 0;padding:0;counter-reset:s}
+.prsteps li{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:var(--muted);text-align:center}
+.prsteps li span{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--rule);font-weight:700;background:var(--surface)}
+.prsteps li.ok{color:var(--green)}.prsteps li.ok span{background:var(--green);border-color:var(--green);color:#fff}
+.prsteps li.now{color:var(--ink);font-weight:700}.prsteps li.now span{border-color:var(--amber);background:var(--amber);color:var(--amber-ink)}
+.prsteps.sm li span{width:22px;height:22px;font-size:12px}
+.prwin .prwname{font:700 20px/1.2 "Barlow Condensed",sans-serif;margin:0}.prwin .prwname small{font:500 13px Inter,sans-serif;color:var(--muted)}
+.prwin .prwtot{font:700 28px/1.1 "Barlow Condensed",sans-serif;color:var(--green);margin:4px 0}
+.prbox{padding:10px 12px;border-radius:10px;margin:8px 0;font-size:14px;line-height:1.4}.prbox.ok{background:var(--green-soft)}.prbox.pend{background:#FFF1C7;color:#6B4A00}.prbox.bad{background:var(--red-soft);color:var(--red)}
+.pracc{display:grid;gap:8px;margin-top:10px}
+.prcmp{overflow-x:auto;margin:8px -4px 0;-webkit-overflow-scrolling:touch}
+.prcmp table{border-collapse:collapse;font-size:13px;min-width:100%}
+.prcmp th,.prcmp td{border:1px solid var(--rule);padding:6px 8px;vertical-align:top;text-align:right;white-space:nowrap}
+.prcmp th{background:var(--amber);color:var(--amber-ink);text-align:center;white-space:normal;min-width:96px}
+.prcmp th.gan{background:var(--green);color:#fff}.prcmp th.best{box-shadow:inset 0 -3px 0 var(--green)}
+.prcmp td:first-child,.prcmp th:first-child{text-align:left;white-space:normal;min-width:150px;position:sticky;left:0;background:var(--surface);z-index:1}
+.prcmp th:first-child{background:var(--amber)}
+.prcmp td small{display:block;color:var(--muted);font-size:11px}.prcmp td.min{background:var(--green-soft);font-weight:700}
+.prcmp .nc{color:var(--red);font-size:11px;font-style:italic}
+.prcmp tr.sub td{background:var(--sunk)}.prcmp tr.sub td:first-child{background:var(--sunk)}.prcmp tr.tot td{font-weight:800;background:#FFF1C7;color:#1B2220}
+.prpu{list-style:none;margin:0 0 10px;padding:0}.prpu li{display:grid;grid-template-columns:1fr 104px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--rule);font-size:13.5px}
+.prhist{list-style:none;margin:0;padding:0}.prhist li{padding:8px 0;border-bottom:1px solid var(--rule);font-size:13.5px}.prhist li span{color:var(--muted)}
+.prseg .prsteps{margin:4px 0 6px}
 </style>
 </head>
 <body>
@@ -727,7 +756,7 @@ nav.tabs button{flex:0 0 auto}
       <button class="bell" id="bellBtn" aria-label="Avisos"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1z"/></svg><span class="cnt" id="bellCnt" hidden></span></button>
     </div>
     <div class="simbar" id="simBar" hidden role="status"><span><b>Modo prueba</b><span id="simTxt"></span></span><button class="btn" id="simSalir">Volver a maestro</button></div>
-    <div class="mods" id="mods" role="group" aria-label="Módulo"><button type="button" data-mod="tar" aria-pressed="false" hidden>Tareas<span class="dot" id="tarDot" hidden></span></button><button type="button" data-mod="req" aria-pressed="true">Requisiciones</button><button type="button" data-mod="rep" aria-pressed="false">Reportes<span class="dot" id="repDot" hidden></span></button><button type="button" data-mod="est" aria-pressed="false" hidden>Estadísticas</button><button type="button" data-mod="via" aria-pressed="false" hidden>Viáticos</button></div>
+    <div class="mods" id="mods" role="group" aria-label="Módulo"><button type="button" data-mod="tar" aria-pressed="false" hidden>Tareas<span class="dot" id="tarDot" hidden></span></button><button type="button" data-mod="req" aria-pressed="true">Requisiciones</button><button type="button" data-mod="rep" aria-pressed="false">Reportes<span class="dot" id="repDot" hidden></span></button><button type="button" data-mod="est" aria-pressed="false" hidden>Estadísticas</button><button type="button" data-mod="via" aria-pressed="false" hidden>Viáticos</button><button type="button" data-mod="pro" aria-pressed="false" hidden>Procura<span class="dot" id="proDot" hidden></span></button></div>
     <nav class="tabs" role="tablist" id="mainTabs">
       <button role="tab" aria-selected="false" data-tab="nueva" data-mod="req" hidden>Nueva</button>
       <button role="tab" aria-selected="false" data-tab="verif" data-mod="req" hidden>Por verificar<span class="cnt" id="cVerif" hidden></span></button>
@@ -742,6 +771,7 @@ nav.tabs button{flex:0 0 auto}
       <button role="tab" aria-selected="false" data-tab="tar" data-mod="tar" hidden>Tareas por puesto</button>
       <button role="tab" aria-selected="false" data-tab="vmis" data-mod="via" hidden>Mis reportes</button>
       <button role="tab" aria-selected="false" data-tab="vtodos" data-mod="via" hidden>Todos</button>
+      <button role="tab" aria-selected="false" data-tab="proc" data-mod="pro" hidden>Control<span class="cnt" id="cProc" hidden></span></button>
       <button role="tab" aria-selected="false" data-tab="ajustes" data-mod="both" class="gear" aria-label="Ajustes y cuenta" title="Ajustes y cuenta"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.7h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span class="cnt" id="cUsers" hidden></span></button>
     </nav>
   </header>
@@ -757,6 +787,23 @@ nav.tabs button{flex:0 0 auto}
     <button class="btn" data-install>Ver cómo</button>
     <button class="x" id="installX" aria-label="Ocultar aviso">×</button>
   </div>
+
+  <!-- PROCURA (v4.29.0) -->
+  <section class="panel" id="p-proc">
+    <div class="block">
+      <div class="memtop"><h2 style="margin:0">Control de procura</h2><button class="btn ghost" id="prRefresh">Actualizar</button></div>
+      <p class="hint">Requisiciones aprobadas y recibidas por Compras: cotizaciones, proveedor ganador, pago, despacho y llegada a la obra.</p>
+      <div class="pfil prfil" id="prFil" role="group" aria-label="Filtrar por estado"></div>
+      <input class="in" id="prBuscar" placeholder="Buscar por N°, área, material o proveedor" style="margin:4px 0 10px">
+      <ul class="hist prlist" id="prList"></ul>
+      <div class="empty" id="prEmpty" hidden></div>
+      <button class="btn block100" id="prXlsx" style="margin-top:12px">Exportar control de procura (Excel)</button>
+    </div>
+  </section>
+  <section class="panel" id="p-pedit">
+    <div class="memtop repTop"><button class="btn ghost" id="peVolver" style="padding-left:0">← Control de procura</button><b id="peTitulo"></b></div>
+    <div id="peBody"></div>
+  </section>
 
   <!-- VIÁTICOS (v4.27.0) -->
   <section class="panel" id="p-vmis">
@@ -1410,6 +1457,17 @@ nav.tabs button{flex:0 0 auto}
     <label class="f"><span>Día</span><input class="in" type="date" id="a-xdate"></label>
     <div class="chips" id="xlsQuick" style="margin:-4px 0 12px"><button type="button" data-d="0">Hoy</button><button type="button" data-d="1">Ayer</button></div>
     <button class="btn primary block100" id="a-xbtn">Descargar Excel</button>
+  </div>
+</dialog>
+
+<!-- Procura: acciones (pago, despacho, llegada a obra, adjudicación) v4.29.0 -->
+<dialog id="prDlg">
+  <div class="sheet"><div class="grab"></div>
+    <h3><span id="prdTit"></span><button class="btn ghost" id="prdClose" style="min-height:40px">Cerrar</button></h3>
+    <p class="hint" id="prdHint" style="margin-top:-6px"></p>
+    <div id="prdBody"></div>
+    <p class="err" id="prdErr" hidden></p>
+    <button class="btn primary block100" id="prdOk"></button>
   </div>
 </dialog>
 
@@ -2433,6 +2491,7 @@ async function verAdjunto(a){
 let aFilter = 'por_aprobar', lTimer = null;
 function setCount(id, n){ const el = $('#'+id); el.textContent = n; el.hidden = !n; }
 function estadoTag(r){
+  if (r.estado === 'aprobada' && r.recibido && r.procura) return `<span class="tag ok">Recibida por compras</span>${prTag(r.procura)}`;
   if (r.estado === 'aprobada') return r.recibido ? `<span class="tag ok">Aprobada por ${esc(r.autorizado)}</span><span class="tag ok">Recibida por compras</span>` : `<span class="tag ok">Aprobada por ${esc(r.autorizado)}</span><span class="tag com">Falta recibido de compras</span>`;
   if (r.estado === 'rechazada') return `<span class="tag bad">Rechazada${r.rechazo && r.rechazo.motivo ? ': ' + esc(r.rechazo.motivo) : ''}</span>`;
   if (r.verificado) return `<span class="tag ok">Verificada por ${esc(r.verificado)}</span><span class="tag pend">Falta aprobar</span>`;
@@ -2511,6 +2570,7 @@ async function refreshCounts(){
     const [av, v, a] = await Promise.all(tasks);
     setCount('bellCnt', av ? av.sin_leer : 0);
     if (canReport()) loadToday(); else $('#repDot').hidden = true;
+    if (veProcura()) rpc('rq_procura_listar').then(L => { prLista = L || []; prBadge(); }).catch(() => {});
     if (canTareas()) rpc('rq_tareas_resumen').then(r => { $('#tarDot').hidden = !r.mias_vencidas; }).catch(() => {}); else $('#tarDot').hidden = true;
     if (v) setCount('cVerif', v.length); if (a) setCount('cAprob', a.length);
     if (me.es_master) { const us = await rpc('rq_usuarios'); setCount('cUsers', (us || []).filter(u => u.estado === 'pendiente').length); }
@@ -2579,6 +2639,7 @@ function renderDetail(){
       ${step(rc, rc && `Recibida por ${esc(rc.nombre)} (compras) el ${fdate(rc.fecha)}`, 'Falta el recibido de Compras')}
     </div>
     ${cambios ? `<p class="chg">Ajustada por: ${cambios}</p>` : ''}
+    ${prSeguimiento(r)}
     ${d.historica ? '' : prioDetalle(r)}
     <dl class="dl">
       ${d.general ? '<dt>Tipo</dt><dd><b>Requisición general del proyecto</b></dd>' : ''}
@@ -2591,6 +2652,7 @@ function renderDetail(){
     ${d.notas ? `<div class="sec">Notas</div><p style="margin:0 0 8px;white-space:pre-wrap">${esc(d.notas)}</p>` : ''}
     ${d.adjunto ? `<button class="btn block100" id="dAdj" style="margin:6px 0 4px">📎 Ver documento original (${esc(d.adjunto.mime === 'application/pdf' ? 'PDF' : 'foto')})</button>` : ''}`;
   if (d.adjunto) $('#dAdj').onclick = () => verAdjunto(d.adjunto);
+  prDetalleAcciones(r);
   const dp = $('#dPrioSel'); if (dp) dp.onclick = e => { const b = e.target.closest('[data-p]'); if (b) cambiarPrioridad(b.dataset.p, b); };
   const p = permsFor(r), btns = [];
   if (p.edit) btns.push('<button class="btn" data-act="editar">Ajustar requisición</button>');
@@ -2710,6 +2772,7 @@ $('#avList').addEventListener('click', e => {
   if (c.startsWith('rep:')) { openReport(c.slice(4)); return; }
   if (c.startsWith('tarea:')) { setMod('tar', 'tar'); abrirTarea(null, c.slice(6)); return; }
   if (c.startsWith('viatico:')) { abrirViatico(c.slice(8)); return; }
+  if (c.startsWith('procura:')) { abrirProcura(c.slice(8)); return; }
   if (c === 'accion:push') { abrirAjuste('pushBlock'); return; }
   if (!c) return;
   openDetail(c);
@@ -3883,6 +3946,7 @@ function setMod(m, tab){
   if (m === 'est' && !canStats()) m = 'req';
   if (m === 'tar' && !canTareas()) m = 'req';
   if (m === 'via' && !(canViaticos() || veViaticos())) m = 'req';
+  if (m === 'pro' && !veProcura()) m = 'req';
   if (soloSemanal() && m === 'req') { m = 'rep'; tab = 'rsem'; }
   if (soloSemanal() && m === 'rep') tab = 'rsem';
   $('#mods').hidden = soloSemanal() && !canStats();
@@ -3890,10 +3954,11 @@ function setMod(m, tab){
   $('#mods [data-mod="est"]').hidden = !canStats();
   $('#mods [data-mod="tar"]').hidden = !canTareas();
   $('#mods [data-mod="via"]').hidden = !(canViaticos() || veViaticos());
+  $('#mods [data-mod="pro"]').hidden = !veProcura();
   curMod = m; LS.set('mod', m);
   $$('#mods button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mod === m));
   applyTabVisibility();
-  const first = tab || (m === 'via' ? (canViaticos() ? 'vmis' : 'vtodos') : m === 'tar' ? 'tar' : m === 'est' ? 'est' : m === 'rep' ? (soloSemanal() ? 'rsem' : esLogistica() ? 'rlog' : 'rarch') : defaultReqTab());
+  const first = tab || (m === 'pro' ? 'proc' : m === 'via' ? (canViaticos() ? 'vmis' : 'vtodos') : m === 'tar' ? 'tar' : m === 'est' ? 'est' : m === 'rep' ? (soloSemanal() ? 'rsem' : esLogistica() ? 'rlog' : 'rarch') : defaultReqTab());
   showTab(first);
 }
 $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mod]'); if (b) setMod(b.dataset.mod); });
@@ -4188,10 +4253,326 @@ $('#vtXlsx').onclick = () => { const d1 = $('#vtDesde').value, d2 = $('#vtHasta'
 $('#vmXlsx').onclick = () => vXlsx(vtLista.filter(v => (v.datos.gastos || []).length), `Reportes de ${me.nombre}`, $('#vmXlsx'));
 function abrirViatico(numero){ setMod('via', veViaticos() ? 'vtodos' : 'vmis'); setTimeout(() => { const v = vtTodos.concat(vtLista).find(x => x.numero === numero); if (v) vAbrir(v, veViaticos() ? 'vtodos' : 'vmis'); }, 900); }
 
+/* ---------- Procura de requisiciones (v4.29.0) ----------
+   Después del recibido de Compras: cuadro comparativo de cotizaciones, proveedor ganador, aviso a Gerencia General
+   para el pago, despacho del proveedor y confirmación de llegada a la obra por quien pidió la requisición. */
+const canProcura = () => me && (me.es_master || ['compras','costos'].includes(me.rol));
+const veProcura = () => me && (me.es_master || ['compras','costos','gerente_general','gerente_operaciones'].includes(me.rol));
+const pagaProcura = () => me && (me.es_master || me.rol === 'gerente_general');
+const PR_EST = { sin: 'Por cotizar', cotizando: 'Cotizando', por_pagar: 'Por pagar', pagada: 'Pagada', en_despacho: 'En despacho', despachada: 'Recibida en obra' };
+const PR_ORD = ['sin', 'cotizando', 'por_pagar', 'pagada', 'en_despacho', 'despachada'];
+const prEst = x => (x && x.procura && (x.procura.estado || x.procura)) || 'sin';
+const prTag = e => `<span class="tag prt pr-${e}">${PR_EST[e] || e}</span>`;
+const prNum = x => { const t = String(x == null ? '' : x).trim(); if (!t) return null; const n = t.includes(',') ? parseFloat(t.replace(/\./g, '').replace(',', '.')) : parseFloat(t); return isNaN(n) ? null : n; };
+const prMon = (n, m) => (m === 'Bs' ? 'Bs ' : '$') + (+n || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// total de una cotización (igual que en el servidor): Σ cant × p.u. + IVA + flete
+function prTot(items, c){
+  let sub = 0, n = 0; (items || []).forEach((it, i) => { const q = prNum(it.cant), pu = c.precios ? prNum(c.precios[i]) : null; if (q != null && pu != null) { sub += q * pu; n++; } });
+  const iva = sub * (prNum(c.iva_pct) || 0) / 100, flete = prNum(c.flete) || 0;
+  return { sub, iva, flete, total: Math.round((sub + iva + flete) * 100) / 100, n };
+}
+let prLista = [], prFiltro = '', prRow = null, prTimer = null;
+const prBases = r => { const B = [...new Set((r.items || []).map(i => +i.base).filter(n => n >= 1 && n <= 13))]; return r.general ? 'Proyecto general' : B.length === 1 ? baseName(B[0]) : B.length > 1 ? `Varias bases (${B.length})` : ''; };
+async function loadProc(){
+  try { prLista = await rpc('rq_procura_listar') || []; } catch (e) { toast(e.message); prLista = []; }
+  if (!prFiltro) prFiltro = pagaProcura() && !canProcura() ? 'por_pagar' : 'pend';
+  pintarProc(); prBadge();
+}
+function prBadge(){ const n = prLista.filter(r => pagaProcura() && !canProcura() ? prEst(r) === 'por_pagar' : ['sin','cotizando','pagada'].includes(prEst(r))).length;
+  $('#cProc').textContent = n; $('#cProc').hidden = !n; $('#proDot').hidden = !n; }
+function pintarProc(){
+  const cnt = {}; prLista.forEach(r => { const e = prEst(r); cnt[e] = (cnt[e] || 0) + 1; });
+  const pend = (cnt.sin || 0) + (cnt.cotizando || 0) + (cnt.por_pagar || 0) + (cnt.pagada || 0) + (cnt.en_despacho || 0);
+  const F = [['pend', 'En proceso', pend], ...PR_ORD.map(e => [e, PR_EST[e], cnt[e] || 0]), ['todas', 'Todas', prLista.length]];
+  $('#prFil').innerHTML = F.filter(([k, , n]) => n || k === prFiltro || k === 'pend' || k === 'todas').map(([k, l, n]) => `<button type="button" data-pf="${k}" aria-pressed="${prFiltro === k}">${PR_EST[k] ? `<i class="pr-${k}"></i>` : ''}${l} <small>${n}</small></button>`).join('');
+  const q = _norm($('#prBuscar').value || '');
+  const L = prLista.filter(r => { const e = prEst(r); if (prFiltro === 'pend' && e === 'despachada') return false; if (prFiltro !== 'pend' && prFiltro !== 'todas' && e !== prFiltro) return false;
+      if (!q) return true; const pv = r.procura ? (r.procura.cotizaciones || []).map(c => c.proveedor).join(' ') : '';
+      return _norm([r.control, r.area, r.solicitante, pv, (r.items || []).map(i => i.desc).join(' ')].join(' ')).includes(q); })
+    .sort((a, b) => prioRank(a.prioridad) - prioRank(b.prioridad) || PR_ORD.indexOf(prEst(a)) - PR_ORD.indexOf(prEst(b)) || String(b.creado).localeCompare(String(a.creado)));
+  $('#prList').innerHTML = L.map(r => { const x = r.procura || {}, e = prEst(r), cots = (x.cotizaciones || []).filter(c => c.proveedor), gan = cots.find(c => c.id === x.ganador);
+    const nxt = { sin: 'Cargar cotizaciones', cotizando: `${cots.length} cotización${cots.length === 1 ? '' : 'es'} · elegir ganador`, por_pagar: 'Esperando el pago de Gerencia General', pagada: 'Falta marcar el despacho', en_despacho: x.despacho && x.despacho.llegada ? `Llegada estimada ${fmt(x.despacho.llegada)}` : 'Esperando confirmación en obra', despachada: x.entrega && x.entrega.completo === false ? 'Llegó incompleta' : 'Completa' }[e];
+    return `<li data-prc="${esc(r.control)}" role="button" tabindex="0" class="prli pr-${PRIO[r.prioridad] ? r.prioridad : 'sin'}">
+      <div class="ctlb"><b>${esc(r.control)}</b><small class="bpf">${esc(prBases(r))}</small><span class="when">${fmt(isoLocal(r.creado))}</span></div>
+      <div class="tags" style="margin:4px 0 2px">${prioTag(r.prioridad)}${prTag(e)}${x.entrega && x.entrega.completo === false ? '<span class="tag bad">Incompleta</span>' : ''}</div>
+      <div class="m">${esc(r.area || '')} · ${r.n} material${r.n === 1 ? '' : 'es'} · Pidió ${esc(r.solicitante || '')}</div>
+      <div class="vnums">${gan ? `<span>${esc(gan.proveedor)}</span><b>${prMon(x.monto, x.moneda)}</b>` : ''}<span class="prnext">${esc(nxt)}</span></div></li>`; }).join('');
+  $('#prEmpty').hidden = L.length > 0; $('#prEmpty').textContent = prLista.length ? 'No hay requisiciones con este filtro.' : 'Todavía no hay requisiciones recibidas por Compras.';
+}
+$('#prFil').addEventListener('click', e => { const b = e.target.closest('[data-pf]'); if (!b) return; prFiltro = b.dataset.pf; pintarProc(); });
+$('#prBuscar').addEventListener('input', pintarProc);
+$('#prRefresh').onclick = loadProc;
+$('#prList').addEventListener('click', e => { const li = e.target.closest('[data-prc]'); if (li) prAbrir(li.dataset.prc); });
+function prAbrir(control){ const r = prLista.find(x => x.control === control); if (!r) return toast('No encontré la requisición ' + control + ' en procura');
+  prRow = JSON.parse(JSON.stringify(r)); if (!prRow.procura) prRow.procura = { estado: 'cotizando', cotizaciones: [], hist: [], nueva: true };
+  if (!prRow.procura.cotizaciones.length && canProcura() && prEst(r) !== 'por_pagar') prRow.procura.cotizaciones.push(prNuevaCot());
+  showTab('pedit'); }
+const prNuevaCot = () => ({ id: uuid().slice(0, 8), proveedor: '', rif: '', contacto: '', moneda: 'USD', precios: [], flete: '', iva_pct: '16', entrega: '', pago: '', validez: '', notas: '' });
+const prEditable = () => canProcura() && prRow && prEst(prRow) === 'cotizando' || (canProcura() && prRow && prRow.procura.nueva);
+function pintarPEdit(){
+  if (!prRow) return showTab('proc');
+  const r = prRow, x = r.procura, e = prEst(r), items = r.items || [], ed = prEditable(), cots = x.cotizaciones || [];
+  $('#peTitulo').textContent = r.control;
+  const tots = cots.map(c => prTot(items, c)), validas = cots.map((c, k) => c.proveedor && tots[k].n ? k : -1).filter(k => k >= 0);
+  // mejor oferta: el menor total entre las que cotizan más materiales (una oferta incompleta no gana por ser más barata)
+  const maxN = validas.length ? Math.max(...validas.map(k => tots[k].n)) : 0;
+  const mejorTot = validas.filter(k => tots[k].n === maxN).reduce((a, k) => a < 0 || tots[k].total < tots[a].total ? k : a, -1);
+  const minPU = items.map((it, i) => { const v = cots.map(c => c.proveedor ? prNum((c.precios || [])[i]) : null).filter(v => v != null); return v.length ? Math.min(...v) : null; });
+  const paso = k => { const i = PR_ORD.indexOf(e); return e === 'despachada' || i > k ? 'ok' : i === k ? 'now' : ''; };
+  const gan = cots.find(c => c.id === x.ganador);
+  let h = `<div class="block"><div class="tags" style="margin:0 0 8px">${prioTag(r.prioridad)}${prTag(e)}</div>
+    <dl class="dl"><dt>Base</dt><dd>${esc(prBases(r))}</dd><dt>Área</dt><dd>${esc(r.area || '')}</dd><dt>Pidió</dt><dd>${esc(r.solicitante || '')}</dd>
+    ${r.fechaRequerida ? `<dt>Para el</dt><dd>${fmt(r.fechaRequerida)}</dd>` : ''}<dt>Recibida</dt><dd>${r.recibido ? fmt(isoLocal(r.recibido)) : ''} por Compras</dd></dl>
+    <ol class="prsteps">${[['Cotizar', 1], ['Ganador', 2], ['Pago', 3], ['Despacho', 4], ['En obra', 5]].map(([t, k]) => `<li class="${paso(k)}"><span>${k}</span>${t}</li>`).join('')}</ol>
+    <button class="btn block100" id="peDet" style="margin-top:8px">Ver la requisición completa</button></div>`;
+  // ---- estado posterior a la adjudicación ----
+  if (gan) {
+    h += `<div class="block prwin"><h2 style="margin-top:0">Proveedor ganador</h2><p class="prwname">${esc(gan.proveedor)}${gan.rif ? ` <small>${esc(gan.rif)}</small>` : ''}</p>
+      <p class="prwtot">${prMon(x.monto, x.moneda)}</p><p class="hint" style="margin:0">${tots[cots.indexOf(gan)].n} de ${items.length} materiales cotizados${gan.entrega ? ' · entrega ' + esc(gan.entrega) : ''}${gan.pago ? ' · ' + esc(gan.pago) : ''}</p>
+      ${x.adjudicado ? `<p class="hint">Adjudicada por ${esc(x.adjudicado.por)} el ${fmt(isoLocal(x.adjudicado.fecha))}${x.adjudicado.motivo ? ': ' + esc(x.adjudicado.motivo) : ''}</p>` : ''}
+      ${x.pago ? `<div class="prbox ok"><b>Pagada</b> el ${fmt(x.pago.fecha)} por ${esc(x.pago.por)}${x.pago.forma ? ' · ' + esc(x.pago.forma) : ''}${x.pago.referencia ? ' · Ref. ' + esc(x.pago.referencia) : ''}${x.pago.monto ? ' · ' + prMon(x.pago.monto, x.moneda) : ''}${x.pago.notas ? '<br>' + esc(x.pago.notas) : ''}</div>` : `<div class="prbox pend"><b>Pago pendiente.</b> Se le avisó a Gerencia General.</div>`}
+      ${x.despacho ? `<div class="prbox ok"><b>Despachada</b> el ${fmt(x.despacho.fecha)}${x.despacho.transportista ? ' · ' + esc(x.despacho.transportista) : ''}${x.despacho.guia ? ' · Guía ' + esc(x.despacho.guia) : ''}${x.despacho.llegada ? ' · llegada estimada ' + fmt(x.despacho.llegada) : ''}${x.despacho.notas ? '<br>' + esc(x.despacho.notas) : ''}</div>` : ''}
+      ${x.entrega ? `<div class="prbox ${x.entrega.completo === false ? 'bad' : 'ok'}"><b>${x.entrega.completo === false ? 'Llegó incompleta' : 'Llegó a la obra completa'}</b>, confirmó ${esc(x.entrega.por)} el ${fmt(isoLocal(x.entrega.fecha))}${x.entrega.notas ? ': ' + esc(x.entrega.notas) : ''}</div>` : ''}
+      <div class="pracc">
+        ${e === 'por_pagar' && pagaProcura() ? '<button class="btn primary block100" data-pa="pagar">Registrar el pago</button>' : ''}
+        ${e === 'por_pagar' && canProcura() ? '<button class="btn block100" data-pa="reabrir">Volver a cotizar</button>' : ''}
+        ${e === 'pagada' && canProcura() ? '<button class="btn primary block100" data-pa="despachar">Marcar en despacho</button>' : ''}
+        ${e === 'en_despacho' && (canProcura() || pagaProcura() || (me.rol === 'gerente_operaciones')) ? '<button class="btn block100" data-pa="obra">Confirmar llegada a la obra</button>' : ''}
+      </div></div>`;
+  }
+  // ---- cuadro comparativo ----
+  h += `<div class="block"><div class="memtop"><h2 style="margin:0">Cuadro comparativo</h2><span class="hint" style="margin:0">${validas.length} proveedor${validas.length === 1 ? '' : 'es'}</span></div>`;
+  if (validas.length) {
+    h += `<div class="prcmp"><table><thead><tr><th>Material</th>${cots.map((c, k) => c.proveedor ? `<th class="${c.id === x.ganador ? 'gan' : k === mejorTot && !x.ganador ? 'best' : ''}">${esc(c.proveedor)}${c.id === x.ganador ? '<br><small>GANADOR</small>' : k === mejorTot && !x.ganador ? `<br><small>${maxN === items.length ? 'mejor oferta completa' : 'mejor oferta'}</small>` : tots[k].n < maxN ? '<br><small>incompleta</small>' : ''}</th>` : '').join('')}</tr></thead><tbody>
+      ${items.map((it, i) => `<tr><td><b>${esc(it.cant)} ${esc(it.und)}</b> ${esc(it.desc)}</td>${cots.map(c => { if (!c.proveedor) return ''; const pu = prNum((c.precios || [])[i]); return `<td class="${pu != null && pu === minPU[i] && cots.filter(z => z.proveedor).length > 1 ? 'min' : ''}">${pu == null ? '<span class="nc">No cotiza</span>' : prMon(pu, c.moneda) + `<small>${prMon(pu * (prNum(it.cant) || 0), c.moneda)}</small>`}</td>`; }).join('')}</tr>`).join('')}
+      <tr class="sub"><td>Subtotal</td>${cots.map((c, k) => c.proveedor ? `<td>${prMon(tots[k].sub, c.moneda)}</td>` : '').join('')}</tr>
+      <tr class="sub"><td>IVA</td>${cots.map((c, k) => c.proveedor ? `<td>${prMon(tots[k].iva, c.moneda)}<small>${prNum(c.iva_pct) || 0}%</small></td>` : '').join('')}</tr>
+      <tr class="sub"><td>Flete</td>${cots.map((c, k) => c.proveedor ? `<td>${prMon(tots[k].flete, c.moneda)}</td>` : '').join('')}</tr>
+      <tr class="tot"><td>TOTAL</td>${cots.map((c, k) => c.proveedor ? `<td>${prMon(tots[k].total, c.moneda)}<small>${tots[k].n} de ${items.length}</small></td>` : '').join('')}</tr>
+      <tr class="sub"><td>Entrega</td>${cots.map(c => c.proveedor ? `<td>${esc(c.entrega || '—')}</td>` : '').join('')}</tr>
+      <tr class="sub"><td>Pago</td>${cots.map(c => c.proveedor ? `<td>${esc(c.pago || '—')}</td>` : '').join('')}</tr>
+      </tbody></table></div>`;
+    if (new Set(validas.map(k => cots[k].moneda || 'USD')).size > 1) h += '<p class="hint" style="color:var(--red)">Hay cotizaciones en monedas distintas: compara los totales con la tasa del día.</p>';
+    if (ed && !x.ganador) h += `<div class="pracc">${validas.map(k => `<button class="btn ${k === mejorTot ? 'primary' : ''} block100" data-gan="${esc(cots[k].id)}">Adjudicar a ${esc(cots[k].proveedor)} · ${prMon(tots[k].total, cots[k].moneda)}</button>`).join('')}</div>`;
+  } else h += '<p class="hint">Carga al menos una cotización con proveedor y precios para ver el comparativo.</p>';
+  h += `<button class="btn block100" id="peXlsx" style="margin-top:10px" ${validas.length ? '' : 'disabled'}>Exportar cuadro comparativo (Excel)</button></div>`;
+  // ---- cotizaciones editables ----
+  if (ed) {
+    h += cots.map((c, k) => `<div class="block prcot" data-ck="${k}"><div class="memtop"><h2 style="margin:0">Cotización ${k + 1}</h2>${cots.length > 1 ? `<button class="btn ghost" data-cdel="${k}" style="color:var(--red)">Quitar</button>` : ''}</div>
+      <label class="f"><span>Proveedor</span><input class="in" data-cf="proveedor" value="${esc(c.proveedor)}" placeholder="Nombre del proveedor"></label>
+      <div class="row2"><label class="f"><span>RIF</span><input class="in" data-cf="rif" value="${esc(c.rif)}"></label><label class="f"><span>Contacto</span><input class="in" data-cf="contacto" value="${esc(c.contacto)}" placeholder="Teléfono o persona"></label></div>
+      <div class="row2"><label class="f"><span>Moneda</span><select class="in" data-cf="moneda"><option ${c.moneda !== 'Bs' ? 'selected' : ''}>USD</option><option ${c.moneda === 'Bs' ? 'selected' : ''}>Bs</option></select></label><label class="f"><span>IVA %</span><input class="in" data-cf="iva_pct" inputmode="decimal" value="${esc(c.iva_pct)}"></label></div>
+      <div class="sec">Precio unitario de cada material <small>(vacío = no lo cotiza)</small></div>
+      <ul class="prpu">${items.map((it, i) => `<li><div><b>${esc(it.cant)} ${esc(it.und)}</b> ${esc(it.desc)}</div><input class="in" data-pu="${i}" inputmode="decimal" placeholder="P.U." value="${esc((c.precios || [])[i] == null ? '' : String((c.precios || [])[i]).replace('.', ','))}"></li>`).join('')}</ul>
+      <div class="row2"><label class="f"><span>Flete</span><input class="in" data-cf="flete" inputmode="decimal" value="${esc(c.flete)}" placeholder="0"></label><label class="f"><span>Tiempo de entrega</span><input class="in" data-cf="entrega" value="${esc(c.entrega)}" placeholder="3 días"></label></div>
+      <div class="row2"><label class="f"><span>Condiciones de pago</span><input class="in" data-cf="pago" value="${esc(c.pago)}" placeholder="Contado, 50% anticipo…"></label><label class="f"><span>Validez</span><input class="in" data-cf="validez" value="${esc(c.validez)}" placeholder="5 días"></label></div>
+      <label class="f"><span>Notas</span><input class="in" data-cf="notas" value="${esc(c.notas)}"></label>
+      <p class="hint prtot" style="margin:6px 0 0">Total: <b>${prMon(tots[k].total, c.moneda)}</b> · ${tots[k].n} de ${items.length} materiales</p></div>`).join('')
+      + `<button class="btn block100" id="peAdd" ${cots.length >= 12 ? 'disabled' : ''}>+ Agregar otra cotización</button><p class="hint" id="peSaved" style="text-align:center"></p>`;
+  }
+  // ---- historial ----
+  if ((x.hist || []).length) h += `<div class="block"><div class="sec">Historial</div><ul class="prhist">${x.hist.map(t => `<li><b>${{ inicio: 'Inicio de la cotización', adjudicada: 'Adjudicada', reabierta: 'Vuelta a cotizar', pagada: 'Pago registrado', en_despacho: 'En despacho', despachada: 'Llegada a la obra' }[t.accion] || t.accion}</b> · ${esc(t.por)} · ${fmt(isoLocal(t.fecha))}${t.detalle ? '<br><span>' + esc(t.detalle) + '</span>' : ''}</li>`).join('')}</ul></div>`;
+  $('#peBody').innerHTML = h;
+}
+// edición de cotizaciones (se guarda sola)
+function prLeer(){
+  $$('#peBody .prcot').forEach(card => { const c = prRow.procura.cotizaciones[+card.dataset.ck];
+    card.querySelectorAll('[data-cf]').forEach(inp => c[inp.dataset.cf] = inp.value.trim());
+    c.precios = [...card.querySelectorAll('[data-pu]')].map(inp => prNum(inp.value)); });
+}
+async function prGuardar(){
+  clearTimeout(prTimer); if (!prEditable()) return true; prLeer();
+  try { const x = await rpc('rq_procura_guardar', { p_control: prRow.control, p_cotizaciones: prRow.procura.cotizaciones });
+    prRow.procura = x; const i = prLista.findIndex(r => r.control === prRow.control); if (i >= 0) prLista[i].procura = JSON.parse(JSON.stringify(x));
+    const sv = $('#peSaved'); if (sv) sv.textContent = 'Guardado ' + new Date().toLocaleTimeString('es-VE', { hour: 'numeric', minute: '2-digit' }); return true; }
+  catch (er) { const sv = $('#peSaved'); if (sv) sv.textContent = 'No se pudo guardar: ' + er.message; return false; }
+}
+$('#peBody').addEventListener('input', e => { if (!e.target.closest('.prcot')) return; prLeer();
+  const card = e.target.closest('.prcot'), k = +card.dataset.ck, c = prRow.procura.cotizaciones[k], t = prTot(prRow.items, c);
+  card.querySelector('.prtot').innerHTML = `Total: <b>${prMon(t.total, c.moneda)}</b> · ${t.n} de ${(prRow.items || []).length} materiales`;
+  $('#peSaved').textContent = 'Guardando…'; clearTimeout(prTimer); prTimer = setTimeout(async () => { await prGuardar(); const y = window.scrollY; pintarPEdit(); window.scrollTo(0, y); }, 1200); });
+$('#peBody').addEventListener('click', async e => {
+  const t = e.target;
+  if (t.id === 'peDet') return openDetail(prRow.control);
+  if (t.id === 'peXlsx') { prLeer(); return prXlsxCuadro(prRow, t); }
+  if (t.id === 'peAdd') { prLeer(); prRow.procura.cotizaciones.push(prNuevaCot()); pintarPEdit(); const L = $$('#peBody .prcot'); L[L.length - 1].scrollIntoView({ behavior: 'smooth' }); return; }
+  const del = t.closest('[data-cdel]'); if (del) { if (!confirm('¿Quitar esta cotización?')) return; prLeer(); prRow.procura.cotizaciones.splice(+del.dataset.cdel, 1); await prGuardar(); return pintarPEdit(); }
+  const g = t.closest('[data-gan]'); if (g) return prAccion('adjudicar', g.dataset.gan);
+  const a = t.closest('[data-pa]'); if (a) return prAccion(a.dataset.pa);
+});
+$('#peVolver').onclick = async () => { await prGuardar(); prRow = null; showTab('proc'); };
+// acciones con diálogo
+let prdAct = null;
+function prAccion(act, arg){
+  const x = prRow.procura, cots = x.cotizaciones || [];
+  const F = (id, lbl, typ, val, ph) => `<label class="f"><span>${lbl}</span>${typ === 'area' ? `<textarea class="in" id="${id}" placeholder="${ph || ''}">${esc(val || '')}</textarea>` : `<input class="in" id="${id}" type="${typ || 'text'}" value="${esc(val || '')}" placeholder="${ph || ''}" ${typ === 'num' ? 'inputmode="decimal"' : ''}>`}</label>`;
+  let tit = '', hint = '', body = '', ok = '';
+  if (act === 'adjudicar') { const c = cots.find(z => z.id === arg), t = prTot(prRow.items, c); prdAct = { act, arg };
+    tit = 'Adjudicar'; hint = `Ganador: ${c.proveedor} por ${prMon(t.total, c.moneda)} (${t.n} de ${(prRow.items || []).length} materiales).${t.n < (prRow.items || []).length ? ' OJO: este proveedor no cotiza todos los materiales; los que faltan habrá que comprarlos aparte.' : ''} Se le avisará a Gerencia General para el pago y al solicitante.`;
+    body = F('prdMot', 'Motivo de la elección (opcional)', 'area', '', 'Mejor precio, entrega inmediata, stock completo…'); ok = 'Adjudicar y avisar a Gerencia General'; }
+  if (act === 'reabrir') { prdAct = { act }; tit = 'Volver a cotizar'; hint = 'Se quita el ganador y la requisición vuelve a cotización. Solo se puede antes del pago.'; body = F('prdMot', 'Motivo', 'area'); ok = 'Volver a cotizar'; }
+  if (act === 'pagar') { prdAct = { act }; tit = 'Registrar el pago'; hint = `${(cots.find(z => z.id === x.ganador) || {}).proveedor || ''} · ${prMon(x.monto, x.moneda)}. Se avisará a Compras para el despacho.`;
+    body = `<div class="row2">${F('prdFecha', 'Fecha del pago', 'date', today())}${F('prdMonto', 'Monto pagado', 'num', String(x.monto || '').replace('.', ','))}</div>${F('prdForma', 'Forma de pago', 'text', '', 'Transferencia, Zelle, efectivo…')}${F('prdRef', 'Referencia', 'text', '', 'N° de transferencia o comprobante')}${F('prdNotas', 'Notas (opcional)', 'area')}`; ok = 'Registrar el pago'; }
+  if (act === 'despachar') { prdAct = { act }; tit = 'Marcar en despacho'; hint = 'El proveedor ya despachó. Se le avisará al solicitante para que confirme cuando llegue a la obra.';
+    body = `<div class="row2">${F('prdFecha', 'Fecha del despacho', 'date', today())}${F('prdLleg', 'Llegada estimada', 'date', '')}</div>${F('prdTrans', 'Transportista', 'text', '', 'Empresa o chofer')}${F('prdGuia', 'N° de guía o nota de entrega', 'text')}${F('prdDest', 'Destino', 'text', prBases(prRow))}${F('prdNotas', 'Notas (opcional)', 'area')}`; ok = 'Marcar en despacho'; }
+  if (act === 'obra') { prdAct = { act }; tit = 'Confirmar llegada a la obra'; hint = '¿Llegó todo lo que se pidió?';
+    body = `<div class="seg" id="prdComp" style="margin-bottom:10px"><button type="button" data-v="si" aria-pressed="true">Llegó completo</button><button type="button" data-v="no" aria-pressed="false">Llegó incompleto</button></div>${F('prdNotas', 'Notas', 'area', '', 'Qué faltó o llegó dañado (si aplica)')}`; ok = 'Confirmar llegada'; }
+  $('#prdTit').textContent = tit; $('#prdHint').textContent = hint; $('#prdBody').innerHTML = body; $('#prdOk').textContent = ok; $('#prdErr').hidden = true; $('#prdOk').disabled = false;
+  const sg = $('#prdComp'); if (sg) sg.onclick = ev => { const b = ev.target.closest('[data-v]'); if (b) segSet('prdComp', b.dataset.v); };
+  $('#prDlg').showModal();
+}
+$('#prdClose').onclick = () => $('#prDlg').close();
+$('#prdOk').onclick = async () => {
+  const v = id => ($('#' + id) || {}).value || '', err = m => { $('#prdErr').textContent = m; $('#prdErr').hidden = false; };
+  const control = prdAct.control || prRow.control; let x;
+  $('#prdOk').disabled = true;
+  try {
+    if (prdAct.act === 'adjudicar') { await prGuardar(); x = await rpc('rq_procura_adjudicar', { p_control: control, p_cot: prdAct.arg, p_motivo: v('prdMot') }); toast('Adjudicada. Se le avisó a Gerencia General para el pago'); }
+    if (prdAct.act === 'reabrir') x = await rpc('rq_procura_reabrir', { p_control: control, p_motivo: v('prdMot') });
+    if (prdAct.act === 'pagar') { if (!v('prdRef').trim() && !confirm('No escribiste la referencia del pago. ¿Registrar así?')) { $('#prdOk').disabled = false; return; }
+      const m = prNum(v('prdMonto')); x = await rpc('rq_procura_pagar', { p_control: control, p_datos: { fecha: v('prdFecha'), monto: m == null ? '' : String(m), forma: v('prdForma'), referencia: v('prdRef'), notas: v('prdNotas') } }); toast('Pago registrado. Se le avisó a Compras'); }
+    if (prdAct.act === 'despachar') { x = await rpc('rq_procura_despachar', { p_control: control, p_datos: { fecha: v('prdFecha'), llegada: v('prdLleg'), transportista: v('prdTrans'), guia: v('prdGuia'), destino: v('prdDest'), notas: v('prdNotas') } }); toast('En despacho. Se le avisó al solicitante'); }
+    if (prdAct.act === 'obra') { const comp = $('#prdComp [aria-pressed="true"]').dataset.v === 'si';
+      if (!comp && !v('prdNotas').trim()) { $('#prdOk').disabled = false; return err('Escribe qué faltó.'); }
+      x = await rpc('rq_procura_recibir_obra', { p_control: control, p_datos: { completo: comp, notas: v('prdNotas') } }); toast('Llegada a la obra confirmada'); }
+  } catch (e) { $('#prdOk').disabled = false; return err(e.message); }
+  $('#prDlg').close();
+  if (prdAct.desdeDetalle) { openDetail(control); return; }
+  prRow.procura = x; const i = prLista.findIndex(r => r.control === control); if (i >= 0) prLista[i].procura = JSON.parse(JSON.stringify(x));
+  pintarPEdit(); prBadge();
+};
+// Seguimiento de procura dentro del detalle de la requisición (lo ve también el contratista que la pidió)
+function prSeguimiento(r){
+  const x = r.procura; if (!x) return '';
+  const e = x.estado, k = PR_ORD.indexOf(e), gan = x.proveedor || ((x.cotizaciones || []).find(c => c.id === x.ganador) || {}).proveedor;
+  const yo = r.solicitante_id === me.id, puede = e === 'en_despacho' && (yo || me.es_master || ['compras','gerente_operaciones','gerente_general'].includes(me.rol));
+  return `<div class="dprio prseg"><div class="dph"><span>Procura</span>${prTag(e)}</div>
+    <ol class="prsteps sm">${[['Cotizar', 1], ['Ganador', 2], ['Pago', 3], ['Despacho', 4], ['En obra', 5]].map(([t, n]) => `<li class="${e === 'despachada' || k > n ? 'ok' : k === n ? 'now' : ''}"><span>${n}</span>${t}</li>`).join('')}</ol>
+    ${gan ? `<p class="dpl">Proveedor: <b>${esc(gan)}</b></p>` : ''}
+    ${x.despacho ? `<p class="dpl">Despachada el ${fmt(x.despacho.fecha)}${x.despacho.transportista ? ' · ' + esc(x.despacho.transportista) : ''}${x.despacho.guia ? ' · Guía ' + esc(x.despacho.guia) : ''}${x.despacho.llegada ? ' · llegada estimada <b>' + fmt(x.despacho.llegada) + '</b>' : ''}</p>` : ''}
+    ${x.entrega ? `<p class="dpl">${x.entrega.completo === false ? '<b style="color:var(--red)">Llegó incompleta</b>' : '<b>Llegó a la obra</b>'}, confirmó ${esc(x.entrega.por)} el ${fmt(isoLocal(x.entrega.fecha))}${x.entrega.notas ? ': ' + esc(x.entrega.notas) : ''}</p>` : ''}
+    ${puede ? '<button class="btn primary block100" id="dPrObra" style="margin-top:8px">Confirmar que llegó el despacho</button>' : ''}
+    ${veProcura() && me.rol !== 'contratista' ? '<button class="btn block100" id="dPrAbrir" style="margin-top:8px">Abrir en Procura</button>' : ''}</div>`;
+}
+function prDetalleAcciones(r){
+  const b = $('#dPrObra'); if (b) b.onclick = () => { prRow = { control: r.control, items: (r.datos || {}).items, procura: r.procura }; prAccion('obra'); prdAct.control = r.control; prdAct.desdeDetalle = true; };
+  const a = $('#dPrAbrir'); if (a) a.onclick = async () => { $('#detDlg').close(); setMod('pro', 'proc'); await loadProc(); prAbrir(r.control); };
+}
+async function abrirProcura(control){ if (veProcura()) { setMod('pro', 'proc'); await loadProc(); prAbrir(control); } else openDetail(control); }
+// ---- Excel: cuadro comparativo ----
+async function prXlsxCuadro(r, boton){
+  if (!window.ExcelJS) return toast('No se pudo cargar el generador de Excel');
+  if (boton) boton.disabled = true;
+  try {
+    const x = r.procura, items = r.items || [], cots = (x.cotizaciones || []).filter(c => c.proveedor), N = items.length;
+    const wb = new ExcelJS.Workbook(); wb.creator = 'Rafmor · Procura';
+    const ws = wb.addWorksheet('Cuadro comparativo', { views: [{ state: 'frozen', xSplit: 4, ySplit: 9 }] });
+    const fnt = (o = {}) => Object.assign({ name: 'Arial', size: 10 }, o), solid = c => ({ type: 'pattern', pattern: 'solid', fgColor: { argb: c } });
+    const thin = { style: 'thin', color: { argb: 'FFB8BCB2' } }, B = { top: thin, left: thin, bottom: thin, right: thin };
+    const L = n => { let s2 = ''; while (n > 0) { const m = (n - 1) % 26; s2 = String.fromCharCode(65 + m) + s2; n = Math.floor((n - 1) / 26); } return s2; };
+    const nc = 4 + cots.length * 2;
+    ws.mergeCells(1, 1, 1, nc); ws.getCell(1, 1).value = 'CONSTRUCTORA RAFMOR · CUADRO COMPARATIVO DE PROCURA'; ws.getCell(1, 1).font = fnt({ bold: true, size: 14 });
+    ws.mergeCells(2, 1, 2, nc); ws.getCell(2, 1).value = 'Reacondicionamiento de 13 Bases de Protección Fronteriza · Estado Zulia'; ws.getCell(2, 1).font = fnt({ size: 9, color: { argb: 'FF5E6763' } });
+    const info = [['Requisición', r.control], ['Base', prBases(r)], ['Área', r.area || ''], ['Solicitante', r.solicitante || ''], ['Prioridad', PRIO[r.prioridad] || 'Sin prioridad'], ['Fecha del cuadro', fmt(today())]];
+    info.forEach(([k, v], i) => { const row = 3 + Math.floor(i / 2), col = i % 2 ? 5 : 1, c = ws.getCell(row, col);
+      if (col === 1) ws.mergeCells(row, 1, row, 4); else if (nc > 5) ws.mergeCells(row, 5, row, nc);
+      c.value = { richText: [{ text: k + ': ', font: fnt({ bold: true, size: 9 }) }, { text: String(v), font: fnt({ size: 9 }) }] }; });
+    const h1 = 8, h2 = 9;
+    ['N°', 'Descripción', 'Und', 'Cant.'].forEach((t, i) => { ws.mergeCells(h1, i + 1, h2, i + 1); const c = ws.getCell(h1, i + 1); c.value = t; });
+    cots.forEach((c, k) => { const c0 = 5 + k * 2; ws.mergeCells(h1, c0, h1, c0 + 1);
+      ws.getCell(h1, c0).value = c.proveedor + (c.rif ? ' · ' + c.rif : '') + (c.id === x.ganador ? '  ★ GANADOR' : '');
+      ws.getCell(h2, c0).value = `P.U. (${c.moneda || 'USD'})`; ws.getCell(h2, c0 + 1).value = `Total (${c.moneda || 'USD'})`; });
+    for (const rr of [h1, h2]) for (let cI = 1; cI <= nc; cI++) { const c = ws.getCell(rr, cI); const k = Math.floor((cI - 5) / 2), gan = cI >= 5 && cots[k] && cots[k].id === x.ganador;
+      c.font = fnt({ bold: true, size: 9, color: { argb: gan ? 'FFFFFFFF' : 'FF1B2220' } }); c.fill = solid(gan ? 'FF2E5E4F' : 'FFF2A900'); c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }; c.border = B; }
+    ws.getRow(h1).height = 30;
+    const r0 = h2 + 1;
+    items.forEach((it, i) => { const rr = r0 + i, q = prNum(it.cant);
+      const vals = [i + 1, it.desc, it.und, q == null ? it.cant : q];
+      cots.forEach((c, k) => { const pu = prNum((c.precios || [])[i]), cp = L(5 + k * 2); vals.push(pu == null ? 'No cotiza' : pu, pu == null ? 0 : { formula: `IF(ISNUMBER(${cp}${rr}),D${rr}*${cp}${rr},0)`, result: (q || 0) * pu }); });
+      const row = ws.addRow(vals); const pus = cots.map(c => prNum((c.precios || [])[i])).filter(v => v != null), mn = pus.length > 1 ? Math.min(...pus) : null;
+      row.eachCell({ includeEmpty: true }, (c, cI) => { c.font = fnt({ size: 9 }); c.border = B; c.alignment = { vertical: 'top', wrapText: cI === 2 };
+        if (cI >= 5) { c.numFmt = '#,##0.00'; const k = Math.floor((cI - 5) / 2); if ((cI - 5) % 2 === 0 && mn != null && prNum((cots[k].precios || [])[i]) === mn) { c.fill = solid('FFDCE9E3'); c.font = fnt({ size: 9, bold: true, color: { argb: 'FF2E5E4F' } }); }
+          if (c.value === 'No cotiza') { c.font = fnt({ size: 8, italic: true, color: { argb: 'FFB3261E' } }); c.alignment = { horizontal: 'center' }; } } }); });
+    const rEnd = r0 + N - 1;
+    // filas de totales: el valor va en la primera columna de cada proveedor (col) y se combina con la segunda
+    const fila = (lbl, fn, fmt2, bold, fillC) => { const vals = [lbl, '', '', '']; cots.forEach((c, k) => { const col = 5 + k * 2; vals.push(fn(c, k, col), ''); });
+      const row = ws.addRow(vals); ws.mergeCells(row.number, 1, row.number, 4);
+      row.eachCell({ includeEmpty: true }, (c, cI) => { c.font = fnt({ size: 9, bold: !!bold }); c.border = B; if (fillC) c.fill = solid(fillC); if (cI >= 5) { c.numFmt = fmt2 || '#,##0.00'; c.alignment = { horizontal: 'right', wrapText: true }; } });
+      cots.forEach((c, k) => ws.mergeCells(row.number, 5 + k * 2, row.number, 6 + k * 2)); return row.number; };
+    const tt = cots.map(c => prTot(items, c));
+    const rSub = fila('SUBTOTAL', (c, k, col) => ({ formula: `SUM(${L(col + 1)}${r0}:${L(col + 1)}${rEnd})`, result: tt[k].sub }), null, true);
+    const rIvaP = fila('IVA %', c => prNum(c.iva_pct) || 0, '0.00"%"');
+    const rIva = fila('IVA', (c, k, col) => ({ formula: `${L(col)}${rSub}*${L(col)}${rIvaP}/100`, result: tt[k].iva }));
+    const rFl = fila('FLETE', c => prNum(c.flete) || 0);
+    const rTot = fila('TOTAL', (c, k, col) => ({ formula: `${L(col)}${rSub}+${L(col)}${rIva}+${L(col)}${rFl}`, result: tt[k].total }), null, true, 'FFFFF1C7');
+    fila('Materiales cotizados', (c, k) => `${tt[k].n} de ${N}`, '@');
+    fila('Tiempo de entrega', c => c.entrega || '—', '@'); fila('Condiciones de pago', c => c.pago || '—', '@'); fila('Validez de la oferta', c => c.validez || '—', '@');
+    fila('Contacto', c => c.contacto || '—', '@'); fila('Notas', c => c.notas || '', '@');
+    cots.forEach((c, k) => { if (c.id !== x.ganador) return; for (let rr = h1; rr <= ws.rowCount; rr++) [5 + k * 2, 6 + k * 2].forEach(cI => { const cl = ws.getCell(rr, cI); cl.border = Object.assign({}, B, { left: cI === 5 + k * 2 ? { style: 'medium', color: { argb: 'FF2E5E4F' } } : thin, right: cI === 6 + k * 2 ? { style: 'medium', color: { argb: 'FF2E5E4F' } } : thin }); }); });
+    ws.addRow([]);
+    const maxN = Math.max(0, ...tt.map(t => t.n)), best = tt.reduce((a, t, k) => t.n && t.n === maxN && (a < 0 || t.total < tt[a].total) ? k : a, -1), gan = cots.find(c => c.id === x.ganador);
+    const nota = ws.addRow([gan ? `Proveedor adjudicado: ${gan.proveedor} por ${prMon(x.monto, x.moneda)}${x.adjudicado ? `, el ${fmt(isoLocal(x.adjudicado.fecha))} por ${x.adjudicado.por}${x.adjudicado.motivo ? '. Motivo: ' + x.adjudicado.motivo : ''}` : ''}.` : best >= 0 ? `Mejor oferta${maxN === N ? ' completa' : ''}: ${cots[best].proveedor} (${prMon(tt[best].total, cots[best].moneda)}, ${tt[best].n} de ${N} materiales). Pendiente de adjudicar.` : '']);
+    ws.mergeCells(nota.number, 1, nota.number, nc); nota.getCell(1).font = fnt({ bold: true, color: { argb: 'FF2E5E4F' } });
+    const leg = ws.addRow(['En verde, el menor precio unitario de cada material. "No cotiza": el proveedor no ofertó ese material (no suma al total).']); ws.mergeCells(leg.number, 1, leg.number, nc); leg.getCell(1).font = fnt({ size: 8, italic: true, color: { argb: 'FF5E6763' } });
+    if (x.pago) { const p2 = ws.addRow([`Pago: ${fmt(x.pago.fecha)} · ${x.pago.forma || ''} · Ref. ${x.pago.referencia || '—'} · registrado por ${x.pago.por}`]); ws.mergeCells(p2.number, 1, p2.number, nc); p2.getCell(1).font = fnt({ size: 9 }); }
+    ws.addRow([]); ws.addRow([]);
+    const fr = ws.addRow(['', 'Elaborado por (Compras)', '', '', 'Revisado por (Costos)', '', 'Aprobado por (Gerencia General)']);
+    fr.eachCell(c => { c.font = fnt({ size: 9 }); c.border = { top: thin }; });
+    ws.getColumn(1).width = 5; ws.getColumn(2).width = 42; ws.getColumn(3).width = 7; ws.getColumn(4).width = 9; for (let cI = 5; cI <= nc; cI++) ws.getColumn(cI).width = 13;
+    ws.pageSetup = { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, printTitlesRow: `${h1}:${h2}` };
+    const buf = await wb.xlsx.writeBuffer();
+    const res = await deliver({ name: `Cuadro_comparativo_${r.control}_${today()}.xlsx`, blob: new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }) });
+    if (res === 'declined') toast('Descarga cancelada');
+  } catch (e) { console.error(e); toast('No se pudo generar el Excel'); } finally { if (boton) boton.disabled = false; }
+}
+// ---- Excel: control de procura (todas las requisiciones) ----
+$('#prXlsx').onclick = async () => {
+  if (!window.ExcelJS) return toast('No se pudo cargar el generador de Excel');
+  const b = $('#prXlsx'); b.disabled = true;
+  try {
+    const wb = new ExcelJS.Workbook(), ws = wb.addWorksheet('Control de procura', { views: [{ state: 'frozen', xSplit: 1, ySplit: 4 }] });
+    const fnt = (o = {}) => Object.assign({ name: 'Arial', size: 9 }, o), solid = c => ({ type: 'pattern', pattern: 'solid', fgColor: { argb: c } }), thin = { style: 'thin', color: { argb: 'FFC9CCC5' } };
+    ws.addRow(['CONTROL DE PROCURA · Constructora Rafmor, 13 B.P.F del Zulia']).font = fnt({ bold: true, size: 14 });
+    ws.addRow([`Generado ${new Date().toLocaleString('es-VE')} · ${prLista.length} requisiciones recibidas por Compras`]).font = fnt({ color: { argb: 'FF5E6763' } }); ws.addRow([]);
+    const H = ['Requisición', 'Fecha', 'Prioridad', 'Base', 'Área', 'Solicitante', 'Materiales', 'Estado', 'Cotizaciones', 'Proveedor ganador', 'RIF', 'Monto', 'Moneda', 'Adjudicada', 'Pagada', 'Forma de pago', 'Referencia', 'Despachada', 'Transportista', 'Guía', 'Llegada estimada', 'Recibida en obra', 'Completa', 'Notas de llegada', 'Días desde el recibido'];
+    const hr = ws.addRow(H); hr.height = 30; hr.eachCell(c => { c.font = fnt({ bold: true }); c.fill = solid('FFF2A900'); c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }; c.border = { top: thin, bottom: thin, left: thin, right: thin }; });
+    const dt = s2 => s2 ? new Date(String(s2).length === 10 ? s2 + 'T12:00:00' : s2) : null;
+    const ESTC = { sin: 'FFF4F5F2', cotizando: 'FFFFF1C7', por_pagar: 'FFF7DEDB', pagada: 'FFDDE7F6', en_despacho: 'FFE7DDF3', despachada: 'FFDCE9E3' };
+    prLista.slice().sort((a, c) => String(a.control).localeCompare(String(c.control))).forEach(r => { const x = r.procura || {}, e = prEst(r), g = (x.cotizaciones || []).find(c => c.id === x.ganador) || {};
+      const fin = x.entrega ? dt(x.entrega.fecha) : new Date(), ini = r.recibido ? new Date(r.recibido) : null;
+      const row = ws.addRow([r.control, dt(r.creado), PRIO[r.prioridad] || 'Sin prioridad', prBases(r), r.area || '', r.solicitante || '', r.n, PR_EST[e], (x.cotizaciones || []).filter(c => c.proveedor).length || '',
+        g.proveedor || '', g.rif || '', x.monto != null ? +x.monto : '', x.moneda || '', x.adjudicado ? dt(x.adjudicado.fecha) : '', x.pago ? dt(x.pago.fecha) : '', x.pago ? x.pago.forma || '' : '', x.pago ? x.pago.referencia || '' : '',
+        x.despacho ? dt(x.despacho.fecha) : '', x.despacho ? x.despacho.transportista || '' : '', x.despacho ? x.despacho.guia || '' : '', x.despacho && x.despacho.llegada ? dt(x.despacho.llegada) : '',
+        x.entrega ? dt(x.entrega.fecha) : '', x.entrega ? (x.entrega.completo === false ? 'No' : 'Sí') : '', x.entrega ? x.entrega.notas || '' : '', ini ? Math.max(0, Math.round((fin - ini) / 864e5)) : '']);
+      row.eachCell({ includeEmpty: true }, (c, cI) => { c.font = fnt(); c.border = { bottom: thin, left: thin, right: thin }; c.alignment = { vertical: 'top', wrapText: [5, 10, 24].includes(cI) }; });
+      [2, 14, 15, 18, 21, 22].forEach(cI => row.getCell(cI).numFmt = 'dd-mm-yyyy'); row.getCell(12).numFmt = '#,##0.00';
+      row.getCell(8).fill = solid(ESTC[e]); row.getCell(8).font = fnt({ bold: true });
+      if (x.entrega && x.entrega.completo === false) row.getCell(23).font = fnt({ bold: true, color: { argb: 'FFB3261E' } }); });
+    [12, 11, 14, 22, 18, 20, 9, 14, 10, 24, 14, 12, 7, 11, 11, 13, 14, 11, 16, 12, 11, 11, 8, 26, 10].forEach((w, i) => ws.getColumn(i + 1).width = w);
+    if (prLista.length) ws.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4 + prLista.length, column: H.length } };
+    // resumen por estado
+    const rs = wb.addWorksheet('Resumen'); rs.addRow(['RESUMEN DE PROCURA']).font = fnt({ bold: true, size: 13 }); rs.addRow([]);
+    const rh = rs.addRow(['Estado', 'Requisiciones', 'Monto USD', 'Monto Bs']); rh.eachCell(c => { c.font = fnt({ bold: true }); c.fill = solid('FFF2A900'); });
+    const fin2 = 4 + prLista.length;
+    PR_ORD.forEach(e => { const row = rs.addRow([PR_EST[e], { formula: `COUNTIF('Control de procura'!H5:H${fin2},A${rs.rowCount + 1})` }, { formula: `SUMIFS('Control de procura'!L5:L${fin2},'Control de procura'!H5:H${fin2},A${rs.rowCount + 1},'Control de procura'!M5:M${fin2},"USD")` }, { formula: `SUMIFS('Control de procura'!L5:L${fin2},'Control de procura'!H5:H${fin2},A${rs.rowCount + 1},'Control de procura'!M5:M${fin2},"Bs")` }]);
+      row.getCell(3).numFmt = '#,##0.00'; row.getCell(4).numFmt = '#,##0.00'; row.eachCell(c => c.font = Object.assign(fnt(), c.font || {})); });
+    rs.getColumn(1).width = 20; rs.getColumn(2).width = 14; rs.getColumn(3).width = 14; rs.getColumn(4).width = 14;
+    const buf = await wb.xlsx.writeBuffer();
+    const res = await deliver({ name: `Control_de_procura_${today()}.xlsx`, blob: new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }) });
+    if (res === 'declined') toast('Descarga cancelada');
+  } catch (e) { console.error(e); toast('No se pudo generar el Excel'); } finally { b.disabled = false; }
+};
+
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.28.0';
+const APP_VERSION = '4.29.0';
 const NOVEDADES = [
+  { v: '4.29.0', fecha: '2026-10-13', titulo: 'Procura de requisiciones', items: [
+    { r: ['compras','costos','master'], t: 'Nuevo módulo Procura: cada requisición recibida por Compras pasa a cotización. Cargas las cotizaciones de los proveedores (precio unitario por material, IVA, flete, entrega y condiciones), ves el cuadro comparativo con el menor precio marcado, lo exportas a Excel y adjudicas al proveedor ganador. Después marcas el despacho y exportas el control de procura completo.' },
+    { r: ['gerente_general'], t: 'Nuevo módulo Procura: cuando Compras adjudica una requisición te llega un aviso de pago pendiente. Ábrela, revisa el cuadro comparativo y toca "Registrar el pago" con la fecha, la forma y la referencia.' },
+    { r: ['gerente_operaciones'], t: 'Nuevo módulo Procura: consulta en qué va cada requisición (cotización, pago, despacho y llegada a la obra) y el cuadro comparativo de proveedores.' },
+    { r: ['contratista','logistica'], t: 'En el detalle de tus requisiciones ves en qué va la compra: proveedor, pago y despacho. Cuando el material llegue a la obra, toca "Confirmar que llegó el despacho" e indica si llegó completo.' }
+  ] },
   { v: '4.28.0', fecha: '2026-10-13', titulo: 'Nuevo reporte semanal por base', items: [
     { r: ['gerente_operaciones','gerente_general','compras','costos','comandante_base','reporte_general','master'], t: 'El PDF semanal ahora es un resumen por base: el avance total en porcentaje (y cuánto subió en la semana), el avance de cada fase, las actividades ejecutadas y una galería grande con todas las fotos de la semana. La portada trae el avance total de la obra y una tabla con el avance de las 13 bases. Si necesitas el detalle día por día, márcalo antes de generar el PDF.' }
   ] },
@@ -4437,6 +4818,7 @@ function abrirDestino(d){
   if (d === 'accion:push') { abrirAjuste('pushBlock'); return; }
   if (d.startsWith('tarea:')) { if (canTareas()) { setMod('tar', 'tar'); abrirTarea(null, d.slice(6)); } return; }
   if (d.startsWith('viatico:')) { if (canViaticos() || veViaticos()) abrirViatico(d.slice(8)); return; }
+  if (d.startsWith('procura:')) { abrirProcura(d.slice(8)); return; }
   if (d.startsWith('rep:')) { setMod('rep', soloSemanal() ? 'rsem' : 'rarch'); openReport(d.slice(4)); return; }
   openDetail(d);
 }
@@ -5462,7 +5844,8 @@ function showTab(t){
   if (t === 'rnuevo') { const a = activeTab(), ab = a && document.querySelector(`#mainTabs [data-tab="${a}"]`); repDesde = ab && ab.dataset.mod === 'rep' && tabAllowed(a) ? a : 'rarch'; }
   if (t !== 'rpf' && !$('#memEd').hidden && mem) { memGuardar(); cerrarMemEd(); }
   if (t !== 'vedit' && vt && vEditable()) { vLeerForm(); vGuardar(); vt = null; }
-  const sel = t === 'rnuevo' ? repDesde : t === 'vedit' ? vtDesdeTab : t;
+  if (t !== 'pedit' && prRow && prEditable()) { prGuardar(); prRow = null; }
+  const sel = t === 'rnuevo' ? repDesde : t === 'vedit' ? vtDesdeTab : t === 'pedit' ? 'proc' : t;
   $$('#mainTabs button').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === sel));
   $$('#mainView section.panel').forEach(p => p.classList.toggle('on', p.id === 'p-'+t));
   $('#dock').hidden = t !== 'nueva'; $('#dockRep').hidden = t !== 'rnuevo'; $('#dockLog').hidden = t !== 'rlog';
@@ -5478,6 +5861,8 @@ function showTab(t){
   if (t === 'vmis') loadVMis();
   if (t === 'vtodos') loadVTodos();
   if (t === 'vedit') pintarVEdit();
+  if (t === 'proc') loadProc();
+  if (t === 'pedit') pintarPEdit();
   if (t === 'rsem') loadWeek();
   if (t === 'verif') loadVerif();
   if (t === 'aprob') loadAprob();
@@ -5499,6 +5884,7 @@ function tabAllowed(t){
   if (t === 'tar') return canTareas();
   if (t === 'vmis' || t === 'vedit') return canViaticos() || (t === 'vedit' && veViaticos());
   if (t === 'vtodos') return veViaticos();
+  if (t === 'proc' || t === 'pedit') return veProcura();
   return true;
 }
 function applyTabVisibility(){ $$('#mainTabs button').forEach(b => { b.hidden = !((b.dataset.mod === curMod || b.dataset.mod === 'both') && tabAllowed(b.dataset.tab)); }); }
