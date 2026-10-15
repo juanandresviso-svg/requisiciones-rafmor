@@ -4716,8 +4716,12 @@ $('#prXlsx').onclick = async () => {
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.31.0';
+const APP_VERSION = '4.32.0';
 const NOVEDADES = [
+  { v: '4.32.0', fecha: '2026-10-14', titulo: 'Curva de avance por base', items: [
+    { r: ['gerente_general','gerente_operaciones','compras','costos','master','reporte_general'], t: 'Estadísticas: al tocar una base aparece la nueva "Curva de avance", con el avance acumulado día a día (promedio de las 9 fases), la línea de hoy y la proyección hasta la culminación de la obra el 15-12-2026. Debajo, el ritmo real de las últimas semanas frente al ritmo necesario para terminar a tiempo.' },
+    { r: ['comandante_base'], t: 'Estadísticas: nueva "Curva de avance" de tu base, con el avance acumulado día a día y la proyección hasta la culminación de la obra el 15-12-2026.' }
+  ] },
   { v: '4.31.0', fecha: '2026-10-13', titulo: 'Dotación de equipos más sencilla', items: [
     { r: ['gerente_operaciones','gerente_general','compras','costos','master'], t: 'La dotación de equipos ya no va por ambiente: cada puesto fronterizo tiene una sola lista con todos los equipos (necesario, existente e instalado). Lo que estaba cargado por ambiente se sumó en la lista de su puesto. Los contratistas ahora también pueden llenarla.' },
     { r: ['contratista'], t: 'Nuevo en Ajustes → Dotación de equipos: elige tu puesto fronterizo y llena, equipo por equipo, cuántos hacen falta (Necesario), cuántos hay en buen estado (Existente) y cuántos están instalados. Se guarda solo. Al terminar, toca "Marcar el puesto como revisado".' }
@@ -5091,6 +5095,62 @@ function lineSVG(series, opts){
   return `<svg class="estsvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.aria || 'Evolución del avance')}" font-family="Barlow, sans-serif">${grid}${labs}${lines}</svg>`;
 }
 const semLabels = ev => ev.map(e => { const [, m, d] = String(e.corte).split('-').map(Number); return `${d}/${m}`; });
+/* Curva de avance acumulado con proyección a la culminación (v4.32.0).
+   Avance de cada día = promedio de las 9 fases del último reporte del día; las fases sin iniciar cuentan 0 %. */
+const FECHA_CULMINACION = '2026-12-15';
+const dNum = iso => { const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number); return Date.UTC(y, m - 1, d) / 864e5; };
+const pctC = v => (Math.round(v * 10) / 10).toString().replace('.', ',') + ' %';
+const fCorta = iso => { const [, m, d] = String(iso).slice(0, 10).split('-').map(Number); return `${d} ${MESES[m - 1].slice(0, 3)}`; };
+function curvaHTML(pts, ini, fin, nombre){
+  const W = 360, H = 220, x0 = 36, x1 = W - 10, y0 = 14, y1 = H - 30;
+  const last = pts[pts.length - 1];
+  const a = dNum(ini), b = Math.max(dNum(fin), dNum(last.f) + 1), hoy = dNum(today());
+  const Xn = n => x0 + (x1 - x0) * (n - a) / (b - a), X = iso => Xn(dNum(iso)), Y = v => y1 - (y1 - y0) * v / 100;
+  const grid = [0, 25, 50, 75, 100].map(v => `<line x1="${x0}" y1="${Y(v)}" x2="${x1}" y2="${Y(v)}" stroke="#E3E7E0"/><text x="${x0 - 6}" y="${Y(v) + 4}" font-size="11" text-anchor="end" fill="#5E6A66">${v}%</text>`).join('');
+  let ticks = `<text x="${x0}" y="${H - 10}" font-size="11" fill="#5E6A66">${fCorta(ini)}</text><text x="${x1}" y="${H - 10}" font-size="11" text-anchor="end" fill="#5E6A66">${fCorta(fin)}</text>`;
+  let [yy, mm] = ini.split('-').map(Number);
+  for (let k = 0; k < 36; k++) { mm++; if (mm > 12) { mm = 1; yy++; } const iso = `${yy}-${String(mm).padStart(2, '0')}-01`; const x = X(iso);
+    if (dNum(iso) >= b) break; ticks += `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y1 + 5}" stroke="#9AA59E"/>`;
+    if (x - x0 > 40 && x1 - x > 54) ticks += `<text x="${x}" y="${H - 10}" font-size="11" text-anchor="middle" fill="#5E6A66">1 ${MESES[mm - 1].slice(0, 3)}</text>`; }
+  const poly = pts.map(p => `${X(p.f).toFixed(1)},${Y(p.v).toFixed(1)}`).join(' ');
+  const area = `${X(pts[0].f).toFixed(1)},${y1} ${poly} ${X(last.f).toFixed(1)},${y1}`;
+  const xh = Xn(Math.min(Math.max(hoy, a), b));
+  const lx = X(last.f), ly = Y(last.v);
+  const svg = `<svg class="estsvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(`Curva de avance de ${nombre}: ${pctC(last.v)} al ${fmt(last.f)}; proyección al 100 % el ${fmt(fin)}`)}" font-family="Barlow, sans-serif">${grid}${ticks}<line x1="${x0}" y1="${y1}" x2="${x1}" y2="${y1}" stroke="#9AA59E"/><polygon points="${area}" fill="#2E5E4F" fill-opacity=".16"/>${last.v < 100 ? `<line x1="${lx}" y1="${ly}" x2="${X(fin)}" y2="${Y(100)}" stroke="#E09A00" stroke-width="2" stroke-dasharray="5 4"/><circle cx="${X(fin)}" cy="${Y(100)}" r="4" fill="#FFFFFF" stroke="#E09A00" stroke-width="2"/>` : ''}<line x1="${xh}" y1="${y0}" x2="${xh}" y2="${y1}" stroke="#8A5A00" stroke-dasharray="3 4"/><polyline points="${poly}" fill="none" stroke="#2E5E4F" stroke-width="2.5" stroke-linejoin="round"/>${pts.slice(1).map(p => `<circle cx="${X(p.f).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="2.5" fill="#2E5E4F"/>`).join('')}<text x="${lx - 6}" y="${Math.max(y0 + 12, ly - 9)}" font-size="13" font-weight="700" text-anchor="end" fill="#1B2220">${pctC(last.v)}</text></svg>`;
+  const ref = pts.filter(p => dNum(p.f) <= dNum(last.f) - 21).pop() || pts[0];
+  const sem = Math.max(1, (dNum(last.f) - dNum(ref.f)) / 7);
+  const ritmo = (last.v - ref.v) / sem;
+  const semRest = (dNum(fin) - dNum(last.f)) / 7;
+  const req = semRest > 0 ? Math.max(0, 100 - last.v) / semRest : null;
+  const r1 = (Math.round(ritmo * 10) / 10).toString().replace('.', ','), r2 = req == null ? '' : (Math.round(req * 10) / 10).toString().replace('.', ',');
+  const estado = last.v >= 100 ? '<span class="tag ok">Culminada</span>' : req == null ? '<span class="tag bad">Fecha de culminación vencida</span>' : ritmo >= req ? '<span class="tag ok">En ritmo para el ' + fmt(fin) + '</span>' : '<span class="tag bad">Por debajo del ritmo necesario</span>';
+  return `<div class="esth"><h2>Curva de avance</h2><span>Meta: ${fCorta(fin)}</span></div>
+    ${svg}
+    <div class="estley"><span><i style="background:#2E5E4F"></i>Avance real (9 fases)</span><span><i style="background:#E09A00"></i>Proyección al 100 % el ${fCorta(fin)}</span><span><i style="background:#8A5A00;width:3px"></i>Hoy</span></div>
+    <div class="tags" style="margin:2px 0 0">${estado}</div>
+    <p class="hint" style="margin:0">${last.v >= 100 ? 'La base llegó al 100 % de avance.' : `Ritmo de las últimas ${Math.round(sem)} semana${Math.round(sem) === 1 ? '' : 's'}: <b>${r1} pts por semana</b>.${req == null ? '' : ` Para culminar el ${fmt(fin)} se necesitan <b>${r2} pts por semana</b>.`}`} Las fases sin iniciar cuentan como 0 %.</p>`;
+}
+async function cargarCurva(puesto, nombre){
+  const box = $('#estCurva'); if (!box) return;
+  try {
+    let rows = [], hasta = null;
+    for (let i = 0; i < 8; i++) {
+      const pg = await rpc('rq_reportes_listar', { p_puesto: puesto, p_hasta: hasta, p_limite: 300 }) || [];
+      rows = rows.concat(pg); if (pg.length < 300) break;
+      hasta = String(pg[pg.length - 1].fecha).slice(0, 10);
+    }
+    const ids = new Set(); rows = rows.filter(r => r && !ids.has(r.id) && ids.add(r.id));
+    if (!$('#estCurva')) return;
+    if (!rows.length) { box.innerHTML = '<h2>Curva de avance</h2><p class="hint" style="margin:0">Todavía no hay reportes de esta base.</p>'; return; }
+    const ini = rows.map(r => String(r.fecha).slice(0, 10)).sort()[0];
+    const porDia = {};
+    rows.filter(r => Array.isArray(r.fases) && r.fases.some(f => f && f.pct != null)).forEach(r => { const f = String(r.fecha).slice(0, 10); if (!porDia[f] || String(r.creado) > String(porDia[f].creado)) porDia[f] = r; });
+    const pts = Object.keys(porDia).sort().map(f => ({ f, v: Math.min(100, porDia[f].fases.reduce((s, x) => s + (+(x && x.pct) || 0), 0) / 9) }));
+    if (!pts.length) { box.innerHTML = '<h2>Curva de avance</h2><p class="hint" style="margin:0">Todavía no hay reportes con avance por fase.</p>'; return; }
+    if (pts[0].f > ini) pts.unshift({ f: ini, v: 0 });
+    box.innerHTML = curvaHTML(pts, ini, FECHA_CULMINACION, nombre);
+  } catch (e) { box.innerHTML = `<h2>Curva de avance</h2><p class="err">${esc(e.message)}</p>`; }
+}
 async function loadEst(){
   if (!canStats()) return;
   $$('#estPer button').forEach(b => b.setAttribute('aria-pressed', b.dataset.p === est.periodo));
@@ -5171,6 +5231,7 @@ function pintarBase(d, soloBase){
       <div class="estk2"><b>${d.archivos}</b><span>fotos, videos y PDF</span></div>
       <div class="estk2"><b>${d.personal ?? '—'}</b><span>personas (prom.)</span></div>
     </div>
+    <section class="estcard" id="estCurva"><h2>Curva de avance</h2><p class="hint" style="margin:0">Cargando la curva…</p></section>
     <section class="estcard"><div class="esth"><h2>Avance por fase</h2><span>vs. hace 7 días</span></div>
       ${(d.fases || []).map(f => { const dl = f.pct != null && f.antes != null ? Math.round((f.pct - f.antes) * 10) / 10 : null;
         return `<div class="estfase c4"><span>${esc(f.fase)}</span><span class="estbar sm"><i style="width:${Math.min(100, f.pct || 0)}%;background:#4B5320"></i></span><b>${pct(f.pct)}</b><em style="color:${dl ? '#2E5E4F' : '#8A938D'}">${dl ? (dl > 0 ? '+' : '') + dl : '—'}</em></div>`; }).join('') || '<p class="hint">Sin avance por fases todavía.</p>'}</section>
@@ -5187,6 +5248,7 @@ function pintarBase(d, soloBase){
     $('#estVolver').onclick = () => { est.vista = 'obra'; loadEst(); window.scrollTo(0, 0); };
     $('#estVerRep').onclick = () => { setMod('rep', 'rpf'); archPuesto = d.puesto; loadArchive(); };
   }
+  cargarCurva(d.puesto, d.nombre);
 }
 async function pdfEstadisticas(d){
   if (!window.jspdf) return toast('No se pudo cargar el generador de PDF');
