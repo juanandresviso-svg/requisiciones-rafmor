@@ -1083,10 +1083,11 @@ nav.tabs button{flex:0 0 auto}
         <label class="f"><span>Mes</span><input class="in" type="month" id="a-mes"></label>
         <label class="f" id="a-autorWrap"><span>Contratista</span><select class="in" id="a-autor"><option value="">Todos</option></select></label>
       </div>
-      <div id="archRoot"><div class="folders" id="archFolders"></div></div>
+      <div id="archRoot"><button class="btn primary block100" id="avgBtn" style="margin:2px 0 10px">Generar reporte de avance general por base</button><div class="folders" id="archFolders"></div></div>
       <div id="archPuesto" hidden>
         <button class="btn ghost" id="archBack" style="padding-left:0">← Todos los puestos</button>
         <div class="sec" id="archPuestoTitle" style="margin-top:4px"></div>
+        <button class="btn block100" id="avgBtnBase" style="margin:2px 0 10px">Reporte de avance de esta base</button>
         <div id="archMem"></div>
         <div id="archAntes"></div>
       </div>
@@ -1480,6 +1481,28 @@ nav.tabs button{flex:0 0 auto}
     <div id="prdBody"></div>
     <p class="err" id="prdErr" hidden></p>
     <button class="btn primary block100" id="prdOk"></button>
+  </div>
+</dialog>
+
+<!-- Reporte de avance general por base (v4.32.0) -->
+<dialog id="avgDlg">
+  <div class="sheet"><div class="grab"></div>
+    <h3><span>Reporte de avance general</span><button class="btn ghost" id="avgClose" style="min-height:40px">Cerrar</button></h3>
+    <p class="hint" style="margin-top:-6px">PDF con el avance acumulado de la base: avance total, evolución semana a semana, avance por fase, avance mes a mes, actividades ejecutadas y galería de fotos de todo el período.</p>
+    <label class="f"><span>Base</span><select class="in" id="avgBase"><option value="">Las 13 bases (resumen + una sección por base)</option></select></label>
+    <span class="lbl">Período</span>
+    <div class="seg" id="avgPer"><button type="button" data-v="obra" aria-pressed="true">Toda la obra</button><button type="button" data-v="mes" aria-pressed="false">Mes del archivo</button><button type="button" data-v="rango" aria-pressed="false">Fechas</button></div>
+    <div class="row2" id="avgRango" hidden style="margin-top:8px"><label class="f"><span>Desde</span><input class="in" type="date" id="avgDesde"></label><label class="f"><span>Hasta</span><input class="in" type="date" id="avgHasta"></label></div>
+    <div id="avgVerWrap" style="margin-top:10px">
+      <span class="lbl">Versión</span>
+      <div class="seg" id="avgVer"><button type="button" data-v="interno" aria-pressed="true">Interno<br><small>con observaciones</small></button><button type="button" data-v="cliente" aria-pressed="false">Cliente<br><small>Comandante / Reporte General</small></button></div>
+    </div>
+    <label class="f" style="margin-top:10px"><span>Fotos en la galería de cada base</span><select class="in" id="avgFotos"><option value="8">8 fotos</option><option value="16" selected>16 fotos</option><option value="24">24 fotos</option><option value="0">Sin galería</option></select></label>
+    <label class="wchk"><input type="checkbox" id="avgAntes" checked> <span>Incluir las fotos del antes de la intervención</span></label>
+    <p class="hint" id="avgNota"></p>
+    <p class="err" id="avgErr" hidden></p>
+    <button class="btn primary block100" id="avgOk">Generar PDF</button>
+    <p class="hint" id="avgProg" style="text-align:center;margin-top:8px"></p>
   </div>
 </dialog>
 
@@ -3497,6 +3520,7 @@ async function loadArchive(){
       archRows = []; $('#a-autor').innerHTML = '<option value="">Todos</option>';
       return;
     }
+    $('#avgBtnBase').hidden = !archPuesto;
     $('#archPuestoTitle').textContent = archPuesto === 0 ? 'Proyecto general' : baseName(archPuesto); if (archPuesto) renderArchAntes(archPuesto); else $('#archAntes').innerHTML = '';
     renderArchMem(archPuesto);
     $('#archEmpty').hidden = false; $('#archEmpty').textContent = 'Cargando…';
@@ -3856,6 +3880,279 @@ async function buildWeeklyPdf(rows, ws, puesto, prog, opts){
       y += 7;
     }
   }
+  }
+  footer();
+  return doc.output('blob');
+}
+
+/* ---------- Reporte de avance general por base (v4.32.0) ---------- */
+let avgPer = 'obra', avgVer = 'interno';
+const avgCliente = () => soloSemanal() || avgVer === 'cliente';
+CECOS.bases.forEach(b => { const o = document.createElement('option'); o.value = b.n; o.textContent = b.n + '. ' + b.nombre.replace('B.P.F ', ''); $('#avgBase').appendChild(o); });
+function avgPintar(){
+  segSet('avgPer', avgPer); segSet('avgVer', avgVer);
+  $('#avgRango').hidden = avgPer !== 'rango';
+  $('#avgVerWrap').hidden = soloSemanal() || soloPropio();
+  const lock = me.rol === 'comandante_base' && !me.es_master;
+  if (lock) { $('#avgBase').value = me.base || ''; $('#avgBase').disabled = true; } else $('#avgBase').disabled = false;
+  const pu = $('#avgBase').value ? +$('#avgBase').value : null;
+  $('#avgNota').textContent = [soloPropio() ? 'Incluye solo los reportes que registraste tú.' : '',
+    soloPropio() ? '' : avgCliente() ? (pu ? 'Versión cliente: solo los reportes compartidos con el Comandante de la base, sin observaciones internas.' : 'Versión cliente: solo los reportes compartidos con Reporte General, sin observaciones internas.') : 'Versión interna: todos los reportes, con observaciones e incidencias.',
+    pu ? '' : 'Con las 13 bases el PDF es más pesado: puede tardar unos minutos.'].filter(Boolean).join(' ');
+}
+function abrirAvanceGeneral(pu){
+  $('#avgBase').value = pu ? String(pu) : '';
+  if (!$('#avgHasta').value) $('#avgHasta').value = today();
+  if (!$('#avgDesde').value) $('#avgDesde').value = (($('#a-mes').value || today().slice(0, 7)) + '-01');
+  $('#avgErr').hidden = true; $('#avgProg').textContent = ''; $('#avgOk').disabled = false;
+  avgPintar(); $('#avgDlg').showModal();
+}
+$('#avgBtn').onclick = () => abrirAvanceGeneral(null);
+$('#avgBtnBase').onclick = () => abrirAvanceGeneral(archPuesto);
+$('#avgClose').onclick = () => $('#avgDlg').close();
+$('#avgBase').onchange = avgPintar;
+$('#avgPer').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; avgPer = b.dataset.v; avgPintar(); });
+$('#avgVer').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; avgVer = b.dataset.v; avgPintar(); });
+// Todos los reportes de un período, de 300 en 300 (se avanza hacia atrás por fecha).
+async function reportesTodos(puesto, desde, hasta, prog){
+  const out = new Map(); let h = hasta;
+  for (let i = 0; i < 60; i++) {
+    const L = await rpc('rq_reportes_listar', { p_puesto: puesto, p_desde: desde, p_hasta: h, p_limite: 300 }) || [];
+    L.forEach(r => out.set(r.id, r));
+    if (prog) prog(`Leyendo reportes… ${out.size}`);
+    if (L.length < 300) break;
+    const minF = L[L.length - 1].fecha;
+    if (minF === h) { if (L.every(r => r.fecha === h)) h = addDays(h, -1); else h = minF; } else h = minF;
+    if (desde && h < desde) break;
+  }
+  return [...out.values()];
+}
+$('#avgOk').onclick = async () => {
+  const btn = $('#avgOk'); btn.disabled = true; $('#avgErr').hidden = true;
+  const prog = t => { $('#avgProg').textContent = t; };
+  try {
+    if (!window.jspdf) throw new Error('No se pudo cargar el generador de PDF. Revisa la conexión.');
+    const pu = $('#avgBase').value ? +$('#avgBase').value : null;
+    let desde = null, hasta = today();
+    if (avgPer === 'mes') { [desde, hasta] = monthRange($('#a-mes').value || today().slice(0, 7)); if (hasta > today()) hasta = today(); }
+    if (avgPer === 'rango') { desde = $('#avgDesde').value || null; hasta = $('#avgHasta').value || today(); if (desde && desde > hasta) throw new Error('La fecha "desde" es posterior a "hasta".'); }
+    const cli = avgCliente();
+    const vista = cli ? (pu || me.rol === 'comandante_base' ? 'comandante' : 'reporte_general') : null;
+    prog('Leyendo reportes…');
+    // Se lee todo el historial hasta la fecha final: hace falta para saber el avance al inicio del período.
+    let rows = (await reportesTodos(pu, null, hasta, prog)).filter(r => r.puesto != null);
+    if (cli && !soloSemanal()) rows = rows.filter(r => vista === 'comandante' ? r.visible_comandante : r.visible_reporte_general);
+    if (!rows.length) throw new Error('No hay reportes de ' + (pu ? 'esta base' : 'ninguna base') + ' hasta esa fecha.');
+    const blob = await buildAvancePdf(rows, { puesto: pu, desde, hasta, cliente: cli, fotos: +$('#avgFotos').value, antes: $('#avgAntes').checked, prog });
+    const name = `Reporte_avance_general_${pu ? baseName(pu).replace('B.P.F ', '').replace(/\s+/g, '_') : '13_bases'}_${desde ? desde + '_al_' : 'obra_al_'}${hasta}${cli ? '_cliente' : ''}.pdf`;
+    prog('Listo: ' + name + ' (' + fileSize(blob.size) + ')');
+    const r = await deliver({ name, blob }); if (r === 'declined') toast('Descarga cancelada');
+  } catch (e) { $('#avgErr').textContent = e.message || 'No se pudo generar el PDF'; $('#avgErr').hidden = false; prog(''); }
+  finally { btn.disabled = false; }
+};
+
+async function buildAvancePdf(all, o){
+  const { puesto, desde, hasta, cliente, prog } = o;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4', compress:true });
+  const W = 210, H = 297, M = 14, CW = W - 2*M;
+  const C = { dark:[26,26,26], olive:[75,83,32], olive2:[85,99,37], cream:[245,239,224], orange:[217,108,36], pale:[242,244,234], grey:[110,110,100], line:[200,200,185], green:[46,94,79], bar:[225,228,215] };
+  let y = M, page = 1;
+  const fmtL = d => { const p = isoParts(d); return `${p.d} de ${MESES[p.m - 1]} de ${p.y}`; };
+  const asc = (a, c) => (a.fecha + a.creado).localeCompare(c.fecha + c.creado);
+  all = all.slice().sort(asc);
+  const bases = puesto ? CECOS.bases.filter(b => b.n === puesto) : CECOS.bases;
+  const primera = all[0].fecha, ini0 = desde || primera;
+  const perTxt = desde ? `Del ${fmtL(desde)} al ${fmtL(hasta)}` : `Toda la obra: del ${fmtL(primera)} al ${fmtL(hasta)}`;
+  const scope = puesto ? baseName(puesto) : 'Las 13 bases';
+  const fill = c => doc.setFillColor(c[0], c[1], c[2]), color = c => doc.setTextColor(c[0], c[1], c[2]), draw = c => doc.setDrawColor(c[0], c[1], c[2]);
+  const font = (sz, st) => { doc.setFont('helvetica', st || 'normal'); doc.setFontSize(sz); };
+  const footer = () => { font(8); color(C.grey); doc.text(pdfTxt(`Puestos Fronterizos · Constructora Rafmor · Reporte de avance general · ${scope} · ${cliente ? 'Cliente' : 'Interno'}`), M, H - 8); doc.text('Página ' + page, W - M, H - 8, { align:'right' }); };
+  const newPage = () => { footer(); doc.addPage(); page++; y = M; };
+  const need = h => { if (y + h > H - 16) newPage(); };
+  const pc = v => (Math.round(v * 10) / 10).toString().replace('.', ',') + '%';
+  const pts = v => (v >= 0 ? '+' : '') + (Math.round(v * 10) / 10).toString().replace('.', ',') + ' pts';
+  const dcorto = d => fmt(d);
+  const norm = t => String(t || '').toLowerCase().replace(/\s+/g, ' ').replace(/[.\s]+$/, '').trim();
+  const titulo = t => { need(16); fill(C.olive); doc.rect(M, y, CW, 8, 'F'); font(10.5, 'bold'); color(C.cream); doc.text(pdfTxt(t), M + 3, y + 5.5); y += 11; };
+  const bandera = (t1, t2) => { fill(C.dark); doc.rect(0, 0, W, 20, 'F'); fill(C.orange); doc.rect(0, 20, W, 1.2, 'F'); font(15, 'bold'); color(C.cream); doc.text(pdfTxt(t1), M, 13); font(9); doc.text(pdfTxt(t2), W - M, 13, { align:'right' }); y = 28; };
+  const bullets = items => items.forEach(([pre, txt]) => { font(8.8); const pw = pre ? doc.getTextWidth(pdfTxt(pre)) + 2 : 0; const ls = doc.splitTextToSize(pdfTxt(txt), CW - 6 - pw);
+    ls.forEach((l, k) => { need(4.3); if (k === 0) { fill(C.olive); doc.circle(M + 2, y + 2.4, 0.7, 'F'); if (pre) { font(8.8, 'bold'); color(C.olive); doc.text(pdfTxt(pre), M + 4.5, y + 3.3); } }
+      font(8.8); color(C.dark); doc.text(l, M + 4.5 + pw, y + 3.3); y += 4.3; }); y += 0.8; });
+
+  // ----- Cálculos -----
+  const repDe = n => all.filter(r => r.puesto === n);
+  const enPer = r => (!desde || r.fecha >= desde) && r.fecha <= hasta;
+  const avAl = (n, d) => { let v = null; for (const r of repDe(n)) { if (r.fecha > d) break; if (r.avance != null) v = +r.avance; } return v; };
+  const avFin = n => avAl(n, hasta);
+  const avIni = n => desde ? avAl(n, addDays(desde, -1)) : null;
+  const obraAl = d => { const v = bases.map(b => avAl(b.n, d)); return v.some(x => x != null) ? v.reduce((a, x) => a + (x || 0), 0) / bases.length : null; };
+  // semanas (cierre domingo) del período, como máximo 60 puntos
+  let cortes = []; { let c = addDays(weekStart(ini0), 6); while (c < hasta) { cortes.push(c); c = addDays(c, 7); } cortes.push(hasta); }
+  if (cortes.length > 60) { const k = Math.ceil(cortes.length / 60); cortes = cortes.filter((_, i) => i % k === 0 || i === cortes.length - 1); }
+  const meses = []; { let m = ini0.slice(0, 7); while (m <= hasta.slice(0, 7)) { meses.push(m); const [yy, mm] = m.split('-').map(Number); m = mm === 12 ? `${yy + 1}-01` : `${yy}-${String(mm + 1).padStart(2, '0')}`; } }
+  const mesTxt = m => { const [yy, mm] = m.split('-').map(Number); return MESES[mm - 1].replace(/^./, c => c.toUpperCase()) + ' ' + yy; };
+  const fotosDe = L => L.flatMap(r => (r.archivos || []).filter(a => a.tipo === 'foto').map(a => ({ a, r })));
+
+  // Gráfico de evolución: una o dos series sobre 0–100 %.
+  const grafico = (series, h) => {
+    need(h + 12); const x0 = M + 10, w = CW - 12, y0 = y + 2;
+    font(7); color(C.grey); draw(C.line);
+    [0, 25, 50, 75, 100].forEach(v => { const yy = y0 + h - h * v / 100; doc.setLineWidth(0.1); doc.line(x0, yy, x0 + w, yy); doc.text(v + '%', x0 - 1.5, yy + 1, { align:'right' }); });
+    const n = cortes.length, X = i => x0 + (n === 1 ? w / 2 : w * i / (n - 1));
+    const paso = Math.max(1, Math.ceil(n / 7)); cortes.forEach((c, i) => { if (i % paso === 0 || i === n - 1) { const p = isoParts(c); doc.text(`${p.d}/${p.m}`, X(i), y0 + h + 4, { align:'center' }); } });
+    series.forEach((s, si) => { doc.setLineWidth(0.7); draw(s.c); let prev = null;
+      s.v.forEach((v, i) => { if (v == null) { prev = null; return; } const pt = [X(i), y0 + h - h * Math.min(100, v) / 100]; if (prev) doc.line(prev[0], prev[1], pt[0], pt[1]); fill(s.c); doc.circle(pt[0], pt[1], 0.65, 'F'); prev = pt; });
+      const last = s.v.map((v, i) => [v, i]).filter(([v]) => v != null).pop(); if (last) { font(7.5, 'bold'); color(s.c); doc.text(pc(last[0]), Math.min(X(last[1]) + 1.5, x0 + w - 8), y0 + h - h * Math.min(100, last[0]) / 100 + (si ? 4 : -1.8)); } });
+    doc.setLineWidth(0.2);
+    if (series.length > 1) { let lx = x0; series.forEach(s => { fill(s.c); doc.rect(lx, y0 + h + 6.5, 4, 1.6, 'F'); font(7.5); color(C.dark); doc.text(pdfTxt(s.t), lx + 5.5, y0 + h + 8); lx += doc.getTextWidth(pdfTxt(s.t)) + 14; }); }
+    y = y0 + h + (series.length > 1 ? 12 : 8);
+  };
+  const cajaAvance = (lbl, fin, ini, extra) => {
+    need(30); fill(C.pale); draw(C.line); doc.roundedRect(M, y, CW, 26, 2, 2, 'FD');
+    font(8.5); color(C.grey); doc.text(pdfTxt(lbl), M + 5, y + 6.5);
+    font(28, 'bold'); color(C.olive); doc.text(fin != null ? pc(fin) : '—', M + 5, y + 19);
+    if (fin != null) {
+      font(10, 'bold'); color(ini == null || fin - ini >= 0 ? C.green : C.orange);
+      doc.text(pdfTxt(ini != null ? `${pts(fin - ini)} en el período` : desde ? 'Sin avance previo al período' : 'Avance acumulado a la fecha'), M + 52, y + 11);
+      font(8.5); color(C.grey); doc.text(pdfTxt(ini != null ? `Al inicio del período: ${pc(ini)}` : `Al ${fmtL(hasta)}`), M + 52, y + 16.5);
+      fill(C.bar); doc.rect(M + 5, y + 21.5, CW - 10, 2.4, 'F'); fill(C.green); doc.rect(M + 5, y + 21.5, (CW - 10) * Math.min(100, fin) / 100, 2.4, 'F');
+    }
+    if (extra) { font(8); color(C.grey); doc.splitTextToSize(pdfTxt(extra), 58).slice(0, 3).forEach((l, k) => doc.text(l, M + CW - 62, y + 8 + k * 4)); }
+    y += 31;
+  };
+
+  // ----- Fotos: muestra repartida en el tiempo, siempre con la más reciente -----
+  const muestra = (L, n) => { if (!n || !L.length) return []; if (L.length <= n) return L; const out = []; for (let i = 0; i < n; i++) out.push(L[Math.round(i * (L.length - 1) / (n - 1 || 1))]); return [...new Set(out)]; };
+  const galSel = new Map(); bases.forEach(b => galSel.set(b.n, muestra(fotosDe(repDe(b.n).filter(enPer)), o.fotos)));
+  let antesSel = new Map();
+  if (o.antes) { prog('Buscando fotos del antes…'); for (const b of bases) { try { const L = (await rpc('rq_antes_listar', { p_puesto: b.n }) || []).filter(a => a.tipo === 'foto'); antesSel.set(b.n, [...L.filter(a => a.categoria === 'aerea').slice(0, 3), ...L.filter(a => a.categoria !== 'aerea').slice(0, 3)].slice(0, 6)); } catch (e) {} } }
+  const paths = [...new Set([...[...galSel.values()].flat().map(x => x.a.path), ...[...antesSel.values()].flat().map(a => a.path)])];
+  const imgs = new Map();
+  if (paths.length) {
+    prog(`Preparando ${paths.length} fotos…`); const url = await signed(paths); let done = 0; const q = paths.slice();
+    await Promise.all([...Array(4)].map(async () => { while (q.length) { const p = q.shift(); try { imgs.set(p, await loadPdfImage(url(p), 1000)); } catch (e) {} done++; prog(`Cargando fotos ${done} de ${paths.length}…`); } }));
+  }
+  prog('Armando el PDF…');
+
+  // ----- Portada -----
+  fill(C.dark); doc.rect(0, 0, W, 46, 'F'); fill(C.orange); doc.rect(0, 46, W, 1.6, 'F');
+  try { const lg = logoNow(); if (lg && lg.data) { const lh = 15, lw = Math.min(52, lg.w * lh / lg.h); fill([255,255,255]); doc.roundedRect(M - 2, 13, lw + 4, lh + 4, 2, 2, 'F'); doc.addImage(lg.data, lg.ext === 'png' ? 'PNG' : 'JPEG', M, 15, lw, lh); } } catch (e) {}
+  font(16, 'bold'); color(C.cream); doc.text('REPORTE DE AVANCE GENERAL', W - M, 22, { align:'right' });
+  font(11); doc.text(pdfTxt(scope), W - M, 30, { align:'right' });
+  font(9); color([185,179,166]); doc.text(pdfTxt(perTxt + ' · ' + (cliente ? 'Informe para el cliente' : 'Informe interno')), W - M, 37, { align:'right' });
+  y = 56;
+  const perAll = all.filter(enPer), fotosN = fotosDe(perAll).length, vidsN = perAll.reduce((a, r) => a + (r.archivos || []).filter(x => x.tipo === 'video').length, 0);
+  const finObra = puesto ? avFin(puesto) : obraAl(hasta), iniObra = desde ? (puesto ? avIni(puesto) : obraAl(addDays(desde, -1))) : null;
+  cajaAvance(puesto ? 'AVANCE TOTAL DE LA BASE' : 'AVANCE TOTAL DE LA OBRA (PROMEDIO DE LAS 13 BASES)', finObra, iniObra,
+    `${perAll.length} reportes · ${puesto ? new Set(perAll.map(r => r.fecha)).size + ' días con reporte' : new Set(perAll.map(r => r.puesto)).size + ' bases con reporte'} · ${fotosN} foto${fotosN === 1 ? '' : 's'}${vidsN ? ' · ' + vidsN + ' video' + (vidsN === 1 ? '' : 's') : ''}`);
+  if (soloPropio()) { font(8); color(C.orange); doc.text(pdfTxt('Incluye solo los reportes registrados por ' + (me.nombre || 'el usuario') + '.'), M, y); y += 5; }
+  titulo('EVOLUCIÓN DEL AVANCE');
+  grafico(puesto ? [{ t: 'Avance de la base', c: C.green, v: cortes.map(c => avAl(puesto, c)) }] : [{ t: 'Avance de la obra', c: C.green, v: cortes.map(obraAl) }], 34);
+  if (!puesto) {
+    titulo('AVANCE POR BASE');
+    const cols = [['Base', 46], ['Avance total', 50], [desde ? 'Período' : 'Inicio', 22], ['Reportes', 18], ['Fotos', 16], ['Último reporte', 30]];
+    const th = () => { fill(C.olive2); doc.rect(M, y, CW, 8, 'F'); font(8.5, 'bold'); color(C.cream); let x = M; cols.forEach(([t, w]) => { doc.text(pdfTxt(t), x + 2, y + 5.3); x += w; }); y += 8; };
+    th();
+    bases.forEach((b, k) => {
+      const L = repDe(b.n), P = L.filter(enPer), fin = avFin(b.n), ini = avIni(b.n), f = fotosDe(P).length, ult = L.length ? L[L.length - 1].fecha : null;
+      need(8); if (y === M) th();
+      if (k % 2) { fill(C.pale); doc.rect(M, y, CW, 8, 'F'); }
+      font(8.5, P.length ? 'bold' : 'normal'); color(P.length ? C.dark : C.grey);
+      let x = M; doc.text(pdfTxt(b.n + '. ' + b.nombre.replace('B.P.F ', '')), x + 2, y + 5.3); x += cols[0][1];
+      if (fin != null) { fill(C.bar); doc.rect(x + 2, y + 2.6, 30, 2.8, 'F'); fill(C.green); doc.rect(x + 2, y + 2.6, 30 * Math.min(100, fin) / 100, 2.8, 'F'); font(8.5, 'bold'); color(C.dark); doc.text(pc(fin), x + 35, y + 5.3); } else doc.text('—', x + 2, y + 5.3);
+      x += cols[1][1]; font(8.5); color(C.dark);
+      doc.text(pdfTxt(desde ? (fin != null ? (ini != null ? pts(fin - ini) : 'nuevo') : '—') : (L.length ? fmt(L[0].fecha) : '—')), x + 2, y + 5.3); x += cols[2][1];
+      doc.text(String(P.length || '—'), x + 2, y + 5.3); x += cols[3][1];
+      doc.text(String(P.length ? f : '—'), x + 2, y + 5.3); x += cols[4][1];
+      if (ult) { const ds = Math.round((Date.parse(hasta) - Date.parse(ult)) / 864e5); color(ds > 7 ? C.orange : C.dark); doc.text(pdfTxt(fmt(ult) + (ds > 0 ? ` (${ds} d)` : '')), x + 2, y + 5.3); } else doc.text('Sin reportes', x + 2, y + 5.3);
+      draw(C.line); doc.line(M, y + 8, M + CW, y + 8); y += 8;
+    });
+    font(7.5); color(C.grey); const nota = doc.splitTextToSize(pdfTxt('Avance total: el último avance reportado de cada base a la fecha final. El de la obra es el promedio de las 13 bases; las que no han reportado avance cuentan 0%. Período: variación respecto al avance que tenía la base al inicio del período. Entre paréntesis, los días transcurridos desde el último reporte.'), CW);
+    need(nota.length * 3.4 + 3); nota.forEach(l => { doc.text(l, M, y + 4); y += 3.4; }); y += 3;
+  }
+
+  // ----- Una sección por base -----
+  for (const b of bases) {
+    const L = repDe(b.n), P = L.filter(enPer);
+    if (!L.length) continue;
+    if (!puesto) { newPage(); bandera(b.nombre, perTxt.replace('Toda la obra: d', 'D')); } else y += 2;
+    const fin = avFin(b.n), ini = avIni(b.n), per = P.filter(r => r.personal != null), emp = [...new Set(P.map(r => r.empresa).filter(Boolean))];
+    if (!puesto) cajaAvance('AVANCE TOTAL DE LA BASE', fin, ini, [`${P.length} reportes en ${new Set(P.map(r => r.fecha)).size} días`, per.length ? `personal promedio ${Math.round(per.reduce((a, r) => a + +r.personal, 0) / per.length)}` : '', emp.join(', ')].filter(Boolean).join(' · '));
+    else if (emp.length || per.length) { font(8.5); color(C.grey); doc.splitTextToSize(pdfTxt([emp.length ? 'Empresas: ' + emp.join(', ') : '', per.length ? `Personal promedio: ${Math.round(per.reduce((a, r) => a + +r.personal, 0) / per.length)}` : '', `Días con reporte: ${new Set(P.map(r => r.fecha)).size}`].filter(Boolean).join(' · ')), CW).forEach(l => { need(5); doc.text(l, M, y + 3); y += 4.3; }); y += 3; }
+    if (!puesto) { titulo('EVOLUCIÓN DEL AVANCE'); grafico([{ t: 'Base', c: C.green, v: cortes.map(c => avAl(b.n, c)) }, { t: 'Promedio de la obra', c: C.orange, v: cortes.map(c => obraAl(c)) }], 36); }
+    // Avance por fase: última medición vs. la que había al inicio del período
+    const conF = L.filter(r => r.fecha <= hasta && (r.fases || []).some(f => f.pct != null));
+    const ultF = conF[conF.length - 1], iniF = desde ? conF.filter(r => r.fecha < desde).pop() : null;
+    const g = (r, fz, i) => r && ((r.fases || []).find(f => f.fase === fz) || (r.fases || [])[i]) || {};
+    const filasF = FASES.map((fz, i) => ({ fz, z: g(ultF, fz, i).pct, a: g(iniF, fz, i).pct,
+      obs: (() => { const out = [], vis = new Set(); P.forEach(r => (r.fases || []).filter(f => f.fase === fz && f.obs).forEach(f => { const k = norm(f.obs); if (k && !vis.has(k)) { vis.add(k); out.push([dcorto(r.fecha) + ':', f.obs.trim()]); } })); return out; })() }));
+    const conAv = filasF.filter(f => f.z != null && (+f.z > 0 || (f.a != null && +f.a > 0)));
+    if (conAv.length) {
+      titulo('AVANCE POR FASE');
+      fill(C.pale); doc.rect(M, y, CW, 6, 'F'); font(8, 'bold'); color(C.olive); doc.text('Fase', M + 2, y + 4.2); doc.text('Avance', M + 56, y + 4.2); doc.text(desde ? 'En el período' : 'Medido el', M + 148, y + 4.2); y += 6;
+      conAv.forEach(f => { need(6.5); font(8.5, 'bold'); color(C.dark); doc.text(pdfTxt(f.fz), M + 2, y + 4.4);
+        fill(C.bar); doc.rect(M + 56, y + 2, 72, 3, 'F'); fill(C.green); doc.rect(M + 56, y + 2, 72 * Math.min(100, +f.z) / 100, 3, 'F'); doc.text(f.z + '%', M + 131, y + 4.4);
+        font(8.5); color(desde && f.a != null && +f.z > +f.a ? C.green : C.grey); doc.text(pdfTxt(desde ? (f.a != null ? (+f.z !== +f.a ? pts(+f.z - +f.a) : 'sin cambio') : 'nuevo') : fmt(ultF.fecha)), M + 148, y + 4.4);
+        draw(C.line); doc.line(M, y + 6.5, M + CW, y + 6.5); y += 6.5; });
+      y += 4;
+    }
+    // Avance mes a mes
+    const filasM = meses.map(m => { const fm = monthRange(m)[1] > hasta ? hasta : monthRange(m)[1], Lm = P.filter(r => r.fecha.slice(0, 7) === m), prevD = addDays(m + '-01', -1);
+      return { m, n: Lm.length, f: fotosDe(Lm).length, fin: avAl(b.n, fm), ini: avAl(b.n, prevD) }; }).filter(x => x.n || x.fin != null);
+    if (filasM.length) {
+      titulo('AVANCE MES A MES');
+      fill(C.pale); doc.rect(M, y, CW, 6, 'F'); font(8, 'bold'); color(C.olive); [['Mes', 2], ['Reportes', 46], ['Fotos', 72], ['Avance al cierre', 94], ['Variación', 152]].forEach(([t, x]) => doc.text(t, M + x, y + 4.2)); y += 6;
+      filasM.forEach(x => { need(6.5); font(8.5, 'bold'); color(C.dark); doc.text(pdfTxt(mesTxt(x.m)), M + 2, y + 4.4); font(8.5); doc.text(String(x.n), M + 46, y + 4.4); doc.text(String(x.f), M + 72, y + 4.4);
+        if (x.fin != null) { fill(C.bar); doc.rect(M + 94, y + 2, 40, 3, 'F'); fill(C.green); doc.rect(M + 94, y + 2, 40 * Math.min(100, x.fin) / 100, 3, 'F'); font(8.5, 'bold'); color(C.dark); doc.text(pc(x.fin), M + 137, y + 4.4); }
+        font(8.5); color(x.fin != null && x.ini != null && x.fin > x.ini ? C.green : C.grey); doc.text(pdfTxt(x.fin != null ? (x.ini != null ? pts(x.fin - x.ini) : 'inicio') : '—'), M + 152, y + 4.4);
+        draw(C.line); doc.line(M, y + 6.5, M + CW, y + 6.5); y += 6.5; });
+      y += 4;
+    }
+    // Actividades ejecutadas
+    if (P.length) {
+      titulo('RESUMEN DE ACTIVIDADES EJECUTADAS');
+      const conObs = filasF.filter(f => f.obs.length);
+      if (conObs.length) for (const f of conObs) { need(10); font(9, 'bold'); color(C.olive); doc.text(pdfTxt(f.fz + (f.z != null ? ` (${f.z}%)` : '')), M, y + 3.5); y += 5; bullets(f.obs); y += 1; }
+      // Días cuyos trabajos no quedaron detallados por fase
+      const vis = new Set(), sinFase = P.filter(r => !(r.fases || []).some(f => f.obs)).filter(r => { const k = norm(r.descripcion); if (!k || vis.has(k)) return false; vis.add(k); return true; });
+      if (sinFase.length) for (const m of meses) { const Lm = sinFase.filter(r => r.fecha.slice(0, 7) === m); if (!Lm.length) continue;
+        need(10); font(9, 'bold'); color(C.olive); doc.text(pdfTxt((conObs.length ? 'Otros trabajos · ' : 'Trabajos · ') + mesTxt(m)), M, y + 3.5); y += 5; bullets(Lm.map(r => [dcorto(r.fecha) + ':', r.descripcion.trim()])); y += 1; }
+      if (!cliente) { const vo = new Set(), ob = P.filter(r => r.observaciones && r.observaciones.trim()).filter(r => { const k = norm(r.observaciones); if (vo.has(k)) return false; vo.add(k); return true; });
+        if (ob.length) { y += 1; need(10); font(9, 'bold'); color(C.orange); doc.text('Observaciones e incidencias', M, y + 3.5); y += 5; bullets(ob.map(r => [dcorto(r.fecha) + ':', r.observaciones.trim()])); } }
+      y += 3;
+    }
+    // Antes de la intervención
+    const an = (antesSel.get(b.n) || []).map(a => imgs.get(a.path)).filter(Boolean);
+    if (an.length) {
+      need(60); titulo('ANTES DE LA INTERVENCIÓN'); const gw = (CW - 6) / 3;
+      for (let i = 0; i < an.length; i += 3) { const row = an.slice(i, i + 3), rh = Math.min(gw * 0.75, Math.max(...row.map(im => gw * im.h / im.w))); need(rh + 3);
+        row.forEach((im, k) => { const x = M + k * (gw + 3), s = Math.min(gw / im.w, rh / im.h), iw = im.w * s, ih = im.h * s; fill([238,238,232]); doc.rect(x, y, gw, rh, 'F'); doc.addImage(im.data, 'JPEG', x + (gw - iw) / 2, y + (rh - ih) / 2, iw, ih, undefined, 'FAST'); });
+        y += rh + 3; }
+      y += 3;
+    }
+    // Galería del avance: fotos repartidas en el período, en orden de fecha
+    const gal = galSel.get(b.n) || [];
+    if (gal.length) {
+      const tot = fotosDe(P).length;
+      need(95); titulo(`GALERÍA DEL AVANCE · ${gal.length}${tot > gal.length ? ' DE ' + tot : ''} FOTO${tot === 1 ? '' : 'S'}`);
+      if (tot > gal.length) { font(8.5); color(C.grey); need(5); doc.text(pdfTxt('Selección repartida a lo largo del período. Todas las fotos están en Reportes → Archivo de la plataforma.'), M, y + 1); y += 4.5; }
+      const gw = (CW - 4) / 2, cap = 7.5;
+      for (let i = 0; i < gal.length; i += 2) {
+        const fila = gal.slice(i, i + 2).map(x => ({ ...x, im: imgs.get(x.a.path) }));
+        const rh = Math.min(gw * 0.75, Math.max(...fila.map(x => x.im ? gw * x.im.h / x.im.w : gw * 0.6)));
+        need(rh + cap + 3);
+        fila.forEach((x, k) => { const xx = M + k * (gw + 4);
+          fill([238,238,232]); doc.rect(xx, y, gw, rh, 'F');
+          if (x.im) { const s2 = Math.min(gw / x.im.w, rh / x.im.h), iw = x.im.w * s2, ih = x.im.h * s2; doc.addImage(x.im.data, 'JPEG', xx + (gw - iw) / 2, y + (rh - ih) / 2, iw, ih, undefined, 'FAST'); }
+          else { font(8); color(C.grey); doc.text('Foto no disponible', xx + gw / 2, y + rh / 2, { align:'center' }); }
+          const fs = (x.r.fases || []).filter(f => f.obs).map(f => f.fase).slice(0, 2).join(', ');
+          font(7.5, 'bold'); color(C.dark); doc.text(pdfTxt(doc.splitTextToSize(`${fmt(x.r.fecha)} · ${x.r.autor_nombre}${x.r.avance != null ? ' · avance ' + pc(+x.r.avance) : ''}`, gw)[0]), xx, y + rh + 3.4);
+          font(7); color(C.grey); const s3 = [x.r.empresa, fs].filter(Boolean).join(' · '); if (s3) doc.text(pdfTxt(doc.splitTextToSize(s3, gw)[0]), xx, y + rh + 6.6); });
+        y += rh + cap + 3;
+      }
+    }
+    if (!P.length) { font(9); color(C.grey); need(8); doc.text(pdfTxt('Sin reportes en el período; se muestra el avance acumulado a la fecha.'), M, y + 4); y += 8; }
   }
   footer();
   return doc.output('blob');
@@ -4718,9 +5015,10 @@ $('#prXlsx').onclick = async () => {
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
 const APP_VERSION = '4.32.0';
 const NOVEDADES = [
-  { v: '4.32.0', fecha: '2026-10-14', titulo: 'Curva de avance por base', items: [
-    { r: ['gerente_general','gerente_operaciones','compras','costos','master','reporte_general'], t: 'Estadísticas: al tocar una base aparece la nueva "Curva de avance", con el avance acumulado día a día (promedio de las 9 fases), la línea de hoy y la proyección hasta la culminación de la obra el 15-12-2026. Debajo, el ritmo real de las últimas semanas frente al ritmo necesario para terminar a tiempo.' },
-    { r: ['comandante_base'], t: 'Estadísticas: nueva "Curva de avance" de tu base, con el avance acumulado día a día y la proyección hasta la culminación de la obra el 15-12-2026.' }
+  { v: '4.32.0', fecha: '2026-10-15', titulo: 'Reporte de avance general por base', items: [
+    { r: ['gerente_operaciones','gerente_general','compras','costos','master'], t: 'Nuevo en Reportes → Archivo: botón "Generar reporte de avance general por base". Elige una base o las 13, el período (toda la obra, el mes del archivo o unas fechas) y la versión (interna o cliente). El PDF trae el avance total, la gráfica de evolución semana a semana, el avance por fase, el avance mes a mes, el resumen de actividades ejecutadas, las fotos del antes y una galería del avance. Con las 13 bases incluye además la tabla comparativa de todas.' },
+    { r: ['gerente_operaciones','gerente_general','compras','costos','master'], t: 'Dentro de la carpeta de cada puesto también está el botón "Reporte de avance de esta base".' },
+    { r: ['contratista'], t: 'Nuevo en Reportes → Archivo: "Generar reporte de avance general por base". Descarga en PDF el avance acumulado de tu base con la gráfica de evolución, el avance por fase, las actividades y las fotos de tus reportes.' }
   ] },
   { v: '4.31.0', fecha: '2026-10-13', titulo: 'Dotación de equipos más sencilla', items: [
     { r: ['gerente_operaciones','gerente_general','compras','costos','master'], t: 'La dotación de equipos ya no va por ambiente: cada puesto fronterizo tiene una sola lista con todos los equipos (necesario, existente e instalado). Lo que estaba cargado por ambiente se sumó en la lista de su puesto. Los contratistas ahora también pueden llenarla.' },
@@ -5095,62 +5393,6 @@ function lineSVG(series, opts){
   return `<svg class="estsvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.aria || 'Evolución del avance')}" font-family="Barlow, sans-serif">${grid}${labs}${lines}</svg>`;
 }
 const semLabels = ev => ev.map(e => { const [, m, d] = String(e.corte).split('-').map(Number); return `${d}/${m}`; });
-/* Curva de avance acumulado con proyección a la culminación (v4.32.0).
-   Avance de cada día = promedio de las 9 fases del último reporte del día; las fases sin iniciar cuentan 0 %. */
-const FECHA_CULMINACION = '2026-12-15';
-const dNum = iso => { const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number); return Date.UTC(y, m - 1, d) / 864e5; };
-const pctC = v => (Math.round(v * 10) / 10).toString().replace('.', ',') + ' %';
-const fCorta = iso => { const [, m, d] = String(iso).slice(0, 10).split('-').map(Number); return `${d} ${MESES[m - 1].slice(0, 3)}`; };
-function curvaHTML(pts, ini, fin, nombre){
-  const W = 360, H = 220, x0 = 36, x1 = W - 10, y0 = 14, y1 = H - 30;
-  const last = pts[pts.length - 1];
-  const a = dNum(ini), b = Math.max(dNum(fin), dNum(last.f) + 1), hoy = dNum(today());
-  const Xn = n => x0 + (x1 - x0) * (n - a) / (b - a), X = iso => Xn(dNum(iso)), Y = v => y1 - (y1 - y0) * v / 100;
-  const grid = [0, 25, 50, 75, 100].map(v => `<line x1="${x0}" y1="${Y(v)}" x2="${x1}" y2="${Y(v)}" stroke="#E3E7E0"/><text x="${x0 - 6}" y="${Y(v) + 4}" font-size="11" text-anchor="end" fill="#5E6A66">${v}%</text>`).join('');
-  let ticks = `<text x="${x0}" y="${H - 10}" font-size="11" fill="#5E6A66">${fCorta(ini)}</text><text x="${x1}" y="${H - 10}" font-size="11" text-anchor="end" fill="#5E6A66">${fCorta(fin)}</text>`;
-  let [yy, mm] = ini.split('-').map(Number);
-  for (let k = 0; k < 36; k++) { mm++; if (mm > 12) { mm = 1; yy++; } const iso = `${yy}-${String(mm).padStart(2, '0')}-01`; const x = X(iso);
-    if (dNum(iso) >= b) break; ticks += `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y1 + 5}" stroke="#9AA59E"/>`;
-    if (x - x0 > 40 && x1 - x > 54) ticks += `<text x="${x}" y="${H - 10}" font-size="11" text-anchor="middle" fill="#5E6A66">1 ${MESES[mm - 1].slice(0, 3)}</text>`; }
-  const poly = pts.map(p => `${X(p.f).toFixed(1)},${Y(p.v).toFixed(1)}`).join(' ');
-  const area = `${X(pts[0].f).toFixed(1)},${y1} ${poly} ${X(last.f).toFixed(1)},${y1}`;
-  const xh = Xn(Math.min(Math.max(hoy, a), b));
-  const lx = X(last.f), ly = Y(last.v);
-  const svg = `<svg class="estsvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(`Curva de avance de ${nombre}: ${pctC(last.v)} al ${fmt(last.f)}; proyección al 100 % el ${fmt(fin)}`)}" font-family="Barlow, sans-serif">${grid}${ticks}<line x1="${x0}" y1="${y1}" x2="${x1}" y2="${y1}" stroke="#9AA59E"/><polygon points="${area}" fill="#2E5E4F" fill-opacity=".16"/>${last.v < 100 ? `<line x1="${lx}" y1="${ly}" x2="${X(fin)}" y2="${Y(100)}" stroke="#E09A00" stroke-width="2" stroke-dasharray="5 4"/><circle cx="${X(fin)}" cy="${Y(100)}" r="4" fill="#FFFFFF" stroke="#E09A00" stroke-width="2"/>` : ''}<line x1="${xh}" y1="${y0}" x2="${xh}" y2="${y1}" stroke="#8A5A00" stroke-dasharray="3 4"/><polyline points="${poly}" fill="none" stroke="#2E5E4F" stroke-width="2.5" stroke-linejoin="round"/>${pts.slice(1).map(p => `<circle cx="${X(p.f).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="2.5" fill="#2E5E4F"/>`).join('')}<text x="${lx - 6}" y="${Math.max(y0 + 12, ly - 9)}" font-size="13" font-weight="700" text-anchor="end" fill="#1B2220">${pctC(last.v)}</text></svg>`;
-  const ref = pts.filter(p => dNum(p.f) <= dNum(last.f) - 21).pop() || pts[0];
-  const sem = Math.max(1, (dNum(last.f) - dNum(ref.f)) / 7);
-  const ritmo = (last.v - ref.v) / sem;
-  const semRest = (dNum(fin) - dNum(last.f)) / 7;
-  const req = semRest > 0 ? Math.max(0, 100 - last.v) / semRest : null;
-  const r1 = (Math.round(ritmo * 10) / 10).toString().replace('.', ','), r2 = req == null ? '' : (Math.round(req * 10) / 10).toString().replace('.', ',');
-  const estado = last.v >= 100 ? '<span class="tag ok">Culminada</span>' : req == null ? '<span class="tag bad">Fecha de culminación vencida</span>' : ritmo >= req ? '<span class="tag ok">En ritmo para el ' + fmt(fin) + '</span>' : '<span class="tag bad">Por debajo del ritmo necesario</span>';
-  return `<div class="esth"><h2>Curva de avance</h2><span>Meta: ${fCorta(fin)}</span></div>
-    ${svg}
-    <div class="estley"><span><i style="background:#2E5E4F"></i>Avance real (9 fases)</span><span><i style="background:#E09A00"></i>Proyección al 100 % el ${fCorta(fin)}</span><span><i style="background:#8A5A00;width:3px"></i>Hoy</span></div>
-    <div class="tags" style="margin:2px 0 0">${estado}</div>
-    <p class="hint" style="margin:0">${last.v >= 100 ? 'La base llegó al 100 % de avance.' : `Ritmo de las últimas ${Math.round(sem)} semana${Math.round(sem) === 1 ? '' : 's'}: <b>${r1} pts por semana</b>.${req == null ? '' : ` Para culminar el ${fmt(fin)} se necesitan <b>${r2} pts por semana</b>.`}`} Las fases sin iniciar cuentan como 0 %.</p>`;
-}
-async function cargarCurva(puesto, nombre){
-  const box = $('#estCurva'); if (!box) return;
-  try {
-    let rows = [], hasta = null;
-    for (let i = 0; i < 8; i++) {
-      const pg = await rpc('rq_reportes_listar', { p_puesto: puesto, p_hasta: hasta, p_limite: 300 }) || [];
-      rows = rows.concat(pg); if (pg.length < 300) break;
-      hasta = String(pg[pg.length - 1].fecha).slice(0, 10);
-    }
-    const ids = new Set(); rows = rows.filter(r => r && !ids.has(r.id) && ids.add(r.id));
-    if (!$('#estCurva')) return;
-    if (!rows.length) { box.innerHTML = '<h2>Curva de avance</h2><p class="hint" style="margin:0">Todavía no hay reportes de esta base.</p>'; return; }
-    const ini = rows.map(r => String(r.fecha).slice(0, 10)).sort()[0];
-    const porDia = {};
-    rows.filter(r => Array.isArray(r.fases) && r.fases.some(f => f && f.pct != null)).forEach(r => { const f = String(r.fecha).slice(0, 10); if (!porDia[f] || String(r.creado) > String(porDia[f].creado)) porDia[f] = r; });
-    const pts = Object.keys(porDia).sort().map(f => ({ f, v: Math.min(100, porDia[f].fases.reduce((s, x) => s + (+(x && x.pct) || 0), 0) / 9) }));
-    if (!pts.length) { box.innerHTML = '<h2>Curva de avance</h2><p class="hint" style="margin:0">Todavía no hay reportes con avance por fase.</p>'; return; }
-    if (pts[0].f > ini) pts.unshift({ f: ini, v: 0 });
-    box.innerHTML = curvaHTML(pts, ini, FECHA_CULMINACION, nombre);
-  } catch (e) { box.innerHTML = `<h2>Curva de avance</h2><p class="err">${esc(e.message)}</p>`; }
-}
 async function loadEst(){
   if (!canStats()) return;
   $$('#estPer button').forEach(b => b.setAttribute('aria-pressed', b.dataset.p === est.periodo));
@@ -5231,7 +5473,6 @@ function pintarBase(d, soloBase){
       <div class="estk2"><b>${d.archivos}</b><span>fotos, videos y PDF</span></div>
       <div class="estk2"><b>${d.personal ?? '—'}</b><span>personas (prom.)</span></div>
     </div>
-    <section class="estcard" id="estCurva"><h2>Curva de avance</h2><p class="hint" style="margin:0">Cargando la curva…</p></section>
     <section class="estcard"><div class="esth"><h2>Avance por fase</h2><span>vs. hace 7 días</span></div>
       ${(d.fases || []).map(f => { const dl = f.pct != null && f.antes != null ? Math.round((f.pct - f.antes) * 10) / 10 : null;
         return `<div class="estfase c4"><span>${esc(f.fase)}</span><span class="estbar sm"><i style="width:${Math.min(100, f.pct || 0)}%;background:#4B5320"></i></span><b>${pct(f.pct)}</b><em style="color:${dl ? '#2E5E4F' : '#8A938D'}">${dl ? (dl > 0 ? '+' : '') + dl : '—'}</em></div>`; }).join('') || '<p class="hint">Sin avance por fases todavía.</p>'}</section>
@@ -5248,7 +5489,6 @@ function pintarBase(d, soloBase){
     $('#estVolver').onclick = () => { est.vista = 'obra'; loadEst(); window.scrollTo(0, 0); };
     $('#estVerRep').onclick = () => { setMod('rep', 'rpf'); archPuesto = d.puesto; loadArchive(); };
   }
-  cargarCurva(d.puesto, d.nombre);
 }
 async function pdfEstadisticas(d){
   if (!window.jspdf) return toast('No se pudo cargar el generador de PDF');
