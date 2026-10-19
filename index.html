@@ -800,7 +800,7 @@ nav.tabs button{flex:0 0 auto}
   <section class="panel" id="p-proc">
     <div class="block">
       <div class="memtop"><h2 style="margin:0">Control de procura</h2><button class="btn ghost" id="prRefresh">Actualizar</button></div>
-      <p class="hint">Requisiciones aprobadas y recibidas por Compras: cotizaciones, proveedor ganador, pago, despacho y llegada a la obra.</p>
+      <p class="hint">Requisiciones aprobadas y recibidas por Compras. <b>En proceso</b> reúne las que están en cotización, pago o despacho; cuando llegan a la obra pasan a "Recibida en obra". Cada una lleva su cotización, proveedor ganador, pago, despacho y llegada a la obra.</p>
       <div class="pfil prfil" id="prFil" role="group" aria-label="Filtrar por estado"></div>
       <input class="in" id="prBuscar" placeholder="Buscar por N°, área, material o proveedor" style="margin:4px 0 10px">
       <ul class="hist prlist" id="prList"></ul>
@@ -942,6 +942,7 @@ nav.tabs button{flex:0 0 auto}
       <h2>Aprobadas <button class="btn ghost" data-refresh="aprob" style="min-height:36px;padding:0 8px;font-size:15px">Actualizar</button></h2>
       <div class="seg" id="seg-afil"><button type="button" data-v="por_aprobar" aria-pressed="true">Por aprobar</button><button type="button" data-v="aprobada" aria-pressed="false">Aprobadas</button><button type="button" data-v="rechazada" aria-pressed="false">Rechazadas</button></div>
       <p class="hint" id="aprobHint" style="margin:10px 0 0"></p>
+      <button type="button" class="btn ghost" id="aHist" style="padding-left:0;min-height:36px" hidden></button>
       <ul class="hist" id="lAprob" style="margin-top:6px"></ul>
       <div class="empty" id="eAprob" hidden></div>
     </div>
@@ -2609,11 +2610,15 @@ async function loadAprob(){
   segSet('seg-afil', aFilter);
   const hints = {
     por_aprobar: me.rol === 'gerente_general' ? 'Ya verificadas. Puedes ajustarlas, aprobarlas o rechazarlas.' : 'Ya verificadas, esperando la aprobación del Gerente General.',
-    aprobada: me.rol === 'compras' ? 'Aprobadas. Firma el recibido cuando compras las procese.' : 'Aprobadas. Quedan cerradas; Compras firma el recibido.',
-    rechazada: 'Rechazadas, con el motivo.' };
+    aprobada: (me.rol === 'compras' || me.es_master ? 'Aprobadas que esperan tu recibido. Al firmarlo, la requisición sale de esta lista y pasa a Procura → En proceso.' : 'Aprobadas que esperan el recibido de Compras.' + (veProcura() ? ' Las ya recibidas están en Procura → En proceso.' : '')),
+    rechazada: 'Rechazadas, con el motivo.',
+    historica: 'Requisiciones históricas, aprobadas y ejecutadas antes de la plataforma.' };
   $('#aprobHint').textContent = hints[aFilter];
-  const rows = await loadList($('#lAprob'), $('#eAprob'), { p_estado: aFilter },
-    { por_aprobar:'No hay requisiciones esperando aprobación.', aprobada:'Todavía no hay requisiciones aprobadas.', rechazada:'No hay requisiciones rechazadas.' }[aFilter],
+  // v4.35.0: "Aprobadas" solo trae las que esperan el recibido de Compras; las históricas van aparte.
+  $('#aHist').hidden = !['aprobada','historica'].includes(aFilter);
+  $('#aHist').textContent = aFilter === 'historica' ? '← Volver a Aprobadas' : 'Ver requisiciones históricas';
+  const rows = await loadList($('#lAprob'), $('#eAprob'), { p_estado: aFilter === 'aprobada' ? 'aprobada_pend' : aFilter },
+    { por_aprobar:'No hay requisiciones esperando aprobación.', aprobada:'No hay requisiciones aprobadas esperando el recibido de Compras.', rechazada:'No hay requisiciones rechazadas.', historica:'No hay requisiciones históricas.' }[aFilter],
     r => (aFilter === 'por_aprobar' && (me.rol === 'gerente_general' || me.es_master)) ? 'Revisar y aprobar' : (aFilter === 'aprobada' && (me.rol === 'compras' || me.es_master) && !r.recibido) ? 'Firmar recibido' : '');
   if (rows && aFilter === 'por_aprobar') setCount('cAprob', rows.length); else refreshCounts();
   schedule();
@@ -2625,7 +2630,7 @@ async function refreshCounts(){
   if (!me) return;
   try {
     const tasks = [rpc('rq_avisos', { p_limite: 1 })];
-    if (seesAll()) tasks.push(rpc('rq_listar', { p_estado: 'por_verificar', p_limite: 300 }), rpc('rq_listar', { p_estado: me.rol === 'compras' ? 'por_recibir' : 'por_aprobar', p_limite: 300 }));
+    if (seesAll()) tasks.push(rpc('rq_listar', { p_estado: 'por_verificar', p_limite: 300 }), rpc('rq_listar', { p_estado: me.rol === 'compras' ? 'aprobada_pend' : 'por_aprobar', p_limite: 300 }));
     const [av, v, a] = await Promise.all(tasks);
     setCount('bellCnt', av ? av.sin_leer : 0);
     if (canReport()) loadToday(); else $('#repDot').hidden = true;
@@ -2638,6 +2643,7 @@ async function refreshCounts(){
 function activeTab(){ const p = document.querySelector('#mainView section.panel.on'); return p ? p.id.slice(2) : ''; }
 function reloadActive(){ const t = activeTab(); if (t === 'verif') loadVerif(); else if (t === 'aprob') loadAprob(); else if (t === 'mias') loadMias(); else if (t === 'ajustes' && seesUsers()) loadUsers(); refreshCounts(); }
 function schedule(){ clearTimeout(lTimer); lTimer = setTimeout(() => { if (!document.hidden && !$('#detDlg').open && !$('#itemDlg').open) reloadActive(); else schedule(); }, 40000); }
+$('#aHist').onclick = () => { aFilter = aFilter === 'historica' ? 'aprobada' : 'historica'; $('#lAprob').innerHTML = ''; loadAprob(); };
 $('#seg-afil').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; aFilter = b.dataset.v; $('#lAprob').innerHTML = ''; loadAprob(); });
 $$('[data-refresh]').forEach(b => b.addEventListener('click', () => ({ verif: loadVerif, aprob: loadAprob, mias: loadMias })[b.dataset.refresh]()));
 ['#lVerif','#lAprob','#lMias'].forEach(id => $(id).addEventListener('click', async e => {
@@ -2770,7 +2776,7 @@ $('#dOk').onclick = async () => {
     detRow = detAcc === 'rechazar'
       ? await rpc('rq_rechazar', { p_control: detRow.control, p_motivo: $('#dMot').value.trim() })
       : await rpc('rq_firmar', { p_control: detRow.control, p_accion: detAcc, p_firma: detSig });
-    toast({ verificar:'Verificada. Se avisó al Gerente General', autorizar:'Aprobada. Se avisó a Compras', recibir:'Recibido firmado', rechazar:'Rechazada. Se avisó al solicitante' }[detAcc]);
+    toast({ verificar:'Verificada. Se avisó al Gerente General', autorizar:'Aprobada. Se avisó a Compras', recibir:'Recibido firmado. Pasó a Procura → En proceso', rechazar:'Rechazada. Se avisó al solicitante' }[detAcc]);
     detAcc = ''; detSig = null; renderDetail(); $('#dBody').scrollIntoView({ behavior:'smooth', block:'start' });
     reloadActive();
   } catch (e) { err(e.message); }
@@ -4623,7 +4629,7 @@ function prBadge(){ const n = prLista.filter(r => pagaProcura() && !canProcura()
   $('#cProc').textContent = n; $('#cProc').hidden = !n; $('#proDot').hidden = !n; }
 function pintarProc(){
   const cnt = {}; prLista.forEach(r => { const e = prEst(r); cnt[e] = (cnt[e] || 0) + 1; });
-  const pend = (cnt.sin || 0) + (cnt.cotizando || 0) + (cnt.por_pagar || 0) + (cnt.pagada || 0) + (cnt.en_despacho || 0);
+  const pend = prLista.length - (cnt.despachada || 0);
   const F = [['pend', 'En proceso', pend], ...PR_ORD.map(e => [e, PR_EST[e], cnt[e] || 0]), ['todas', 'Todas', prLista.length]];
   $('#prFil').innerHTML = F.filter(([k, , n]) => n || k === prFiltro || k === 'pend' || k === 'todas').map(([k, l, n]) => `<button type="button" data-pf="${k}" aria-pressed="${prFiltro === k}">${PR_EST[k] ? `<i class="pr-${k}"></i>` : ''}${l} <small>${n}</small></button>`).join('');
   const q = _norm($('#prBuscar').value || '');
@@ -4635,7 +4641,7 @@ function pintarProc(){
     const nxt = { sin: 'Cargar cotizaciones', cotizando: `${cots.length} cotización${cots.length === 1 ? '' : 'es'} · elegir ganador`, por_pagar: x.confirmacion && x.confirmacion.recibido === false ? 'El proveedor no confirmó el pago: revisar' : 'Esperando el pago de Gerencia General', pagada: 'Confirmar con el proveedor que recibió el pago', pago_confirmado: 'Falta marcar el despacho', en_despacho: x.despacho && x.despacho.llegada ? `Llegada estimada ${fmt(x.despacho.llegada)}` : 'Esperando confirmación en obra', despachada: x.entrega && x.entrega.completo === false ? 'Llegó incompleta' : 'Completa' }[e];
     return `<li data-prc="${esc(r.control)}" role="button" tabindex="0" class="prli pr-${PRIO[r.prioridad] ? r.prioridad : 'sin'}">
       <div class="ctlb"><b>${esc(r.control)}</b><small class="bpf">${esc(prBases(r))}</small><span class="when">${fmt(isoLocal(r.creado))}</span></div>
-      <div class="tags" style="margin:4px 0 2px">${prioTag(r.prioridad)}${prTag(e)}${x.entrega && x.entrega.completo === false ? '<span class="tag bad">Incompleta</span>' : ''}</div>
+      <div class="tags" style="margin:4px 0 2px">${prioTag(r.prioridad)}${e !== 'despachada' && /^\d{4}-\d{2}-\d{2}$/.test(r.fechaRequerida || '') && r.fechaRequerida < today() ? `<span class="tag bad">⏰ Vencida el ${fmt(r.fechaRequerida)}</span>` : ''}${prTag(e)}${x.entrega && x.entrega.completo === false ? '<span class="tag bad">Incompleta</span>' : ''}</div>
       <div class="m">${esc(r.area || '')} · ${r.n} material${r.n === 1 ? '' : 'es'} · Pidió ${esc(r.solicitante || '')}</div>
       <div class="vnums">${gan ? `<span>${esc(gan.proveedor)}</span><b>${prMon(x.monto, x.moneda)}</b>` : ''}<span class="prnext">${esc(nxt)}</span></div></li>`; }).join('');
   $('#prEmpty').hidden = L.length > 0; $('#prEmpty').textContent = prLista.length ? 'No hay requisiciones con este filtro.' : 'Todavía no hay requisiciones recibidas por Compras.';
@@ -5066,8 +5072,12 @@ $('#prXlsx').onclick = async () => {
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.34.0';
+const APP_VERSION = '4.35.0';
 const NOVEDADES = [
+  { v: '4.35.0', fecha: '2026-10-19', titulo: 'Aprobadas y Procura más ordenadas', items: [
+    { r: ['compras','master'], t: 'En Requisiciones → Aprobadas → Aprobadas ahora solo están las que esperan tu recibido. Al firmar el recibido, la requisición sale de esa lista y pasa a Procura → En proceso, donde sigues la cotización, el pago y el despacho hasta que llega a la obra.' },
+    { r: ['gerente_operaciones','gerente_general','costos'], t: 'En Requisiciones → Aprobadas → Aprobadas solo quedan las que esperan el recibido de Compras. Las ya recibidas las sigues en Procura → En proceso. Las requisiciones históricas están en "Ver requisiciones históricas", debajo de Aprobadas.' }
+  ] },
   { v: '4.34.0', fecha: '2026-10-19', titulo: 'Requisiciones vencidas pasan a urgente', items: [
     { r: ['gerente_operaciones','gerente_general','compras','costos','contratista','logistica','master'], t: 'Cuando una requisición aprobada llega a su fecha requerida ("¿Para cuándo?") y el material todavía no ha llegado a la obra, pasa sola a URGENTE y aparece marcada "⏰ Vencida" en Aprobadas y en Mías. Avisamos al solicitante, a Operaciones, a Gerencia General y a Compras. Si después alguien le cambia la prioridad a mano, se respeta.' },
     { r: ['master'], t: 'El usuario maestro tiene acceso total: puede ajustar, verificar, aprobar y rechazar requisiciones en cualquier etapa (también las suyas), firmar el recibido de Compras y registrar logística, además de todo lo que ya tenía.' }
