@@ -2562,7 +2562,7 @@ function rowLi(r, primaryLabel, extra){
   const li = document.createElement('li'); li.className = 'pr-' + (PRIO[r.prioridad] ? r.prioridad : 'sin');
   const bt = basesTxt(r);
   li.innerHTML = `<div class="h1"><span class="ctlb"><b>${esc(r.control)}</b>${bt ? `<span class="bpf">${esc(bt)}</span>` : ''}</span><span style="color:var(--muted);font-weight:500;flex:0 0 auto">${when}</span></div>
-    <div class="tags" style="margin:4px 0 2px">${r.historica ? '' : prioTag(r.prioridad)}${estadoTag(r)}${r.editada ? '<span class="tag">Editada</span>' : ''}${r.historica ? '<span class="tag hist">Histórica</span>' : ''}${r.adjunto ? '<span class="tag">📎 Con documento</span>' : ''}${r.general ? '<span class="tag gen">General</span>' : ''}</div>
+    <div class="tags" style="margin:4px 0 2px">${r.historica ? '' : prioTag(r.prioridad)}${r.vencida ? `<span class="tag bad">⏰ Vencida${r.fechaRequerida ? ' el ' + fmt(r.fechaRequerida) : ''}</span>` : ''}${estadoTag(r)}${r.editada ? '<span class="tag">Editada</span>' : ''}${r.historica ? '<span class="tag hist">Histórica</span>' : ''}${r.adjunto ? '<span class="tag">📎 Con documento</span>' : ''}${r.general ? '<span class="tag gen">General</span>' : ''}</div>
     <div class="h2">${esc(r.area || '')}${r.coordinacion ? ', ' + esc(r.coordinacion) : ''}. ${r.n} material${r.n === 1 ? '' : 'es'}. Pidió ${esc(r.solicitante || '')}${r.fechaRequerida ? '. Para el ' + fmt(r.fechaRequerida) : ''}</div>
     <div class="hb"><button class="btn ${primaryLabel ? 'primary' : ''}" data-open="${esc(r.control)}">${primaryLabel || 'Ver'}</button><button class="btn" data-rdl="${esc(r.control)}">Descargar</button>${extra || ''}</div>`;
   return li;
@@ -2601,7 +2601,7 @@ document.addEventListener('click', e => {
 });
 async function loadVerif(){
   $('#verifHint').textContent = me.rol === 'gerente_operaciones' ? 'Requisiciones enviadas que esperan tu revisión. Puedes ajustarlas, verificarlas o rechazarlas.' : 'Requisiciones enviadas que esperan la verificación del Gerente de Operaciones.';
-  const rows = await loadList($('#lVerif'), $('#eVerif'), { p_estado: 'por_verificar' }, 'No hay requisiciones por verificar.', () => me.rol === 'gerente_operaciones' ? 'Revisar y verificar' : '');
+  const rows = await loadList($('#lVerif'), $('#eVerif'), { p_estado: 'por_verificar' }, 'No hay requisiciones por verificar.', () => me.rol === 'gerente_operaciones' || me.es_master ? 'Revisar y verificar' : '');
   if (rows) setCount('cVerif', rows.length);
   schedule();
 }
@@ -2614,7 +2614,7 @@ async function loadAprob(){
   $('#aprobHint').textContent = hints[aFilter];
   const rows = await loadList($('#lAprob'), $('#eAprob'), { p_estado: aFilter },
     { por_aprobar:'No hay requisiciones esperando aprobación.', aprobada:'Todavía no hay requisiciones aprobadas.', rechazada:'No hay requisiciones rechazadas.' }[aFilter],
-    r => (aFilter === 'por_aprobar' && me.rol === 'gerente_general') ? 'Revisar y aprobar' : (aFilter === 'aprobada' && me.rol === 'compras' && !r.recibido) ? 'Firmar recibido' : '');
+    r => (aFilter === 'por_aprobar' && (me.rol === 'gerente_general' || me.es_master)) ? 'Revisar y aprobar' : (aFilter === 'aprobada' && (me.rol === 'compras' || me.es_master) && !r.recibido) ? 'Firmar recibido' : '');
   if (rows && aFilter === 'por_aprobar') setCount('cAprob', rows.length); else refreshCounts();
   schedule();
 }
@@ -2667,9 +2667,11 @@ function permsFor(r){
   if (r.estado === 'rechazada') { out.why = 'Rechazada. Ya no se puede modificar.'; return out; }
   if (r.datos && r.datos.historica) { const im = r.datos.importado || {}; out.why = `Requisición histórica, aprobada y ejecutada antes de la plataforma. Cargada desde Excel${im.hoja ? ' (hoja ' + im.hoja + ')' : ''}${im.por ? ' por ' + im.por : ''}. Las firmas son las del documento original, sin firma digital.`; return out; }
   if (r.estado === 'aprobada') {
-    if (!r.recibido && me.rol === 'compras') { out.recibir = true; return out; }
+    if (!r.recibido && (me.rol === 'compras' || me.es_master)) { out.recibir = true; return out; }
     out.why = r.recibido ? 'Aprobada y recibida por compras. Proceso completo.' : 'Aprobada y cerrada. Falta que Compras firme el recibido.'; return out;
   }
+  // v4.34.0: el maestro tiene acceso total: ajusta, verifica, aprueba o rechaza en cualquier etapa.
+  if (me.es_master) { out.edit = out.rechazar = true; if (r.verificado) out.autorizar = true; else out.verificar = true; return out; }
   if (!r.verificado) {
     if (me.rol === 'gerente_operaciones' && r.solicitante_id === me.id) { out.why = 'La hiciste tú: la debe verificar otro Gerente de Operaciones.'; return out; }
     if (me.rol === 'gerente_operaciones') { out.edit = out.verificar = out.rechazar = true; return out; }
@@ -2704,7 +2706,7 @@ function renderDetail(){
       ${d.general ? '<dt>Tipo</dt><dd><b>Requisición general del proyecto</b></dd>' : ''}
       <dt>Área</dt><dd>${esc(d.area || '')}</dd>
       ${d.coordinacion ? `<dt>Coordinación</dt><dd>${esc(d.coordinacion)}</dd>` : ''}
-      ${d.fechaRequerida ? `<dt>Para el</dt><dd>${fmt(d.fechaRequerida)}</dd>` : ''}
+      ${d.fechaRequerida ? `<dt>Para el</dt><dd>${fmt(d.fechaRequerida)}${reqVencida(r) ? ' <span class="tag bad">⏰ Vencida</span>' : ''}</dd>` : ''}
       <dt>Pidió</dt><dd>${esc(f.solicitado || '')}${d.solicitante && d.solicitante.empresa ? ', ' + esc(d.solicitante.empresa) : ''}${d.firma ? `<img class="sigimg" alt="Firma de ${esc(f.solicitado || '')}" src="${d.firma}">` : ''}</dd>
     </dl>
     <div class="sec">Materiales</div>${(d.items || []).some(it => it.tot != null) ? `<p class="hint" style="margin:-4px 0 8px">Total según el presupuesto: <b>${usd((d.items || []).reduce((a, it) => a + (+it.tot || 0), 0))}</b> (sin impuestos)</p>` : ''}<ul class="items">${items}</ul>
@@ -2723,9 +2725,11 @@ function renderDetail(){
   $('#dAct').hidden = !btns.length; $('#dForm').hidden = true; $('#dActBtns').hidden = false;
   $('#dLock').hidden = !p.why; $('#dLock').textContent = p.why;
 }
+// v4.34.0: aprobada, con la fecha requerida vencida y el material todavía sin llegar a la obra.
+const reqVencida = r => { const d = r.datos || {}, x = r.procura; return r.estado === 'aprobada' && !d.historica && /^\d{4}-\d{2}-\d{2}$/.test(d.fechaRequerida || '') && d.fechaRequerida < today() && !(x && (x.entrega || x.estado === 'despachada')); };
 function prioDetalle(r){
   const H = r.prioridad_hist || [], ult = H[H.length - 1];
-  const quien = ult ? `${H.length > 1 ? 'Cambiada' : 'Asignada'} por ${esc(ult.nombre)} el ${fmt(isoLocal(ult.fecha))}` : '';
+  const quien = ult ? (ult.auto === 'vencida' ? `Pasó a urgente automáticamente el ${fmt(isoLocal(ult.fecha))} porque venció la fecha requerida y el material no ha llegado a la obra` : `${H.length > 1 ? 'Cambiada' : 'Asignada'} por ${esc(ult.nombre)} el ${fmt(isoLocal(ult.fecha))}`) : '';
   const log = H.length > 1 ? H.map(h => `${esc(h.nombre)}: ${esc(PRIO[h.prioridad] || h.prioridad)} (${fmt(isoLocal(h.fecha))})`).join(' · ') : '';
   const edita = canPrio(r);
   return `<div class="dprio"><div class="dph"><span>Prioridad</span>${prioTag(r.prioridad)}</div>
@@ -5062,8 +5066,12 @@ $('#prXlsx').onclick = async () => {
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.33.0';
+const APP_VERSION = '4.34.0';
 const NOVEDADES = [
+  { v: '4.34.0', fecha: '2026-10-19', titulo: 'Requisiciones vencidas pasan a urgente', items: [
+    { r: ['gerente_operaciones','gerente_general','compras','costos','contratista','logistica','master'], t: 'Cuando una requisición aprobada llega a su fecha requerida ("¿Para cuándo?") y el material todavía no ha llegado a la obra, pasa sola a URGENTE y aparece marcada "⏰ Vencida" en Aprobadas y en Mías. Avisamos al solicitante, a Operaciones, a Gerencia General y a Compras. Si después alguien le cambia la prioridad a mano, se respeta.' },
+    { r: ['master'], t: 'El usuario maestro tiene acceso total: puede ajustar, verificar, aprobar y rechazar requisiciones en cualquier etapa (también las suyas), firmar el recibido de Compras y registrar logística, además de todo lo que ya tenía.' }
+  ] },
   { v: '4.33.0', fecha: '2026-10-19', titulo: 'Nuevo formato de lista de materiales', items: [
     { r: ['contratista','costos','gerente_operaciones','gerente_general','master'], t: 'La app ahora lee las listas de materiales con columnas # · Descripción del material · Cantidad requerida, donde la unidad viene junto a la cantidad (por ejemplo "20 UND", "598,65 M²" o "5.032 PZA"), como la del PCF Francisco de Miranda. Ignora los capítulos y los recuadros de resumen y arma la requisición solo con la lista de materiales; el puesto se detecta del título.' }
   ] },
@@ -5570,14 +5578,15 @@ async function pdfEstadisticas(d){
 const esLogistica = () => me && !me.es_master && me.rol === 'logistica';
 const veLogistica = () => me && (me.es_master || ['gerente_general','gerente_operaciones','compras','costos'].includes(me.rol));
 Object.assign(ERRS, { sin_frente:'Todavía no tienes frente de trabajo asignado. Pídeselo al administrador.', falta_unidad:'Escribe la unidad (vehículo o placa).', falta_litros:'Escribe los litros cargados.', falta_carga:'Describe qué se trasladó.' });
+const miFrente = () => (me && me.frente) || (me && me.es_master ? 'Maestro' : '');
 CECOS.bases.forEach(bb => { const o = document.createElement('option'); o.value = bb.n; o.textContent = bb.n + '. ' + bb.nombre.replace('B.P.F ', ''); $('#lg-puesto').appendChild(o); });
 let lg = { tipo: 'combustible', comb: 'Gasoil', files: [], id: null };
 function pintarUnidades(){ $('#dl-unidades').innerHTML = (LS.get('unidades', []) || []).map(u => `<option value="${esc(u)}">`).join(''); }
 function lgLimpiar(keep){ lg = { tipo: keep ? lg.tipo : 'combustible', comb: 'Gasoil', files: [], id: null };
   ['lg-litros','lg-km','lg-lugar','lg-origen','lg-km2','lg-carga','lg-obs'].forEach(i => $('#' + i).value = ''); $('#lg-puesto').value = ''; }
 function pintarLg(){
-  $('#lgFrente').innerHTML = me.frente ? `<span>Frente de trabajo</span><b>${esc(me.frente)}</b>` : `<span>Sin frente asignado</span><b style="font-size:15px">Pide al administrador que te asigne tu frente de trabajo para poder registrar.</b>`;
-  $('#lgFrente').classList.toggle('sin', !me.frente);
+  $('#lgFrente').innerHTML = miFrente() ? `<span>Frente de trabajo</span><b>${esc(miFrente())}</b>` : `<span>Sin frente asignado</span><b style="font-size:15px">Pide al administrador que te asigne tu frente de trabajo para poder registrar.</b>`;
+  $('#lgFrente').classList.toggle('sin', !miFrente());
   $$('#lgTipo button').forEach(x => x.setAttribute('aria-pressed', x.dataset.v === lg.tipo));
   $('#lgTit').textContent = lg.tipo === 'combustible' ? 'Carga de combustible' : 'Traslado';
   $('#lgComb').hidden = lg.tipo !== 'combustible'; $('#lgTras').hidden = lg.tipo !== 'traslado';
@@ -5585,7 +5594,7 @@ function pintarLg(){
   const t = today(); $('#lg-fecha').max = t; $('#lg-fecha').min = addDays(t, -3); if (!$('#lg-fecha').value || $('#lg-fecha').value > t || $('#lg-fecha').value < addDays(t, -3)) $('#lg-fecha').value = t;
   $('#lg-media').innerHTML = lg.files.map((f, i) => `<div class="mi">${f.kind === 'pdf' ? `<div class="pdft"><b>PDF</b><span>${esc(f.file.name)}</span></div>` : `<img src="${f.thumb}" alt="Soporte ${i+1}">`}<button class="x" data-lgrm="${i}" aria-label="Quitar">×</button></div>`).join('');
   $('#lg-count').textContent = lg.files.length ? String(lg.files.length) : '';
-  $('#lg-send').disabled = !me.frente; pintarUnidades();
+  $('#lg-send').disabled = !miFrente(); pintarUnidades();
 }
 $('#lgTipo').addEventListener('click', e => { const x = e.target.closest('[data-v]'); if (!x) return; lg.tipo = x.dataset.v; $('#lg-err').hidden = true; pintarLg(); });
 $('#lg-comb').addEventListener('click', e => { const x = e.target.closest('button'); if (!x) return; lg.comb = x.textContent; pintarLg(); });
@@ -5599,7 +5608,7 @@ $$('[data-lgpick]').forEach(inp => inp.addEventListener('change', e => {
 $('#lg-send').onclick = async () => {
   const err = m => { $('#lg-err').textContent = m; $('#lg-err').hidden = false; $('#lg-err').scrollIntoView({ behavior:'smooth', block:'center' }); };
   const v = id => $('#' + id).value.trim();
-  if (!me.frente) return err(ERRS.sin_frente);
+  if (!miFrente()) return err(ERRS.sin_frente);
   if (!v('lg-unidad')) { $('#lg-unidad').classList.add('bad'); return err(ERRS.falta_unidad); }
   if (lg.tipo === 'combustible' && !(parseFloat(v('lg-litros').replace(',', '.')) > 0)) { $('#lg-litros').classList.add('bad'); return err(ERRS.falta_litros); }
   if (lg.tipo === 'traslado' && !v('lg-puesto')) { $('#lg-puesto').classList.add('bad'); return err('Elige el puesto fronterizo de destino.'); }
@@ -5620,7 +5629,7 @@ $('#lg-send').onclick = async () => {
     toast(lg.tipo === 'combustible' ? 'Carga de combustible registrada' : 'Traslado registrado');
     lg.files.forEach(f => f.thumb && URL.revokeObjectURL(f.thumb)); lgLimpiar(true); pintarLg();
   } catch (e) { err(e.message || 'No se pudo guardar'); }
-  finally { b.disabled = !me.frente; b.textContent = 'Guardar registro'; }
+  finally { b.disabled = !miFrente(); b.textContent = 'Guardar registro'; }
 };
 ['lg-unidad','lg-litros','lg-puesto','lg-carga'].forEach(id => $('#' + id).addEventListener('input', e => { e.target.classList.remove('bad'); $('#lg-err').hidden = true; }));
 
@@ -6352,7 +6361,7 @@ function tabAllowed(t){
   if (t === 'rsem') return canWeekly();
   if (t === 'est') return canStats();
   if (t === 'rarch' || t === 'rpf') return !soloSemanal() && !esLogistica();
-  if (t === 'rlog') return esLogistica();
+  if (t === 'rlog') return esLogistica() || !!(me && me.es_master);
   if (t === 'rlogl') return esLogistica() || veLogistica();
   if (t === 'tar') return canTareas();
   if (t === 'vmis' || t === 'vedit') return canViaticos() || (t === 'vedit' && veViaticos());
@@ -6360,7 +6369,7 @@ function tabAllowed(t){
   if (t === 'proc' || t === 'pedit') return veProcura();
   return true;
 }
-function applyTabVisibility(){ $$('#mainTabs button').forEach(b => { b.hidden = !((b.dataset.mod === curMod || b.dataset.mod === 'both') && tabAllowed(b.dataset.tab)); }); }
+function applyTabVisibility(){ $$('#mainTabs button').forEach(b => { b.hidden = !((b.dataset.mod === curMod || b.dataset.mod === 'both') && tabAllowed(b.dataset.tab)); }); const rl = $('#mainTabs [data-tab="rlog"]'); if (rl) rl.textContent = esLogistica() ? 'Nuevo registro' : 'Registrar logística'; }
 function defaultReqTab(){ return canCreate() && !['gerente_general','gerente_operaciones'].includes(me.rol) ? 'nueva' : me.rol === 'gerente_operaciones' ? 'verif' : seesAll() ? 'aprob' : 'nueva'; }
 function setHeader(){ $('#hUser').textContent = `${me.nombre}, ${roleText(me)}${me.es_master ? ' · Maestro' : ''}${me.simulando ? ' · Modo prueba' : ''}`; }
 
