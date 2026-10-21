@@ -1776,7 +1776,7 @@ if (typeof module !== 'undefined') module.exports = buildAvanceDiario;
 </script>
 <script>
 (function(){
-const MAX = 150;
+const MAX = 400;   // v4.36.0: antes 150; las listas generales por capítulos pueden traer más de 300 materiales
 const hojasTxt = n => n > 13 ? ` · ${Math.ceil(n / 13)} hojas` : '';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -1807,7 +1807,7 @@ const ERRS = {
   cotizacion_sin_archivo:'Cada cotización debe venir del archivo del proveedor (PDF, Excel o foto).',
   procura_pago_sin_confirmar:'Primero confirma con el proveedor que recibió el pago.', procura_no_pagada:'La requisición todavía no está pagada.', falta_motivo:'Escribe qué pasó.',
   prioridad_invalida:'Elige la prioridad: urgente, media o compra planificada.', prioridad_cerrada:'Esta requisición ya está cerrada (rechazada o recibida): su prioridad no se puede cambiar.',
-  sin_motivo:'Escribe el motivo del rechazo.', sin_materiales:'Agrega al menos un material.', max_materiales:'Una requisición admite máximo 150 materiales.',
+  sin_motivo:'Escribe el motivo del rechazo.', sin_materiales:'Agrega al menos un material.', max_materiales:'Una requisición admite máximo 400 materiales.',
   demasiado_grande:'La requisición es muy pesada. Borra la firma y vuelve a firmar.', datos_invalidos:'Los datos no son válidos.',
   no_a_ti_mismo:'No puedes desactivarte a ti mismo.', rol_invalido:'Rol no válido.', falta_nombre:'Falta el nombre.'
 };
@@ -1932,13 +1932,13 @@ function renderItems(){
   $('#emptyItems').hidden = draft.items.length > 0;
   $('#count').textContent = `${draft.items.length} material${draft.items.length === 1 ? '' : 'es'}${hojasTxt(draft.items.length)}`;
   $('#addItem').disabled = draft.items.length >= MAX;
-  $('#addItem').textContent = draft.items.length >= MAX ? 'Máximo 150 materiales' : 'Agregar material';
+  $('#addItem').textContent = draft.items.length >= MAX ? 'Máximo ' + MAX + ' materiales' : 'Agregar material';
   $('#gen').textContent = 'Enviar a verificación' + (draft.items.length ? ` (${draft.items.length})` : '');
 }
 $('#items').addEventListener('click', e => {
   const ed = e.target.closest('[data-edit]'), dp = e.target.closest('[data-dup]');
   itemCtx = null;
-  if (dp) { if (draft.items.length >= MAX) return toast('Máximo 150 materiales'); const i=+dp.dataset.dup; draft.items.splice(i+1,0,Object.assign({},draft.items[i])); saveDraft(); renderItems(); openItem(i+1); return; }
+  if (dp) { if (draft.items.length >= MAX) return toast('Máximo ' + MAX + ' materiales'); const i=+dp.dataset.dup; draft.items.splice(i+1,0,Object.assign({},draft.items[i])); saveDraft(); renderItems(); openItem(i+1); return; }
   if (ed) openItem(+ed.dataset.edit);
 });
 $('#items').addEventListener('keydown', e => { if ((e.key==='Enter'||e.key===' ') && e.target.dataset.edit !== undefined) { e.preventDefault(); itemCtx = null; openItem(+e.target.dataset.edit); } });
@@ -1997,7 +1997,7 @@ function commitItem(){
   c.changed(); return true;
 }
 $('#itemSave').onclick = () => { if (commitItem()) dlg.close(); };
-$('#itemSaveNext').onclick = () => { if (!commitItem()) return; if (ictx().items.length >= MAX) { dlg.close(); return toast('Llegaste al máximo de 150 materiales'); } toast('Material guardado'); openItem(-1); };
+$('#itemSaveNext').onclick = () => { if (!commitItem()) return; if (ictx().items.length >= MAX) { dlg.close(); return toast('Llegaste al máximo de ' + MAX + ' materiales'); } toast('Material guardado'); openItem(-1); };
 $('#itemDel').onclick = () => { if (editIdx<0) return; const c = ictx(); c.items.splice(editIdx,1); c.changed(); dlg.close(); toast('Material eliminado'); };
 $('#itemClose').onclick = () => dlg.close();
 dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
@@ -2279,9 +2279,11 @@ function parseSolicitud(T){
     const derecha = t => P.filter(o => o !== t && Math.abs(o.y - t.y) < 4 && o.x > t.x).sort((a, b) => a.x - b.x)[0];
     const f = P.find(t => /^FECHA\b/.test(N(t))); if (f && !out.fecha) { const fd = derecha(f); const m = (N(f) + ' ' + (fd ? N(fd) : '')).match(/(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/); if (m) out.fecha = `${m[3].length === 2 ? '20' + m[3] : m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`; }
     const so = P.find(t => /^SOL(ICITUD)?\.?\s*(N[°º]?\s*)?\d+$/.test(N(t))); if (so && !out.sol) out.sol = (N(so).match(/(\d+)$/) || [])[1] || '';
-    if (P.some(t => /^LISTA DE MATERIALES$/.test(N(t)))) out.lista = true;
-    const mo = P.find(t => /^M\.?\s?O\.?[-\s]/.test(N(t))); if (mo && !out.sol) { const md = derecha(mo); out.sol = (mo.s + (md && /^\d+$/.test(md.s.trim()) ? md.s.trim() : '')).replace(/\s+/g, ''); }
-    const pr = P.find(t => /^PROYECTO\b/.test(N(t)) && t.y > hItem.y + 3); if (pr && !out.proyecto) { const resto = pr.s.replace(/^proyecto\s*:?\s*/i, '').trim(); const pd = derecha(pr); out.proyecto = resto || (pd ? pd.s.trim() : ''); }
+    if (P.some(t => /^LISTA (GENERAL )?DE MATERIALES$/.test(N(t)))) out.lista = true;
+    const mo = P.find(t => /^M\.?\s?O\.?[-\s]/.test(N(t))); if (mo && !out.sol) { const md = derecha(mo); out.sol = (mo.s + (md && /^\d+$/.test(md.s.trim()) ? md.s.trim() : '')).replace(/\s+/g, ' ').replace(/\s*-\s*/g, '-').trim(); }
+    const pr = P.find(t => /^PROYECTO\b/.test(N(t)) && t.y > hItem.y + 3); if (pr && !out.proyecto) { const resto = pr.s.replace(/^proyecto\s*:?\s*/i, '').trim(); const pd = derecha(pr); out.proyecto = resto || (pd ? pd.s.trim() : '');
+      // el título del proyecto puede seguir en la línea de abajo ("…, Estado Zulia," / "Venezuela.")
+      if (/,$/.test(out.proyecto)) { const sig = P.filter(t => t.y < pr.y - 2 && t.y > pr.y - 16).sort((a, b) => a.x - b.x).map(t => t.s.trim()).join(' '); if (sig) out.proyecto += ' ' + sig; } }
     const fa = P.find(t => /^FASE\s*#?\s*\d+/.test(N(t))); if (fa && !out.fase) out.fase = fa.s.trim();
     const yH = hItem.y, undC = cx(hUnd), cantX = hCant.x;
     const abajo = /^(N|NO|N[°º]|NRO\.?)$/.test(N(hItem));
@@ -2290,7 +2292,7 @@ function parseSolicitud(T){
     const caps = P.filter(t => t.y < yH - 3 && esCap(t)).map(t => ({ y: t.y, s: t.s.trim() })).sort((a, b) => b.y - a.y);
     out.capitulos += caps.length;
     P.filter(esPie).forEach(t => { const v = t.s.replace(/^[^:]*:\s*/, '').trim(); if (/^SOLICITADO/.test(N(t)) && v && !out.solicitante) out.solicitante = v; });
-    const body = P.filter(t => t.y < yH - 3 && !/^(SOLICITUD|LISTA) DE MATERIALES$/.test(N(t)) && !esCap(t) && !esPie(t));
+    const body = P.filter(t => t.y < yH - 3 && !/^(SOLICITUD|LISTA( GENERAL)?) DE MATERIALES$/.test(N(t)) && !esCap(t) && !esPie(t));
     const obs = body.find(t => /^OBSERVACION/.test(N(t)));
     const yObs = obs ? obs.y : -1e9;
     // fin de la tabla: "TOTAL PRESUPUESTO", "SUBTOTAL"… a la izquierda de la descripción
@@ -2319,8 +2321,11 @@ function parseSolicitud(T){
     const xs = {}; tabla.filter(t => cx(t) < undC - 30 && t.x > hItem.x + (hItem.w || 0) + 2 && !/^\d{1,3}$/.test(t.s.trim())).forEach(t => { const k = Math.round(t.x); xs[k] = (xs[k] || 0) + 1; });
     const xDesc = +Object.entries(xs).sort((a, b) => b[1] - a[1])[0]?.[0] || hDesc.x;
     const anclas = tabla.filter(t => /^\d{1,3}$/.test(t.s.trim()) && t.x < xDesc - 3).sort((a, b) => b.y - a.y);
-    const filas = anclas.map(a => ({ n: +a.s.trim(), y: a.y, desc: [], und: [], cant: [] }));
-    const primera = anclas.length ? anclas[0].y : -1e9;
+    let filas = anclas.map(a => ({ n: +a.s.trim(), y: a.y, desc: [], und: [], cant: [] }));
+    // v4.36.0: listas con la columna Nº vacía (p. ej. La Primavera): cada cantidad marca un renglón y se numeran en orden.
+    if (!anclas.length) filas = tabla.filter(t => /^[\d.]+(,\d+)?$/.test(t.s.trim()) && t.x >= cantX - 25 && (!hPU || cx(t) < hPU.x - 10))
+      .sort((a, b) => b.y - a.y).map((a, i) => ({ n: out.items.length + i + 1, y: a.y, desc: [], und: [], cant: [], sinN: true }));
+    const primera = anclas.length ? anclas[0].y : filas.length ? filas[0].y : -1e9;
     tabla.forEach(t => {
       if (anclas.includes(t)) return;
       const esNum = /^[\d.]+(,\d+)?$/.test(t.s.trim());
@@ -2427,7 +2432,10 @@ function agruparMateriales(items){
   });
   return { unidos, items: out.map(g => {
     const multi = g.partes.length > 1, conCap = g.partes.some(p => p.cap);
-    let det = multi ? g.partes.map(p => `${p.cap ? capCorto(p.cap) : 'Renglón ' + p.n}: ${p.cant}`).join(' · ') : (conCap ? capCorto(g.partes[0].cap) : '');
+    // un mismo capítulo que repite el material se suma en una sola parte del desglose
+    const partes = []; g.partes.forEach(p => { const q = p.cap ? partes.find(x => x.cap === p.cap) : null, v = parseFloat(String(p.cant).replace(',', '.'));
+      if (q && !isNaN(v) && !isNaN(q.v)) { q.v += v; q.cant = fmtCant(q.v); } else partes.push({ ...p, v }); });
+    let det = multi ? partes.map(p => `${p.cap ? capCorto(p.cap) : 'Renglón ' + p.n}: ${p.cant}`).join(' · ') : (conCap ? capCorto(g.partes[0].cap) : '');
     const precio = [g.pu != null ? 'P.U. ' + usd(g.pu) : '', g.tot != null ? 'Total ' + usd(g.tot) : ''].filter(Boolean).join(' · ');
     if (precio) det = [det, precio].filter(Boolean).join(' · ');
     return { desc: g.desc, und: g.und, cant: g.total != null ? fmtCant(g.total) : g.cant, det, veces: g.partes.length, renglones: g.renglones,
@@ -5072,8 +5080,12 @@ $('#prXlsx').onclick = async () => {
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.35.0';
+const APP_VERSION = '4.36.0';
 const NOVEDADES = [
+  { v: '4.36.0', fecha: '2026-10-21', titulo: 'Listas generales de materiales', items: [
+    { r: ['contratista','costos','gerente_operaciones','gerente_general','logistica','master'], t: 'La app ahora lee las "Lista general de materiales" por capítulos que traen la columna Nº vacía (como la de La Primavera, de 12 páginas): toma cada renglón con su unidad y cantidad, agrupa los materiales repetidos en varios capítulos sumando sus cantidades y detecta el puesto, el N° (M.O.-…), la fecha y quién la solicitó.' },
+    { r: ['contratista','costos','gerente_operaciones','gerente_general','logistica','compras','master'], t: 'Una requisición ahora admite hasta 400 materiales (antes 150). El Excel sale con todas las hojas del formato que hagan falta, 13 materiales por hoja.' }
+  ] },
   { v: '4.35.0', fecha: '2026-10-19', titulo: 'Aprobadas y Procura más ordenadas', items: [
     { r: ['compras','master'], t: 'En Requisiciones → Aprobadas → Aprobadas ahora solo están las que esperan tu recibido. Al firmar el recibido, la requisición sale de esa lista y pasa a Procura → En proceso, donde sigues la cotización, el pago y el despacho hasta que llega a la obra.' },
     { r: ['gerente_operaciones','gerente_general','costos'], t: 'En Requisiciones → Aprobadas → Aprobadas solo quedan las que esperan el recibido de Compras. Las ya recibidas las sigues en Procura → En proceso. Las requisiciones históricas están en "Ver requisiciones históricas", debajo de Aprobadas.' }
