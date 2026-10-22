@@ -228,6 +228,7 @@ nav.tabs button.gear .cnt{position:absolute;top:0;right:-4px;margin:0}
 .media .mi img,.media .mi video{width:100%;height:100%;object-fit:cover;display:block}
 .media .mi .x{position:absolute;top:4px;right:4px;width:30px;height:30px;border-radius:15px;border:0;background:rgba(0,0,0,.65);color:#fff;font-size:18px;cursor:pointer}
 .media .mi .vb{position:absolute;left:4px;bottom:4px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.65);padding:2px 6px;border-radius:5px}
+.pavt{border:1.5px solid var(--rule);border-radius:10px;overflow:hidden;margin-top:8px}.pavh,.pavr{display:grid;grid-template-columns:1fr 72px 84px;gap:8px;align-items:center;padding:6px 10px}.pavh{background:var(--sunk);font-size:12.5px;font-weight:700;color:var(--muted)}.pavr{border-top:1px solid var(--rule)}.pavr small{display:block;color:var(--muted);font-size:12px}.pavr .in{min-height:40px;padding:4px 8px;text-align:right}.pavr>span:nth-child(2){text-align:right;font-weight:600}
 .folders{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
 .folders button{text-align:left;padding:10px 12px;border:1.5px solid var(--rule);border-radius:10px;background:var(--sunk);cursor:pointer;min-height:74px}
 .folders button b{display:block;font:700 16px/1.1 "Barlow Condensed",sans-serif}
@@ -1231,6 +1232,11 @@ nav.tabs button{flex:0 0 auto}
       <p class="hint" style="margin-top:-6px">Una lista de equipos por puesto fronterizo: por cada equipo se cuenta lo necesario, lo existente en buen estado y lo instalado. Resumen por puesto (a adquirir y por instalar), consolidado de la obra y Excel.</p>
       <div id="dotMini" class="hint"></div>
       <button class="btn dark block100" id="dotAbrir">Abrir dotación de equipos</button>
+    </div>
+    <div class="block" id="pavBlock" hidden>
+      <h2>Procura de materiales en los reportes</h2>
+      <p class="hint" style="margin-top:-6px">Los reportes (estadísticas, PDF semanal y reporte de avance general) muestran, además del avance físico, el avance de la procura de materiales de cada base y el avance ponderado. La plataforma calcula la procura con las requisiciones (renglones de materiales comprados sobre pedidos); si hay compras hechas fuera de la plataforma, informa aquí el % de la base y el reporte lo indicará.</p>
+      <div id="pavBody"></div>
     </div>
     <div class="block"><h2>Instalar en el teléfono</h2><button class="btn block100" data-install>Ver instrucciones para Android y iPhone</button></div>
     <div class="block" id="usersBlock" hidden>
@@ -3276,7 +3282,7 @@ $('#lbDel').onclick = async () => {
 
 /* ---------- Mi cuenta y ajustes ---------- */
 function renderSettings(){
-  pintarPush(); pintarSim(); pintarDotMini();
+  pintarPush(); pintarSim(); pintarDotMini(); pintarProcAvAj();
   $('#anuBlock').hidden = !me.es_master; if (me.es_master) pintarAnuRoles();
   $('#usersBlock').hidden = !seesUsers(); if (seesUsers()) loadUsers();
   $('#histBlock').hidden = !me.es_master; $('#driveBlock').hidden = !me.es_master; $('#antesBlock').hidden = !canAntes();
@@ -3790,6 +3796,12 @@ async function buildWeeklyPdf(rows, ws, puesto, prog, opts){
   if (nGen) { need(8); font(9, 'bold'); color(C.dark); doc.text(pdfTxt(`Reportes de temas generales del proyecto: ${nGen}`), M + 2, y + 5); y += 7; }
   { font(7.5); color(C.grey); const nota = doc.splitTextToSize(pdfTxt('Avance total: el último avance reportado de cada base hasta el cierre de la semana.' + (puesto ? '' : ` El de la obra es el promedio de las 13 bases; las que todavía no reportan avance cuentan 0%.${conAv.length && conAv.length < 13 ? ` Promedio de las ${conAv.length} bases con avance reportado: ${pc(conAv.reduce((a, b) => a + avFin(b.n), 0) / conAv.length)}.` : ''}`)), CW);
     need(nota.length * 3.4 + 3); nota.forEach(l => { doc.text(l, M, y + 4); y += 3.4; }); y += 3; }
+  // ----- Procura de materiales y avance ponderado (v4.37.0) -----
+  const pa = await cargarProcAv();
+  if (pa) { const h = { M, CW, C, need, font, fill, color, draw, titulo: t => { need(16); fill(C.olive); doc.rect(M, y, CW, 8, 'F'); font(10.5, 'bold'); color(C.cream); doc.text(pdfTxt(t), M + 3, y + 5.5); y += 11; }, get y(){ return y; }, set y(v){ y = v; } };
+    if (!puesto) { const fo = bases.reduce((a, b) => a + (avFin(b.n) || 0), 0) / 13, po = procObra(pa);
+      need(26); y += 2; font(9.5, 'bold'); color(C.dark); doc.text(pdfTxt(`Obra: avance físico ${pc(fo)} · procura de materiales ${pc(po)} · avance ponderado ${pc(ponderar(fo, po, pa.peso))}`), M, y + 4); y += 8; }
+    pdfProcuraSeccion(doc, h, pa, bases.map(b => ({ n: b.n, nombre: b.nombre, fis: avFin(b.n) }))); }
 
   // ----- Antes de la intervención (solo cuando el PDF es de una base) -----
   if (puesto) {
@@ -3859,6 +3871,7 @@ async function buildWeeklyPdf(rows, ws, puesto, prog, opts){
       font(8.5); color(C.grey); doc.text(pdfTxt(ini != null ? `De ${pc(ini)} a ${pc(fin)}` : ''), M + 48, y + 16.5);
       fill([225,228,215]); doc.rect(M + 100, y + 9, CW - 106, 4, 'F'); fill(C.green); doc.rect(M + 100, y + 9, (CW - 106) * Math.min(100, fin) / 100, 4, 'F'); }
     const per = L.filter(r => r.personal != null), emp = [...new Set(L.map(r => r.empresa).filter(Boolean))];
+    if (pa && procPct(pa, b.n) != null) { font(8); color(C.green); doc.text(pdfTxt(`Procura ${pc(procPct(pa, b.n))} · Ponderado ${pc(ponderar(fin, procPct(pa, b.n), pa.peso))}`), M + 100, y + 6.5); }
     font(8); color(C.grey); doc.text(pdfTxt([`${new Set(L.map(r => r.fecha)).size} día${new Set(L.map(r => r.fecha)).size === 1 ? '' : 's'} con reporte`, per.length ? `personal promedio ${Math.round(per.reduce((a, r) => a + +r.personal, 0) / per.length)}` : '', emp.length ? emp.join(', ') : ''].filter(Boolean).join(' · ')).slice(0, 110), M + 100, y + 19);
     y += 30;
     // avance por fase: primera y última medición de la semana
@@ -4138,6 +4151,11 @@ async function buildAvancePdf(all, o){
     font(7.5); color(C.grey); const nota = doc.splitTextToSize(pdfTxt('Avance total: el último avance reportado de cada base a la fecha final. El de la obra es el promedio de las 13 bases; las que no han reportado avance cuentan 0%. Período: variación respecto al avance que tenía la base al inicio del período. Entre paréntesis, los días transcurridos desde el último reporte.'), CW);
     need(nota.length * 3.4 + 3); nota.forEach(l => { doc.text(l, M, y + 4); y += 3.4; }); y += 3;
   }
+  // ----- Procura de materiales y avance ponderado (v4.37.0) -----
+  const pa = await cargarProcAv();
+  if (pa) { const h = { M, CW, C, need, font, fill, color, draw, titulo: t => { need(16); fill(C.olive); doc.rect(M, y, CW, 8, 'F'); font(10.5, 'bold'); color(C.cream); doc.text(pdfTxt(t), M + 3, y + 5.5); y += 11; }, get y(){ return y; }, set y(v){ y = v; } };
+    if (!puesto) { const po = procObra(pa); need(26); font(9.5, 'bold'); color(C.dark); doc.text(pdfTxt(`Obra: avance físico ${pc(finObra || 0)} · procura de materiales ${pc(po)} · avance ponderado ${pc(ponderar(finObra, po, pa.peso))}`), M, y + 4); y += 8; }
+    pdfProcuraSeccion(doc, h, pa, bases.map(b => ({ n: b.n, nombre: b.nombre, fis: avFin(b.n) }))); }
 
   // ----- Una sección por base -----
   for (const b of bases) {
@@ -4147,6 +4165,7 @@ async function buildAvancePdf(all, o){
     const fin = avFin(b.n), ini = avIni(b.n), per = P.filter(r => r.personal != null), emp = [...new Set(P.map(r => r.empresa).filter(Boolean))];
     if (!puesto) cajaAvance('AVANCE TOTAL DE LA BASE', fin, ini, [`${P.length} reportes en ${new Set(P.map(r => r.fecha)).size} días`, per.length ? `personal promedio ${Math.round(per.reduce((a, r) => a + +r.personal, 0) / per.length)}` : '', emp.join(', ')].filter(Boolean).join(' · '));
     else if (emp.length || per.length) { font(8.5); color(C.grey); doc.splitTextToSize(pdfTxt([emp.length ? 'Empresas: ' + emp.join(', ') : '', per.length ? `Personal promedio: ${Math.round(per.reduce((a, r) => a + +r.personal, 0) / per.length)}` : '', `Días con reporte: ${new Set(P.map(r => r.fecha)).size}`].filter(Boolean).join(' · ')), CW).forEach(l => { need(5); doc.text(l, M, y + 3); y += 4.3; }); y += 3; }
+    if (!puesto && pa && procPct(pa, b.n) != null) { const pb = procBase(pa, b.n); need(8); font(9, 'bold'); color(C.green); doc.text(pdfTxt(`Procura de materiales ${pc(procPct(pa, b.n))} (${procFuente(pb)}) · Avance ponderado ${pc(ponderar(fin, procPct(pa, b.n), pa.peso))}`), M, y + 1); y += 6; }
     if (!puesto) { titulo('EVOLUCIÓN DEL AVANCE'); grafico([{ t: 'Base', c: C.green, v: cortes.map(c => avAl(b.n, c)) }, { t: 'Promedio de la obra', c: C.orange, v: cortes.map(c => obraAl(c)) }], 36); }
     // Avance por fase: última medición vs. la que había al inicio del período
     const conF = L.filter(r => r.fecha <= hasta && (r.fases || []).some(f => f.pct != null));
@@ -5080,8 +5099,12 @@ $('#prXlsx').onclick = async () => {
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.36.0';
+const APP_VERSION = '4.37.0';
 const NOVEDADES = [
+  { v: '4.37.0', fecha: '2026-10-22', titulo: 'Procura de materiales en los reportes', items: [
+    { r: ['gerente_general','compras','master'], t: 'Los reportes ahora incluyen la procura de materiales de cada base y el avance ponderado (avance físico + materiales comprados, según su peso en el presupuesto). En Ajustes → Procura de materiales en los reportes defines el peso de los materiales (40% por defecto) y, si hubo compras fuera de la plataforma, el % comprado de cada base; el reporte indica quién lo informó y cuándo.' },
+    { r: ['gerente_operaciones','costos','reporte_general','comandante_base','contratista'], t: 'Las estadísticas, el PDF semanal y el reporte de avance general muestran ahora la procura de materiales de cada base (materiales comprados sobre pedidos) y el avance ponderado, además del avance físico.' }
+  ] },
   { v: '4.36.0', fecha: '2026-10-21', titulo: 'Listas generales de materiales', items: [
     { r: ['contratista','costos','gerente_operaciones','gerente_general','logistica','master'], t: 'La app ahora lee las "Lista general de materiales" por capítulos que traen la columna Nº vacía (como la de La Primavera, de 12 páginas): toma cada renglón con su unidad y cantidad, agrupa los materiales repetidos en varios capítulos sumando sus cantidades y detecta el puesto, el N° (M.O.-…), la fecha y quién la solicitó.' },
     { r: ['contratista','costos','gerente_operaciones','gerente_general','logistica','compras','master'], t: 'Una requisición ahora admite hasta 400 materiales (antes 150). El Excel sale con todas las hojas del formato que hagan falta, 13 materiales por hoja.' }
@@ -5483,12 +5506,23 @@ async function loadEst(){
   const soloBase = me.rol === 'comandante_base' && !me.es_master;
   try {
     if (soloBase || est.vista === 'base') {
-      const d = await rpc('rq_estadisticas_base', { p_puesto: soloBase ? me.base : est.puesto, p_desde: desde, p_hasta: hasta });
-      est.datos = d; pintarBase(d, soloBase);
-    } else { const d = await rpc('rq_estadisticas', { p_desde: desde, p_hasta: hasta }); est.datos = d; pintarObra(d); }
+      const [d, pa] = await Promise.all([rpc('rq_estadisticas_base', { p_puesto: soloBase ? me.base : est.puesto, p_desde: desde, p_hasta: hasta }), cargarProcAv()]);
+      est.datos = d; pintarBase(d, soloBase, pa);
+    } else { const [d, pa] = await Promise.all([rpc('rq_estadisticas', { p_desde: desde, p_hasta: hasta }), cargarProcAv()]); est.datos = d; pintarObra(d, pa); }
   } catch (e) { box.innerHTML = `<p class="err">${esc(e.message)}</p>`; }
 }
-function pintarObra(d){
+// v4.37.0: tarjeta de procura de materiales y avance ponderado
+function procCardHTML(pa, filas, obra){
+  if (!pa) return '';
+  const pp = v => v == null ? '—' : pct(v);
+  return `<section class="estcard"><div class="esth"><h2>Procura y avance ponderado</h2><span>Materiales ${pa.peso}% del presupuesto</span></div>
+    ${obra ? `<div class="estkpis tres" style="margin:0 0 8px"><div class="estk2"><b>${pp(obra.fis)}</b><span>avance físico (13 bases)</span></div><div class="estk2"><b>${pp(obra.proc)}</b><span>procura de materiales</span></div><div class="estk2"><b style="color:#2E5E4F">${pp(obra.pond)}</b><span>avance ponderado</span></div></div>` : ''}
+    ${filas.map(f => { const b = procBase(pa, f.n), pr = procPct(pa, f.n), po = ponderar(f.fis, pr, pa.peso);
+      return `<div class="estfase c4"><span>${esc(f.nombre.replace('B.P.F ', ''))}<small style="display:block;color:#8A938D;font-size:11.5px">${esc(procFuente(b))}</small></span><span class="estbar sm"><i style="width:${Math.min(100, pr || 0)}%;background:#345C8C"></i></span><b>${pp(pr)}</b><em style="color:#2E5E4F;font-style:normal;font-weight:700">${pp(po)}</em></div>`; }).join('')}
+    <div class="estley"><span><i style="background:#345C8C"></i>Procura de materiales</span><span><i style="background:#2E5E4F"></i>Avance ponderado</span></div>
+    <p class="hint" style="margin:6px 0 0">${esc(procNotaTxt(pa))}</p></section>`;
+}
+function pintarObra(d, pa){
   const box = $('#estBox');
   const bases = (d.bases || []).slice().sort((a, b) => (b.avance ?? -1) - (a.avance ?? -1));
   const conDatos = bases.filter(b => b.avance != null).length;
@@ -5512,6 +5546,8 @@ function pintarObra(d){
       <div class="estk2"><b>${d.archivos}</b><span>fotos, videos y PDF</span></div>
       <div class="estk2"><b>${d.personal ?? '—'}</b><span>personas en obra por reporte (prom.)</span></div>
     </div>
+    ${(() => { if (!pa) return ''; const fis = r1((d.bases || []).reduce((a, b) => a + (b.avance != null ? +b.avance : 0), 0) / 13), proc = procObra(pa);
+      return procCardHTML(pa, (d.bases || []).slice().sort((a, b) => a.n - b.n).map(b => ({ n: b.n, nombre: b.nombre, fis: b.avance })), { fis, proc, pond: ponderar(fis, proc, pa.peso) }); })()}
     <section class="estcard"><div class="esth"><h2>Avance por base</h2><span>Toca una base</span></div>
       ${bases.map(b => `<button type="button" class="estbase" data-eb="${b.n}"><span class="ebn"><b>${esc(b.nombre.replace('B.P.F ', ''))}</b><em style="color:${colAv(b.avance)}">${b.avance == null ? 'Sin reportes' : pct(b.avance)}</em></span><span class="estbar sm"><i style="width:${Math.min(100, b.avance || 0)}%;background:${colAv(b.avance)}"></i></span></button>`).join('')}
     </section>
@@ -5530,9 +5566,9 @@ function pintarObra(d){
     ${d.generales ? `<p class="hint">Además hay ${d.generales} reporte${d.generales === 1 ? '' : 's'} de temas generales del proyecto ${perTxt()} (no cuentan en el avance por base).</p>` : ''}
     <button class="btn primary block100" id="estPdf">Descargar estadísticas (PDF)</button>`;
   $$('#estBox [data-eb]').forEach(b => b.onclick = () => { est.vista = 'base'; est.puesto = +b.dataset.eb; loadEst(); window.scrollTo(0, 0); });
-  $('#estPdf').onclick = () => pdfEstadisticas(d);
+  $('#estPdf').onclick = () => pdfEstadisticas(d, pa);
 }
-function pintarBase(d, soloBase){
+function pintarBase(d, soloBase, pa){
   const box = $('#estBox'); const av = d.avance;
   const delta = av != null && d.avance_ini != null ? Math.round((av - d.avance_ini) * 10) / 10 : null;
   const C = 2 * Math.PI * 48, dash = (Math.min(100, av || 0) / 100) * C;
@@ -5555,6 +5591,7 @@ function pintarBase(d, soloBase){
       <div class="estk2"><b>${d.archivos}</b><span>fotos, videos y PDF</span></div>
       <div class="estk2"><b>${d.personal ?? '—'}</b><span>personas (prom.)</span></div>
     </div>
+    ${pa && procBase(pa, d.puesto) ? procCardHTML(pa, [{ n: d.puesto, nombre: d.nombre, fis: av }], null) : ''}
     <section class="estcard"><div class="esth"><h2>Avance por fase</h2><span>vs. hace 7 días</span></div>
       ${(d.fases || []).map(f => { const dl = f.pct != null && f.antes != null ? Math.round((f.pct - f.antes) * 10) / 10 : null;
         return `<div class="estfase c4"><span>${esc(f.fase)}</span><span class="estbar sm"><i style="width:${Math.min(100, f.pct || 0)}%;background:#4B5320"></i></span><b>${pct(f.pct)}</b><em style="color:${dl ? '#2E5E4F' : '#8A938D'}">${dl ? (dl > 0 ? '+' : '') + dl : '—'}</em></div>`; }).join('') || '<p class="hint">Sin avance por fases todavía.</p>'}</section>
@@ -5572,7 +5609,7 @@ function pintarBase(d, soloBase){
     $('#estVerRep').onclick = () => { setMod('rep', 'rpf'); archPuesto = d.puesto; loadArchive(); };
   }
 }
-async function pdfEstadisticas(d){
+async function pdfEstadisticas(d, pa){
   if (!window.jspdf) return toast('No se pudo cargar el generador de PDF');
   const { jsPDF } = window.jspdf; const doc = new jsPDF({ unit:'mm', format:'a4' });
   const W = 210, M = 14; let y = 0;
@@ -5587,6 +5624,18 @@ async function pdfEstadisticas(d){
   bases.forEach(b => { doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text(pdfTxt(b.nombre), M, y + 4); doc.setFillColor(238,240,234); doc.rect(M + 58, y + 1, 90, 4, 'F');
     const c = b.avance == null ? [179,38,30] : b.avance >= 40 ? [46,94,79] : b.avance >= 20 ? [75,122,106] : [217,108,36]; doc.setFillColor(...c); doc.rect(M + 58, y + 1, 90 * Math.min(100, b.avance || 0) / 100, 4, 'F');
     doc.setFont('helvetica','bold'); doc.text(pdfTxt(b.avance == null ? 'Sin reportes' : pct(b.avance)), M + 152, y + 4.5); doc.setFont('helvetica','normal'); doc.text(pdfTxt(`${b.reportes} rep.`), M + 172, y + 4.5); y += 6.5; });
+  if (pa) { // v4.37.0
+    const fis = r1((d.bases || []).reduce((a, b) => a + (b.avance != null ? +b.avance : 0), 0) / 13), proc = procObra(pa), pond = ponderar(fis, proc, pa.peso);
+    if (y > 200) { doc.addPage(); y = 20; }
+    y += 4; doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(27,34,32); doc.text('Procura de materiales y avance ponderado', M, y); y += 4;
+    doc.setFontSize(9.5); doc.text(pdfTxt(`Obra: avance físico ${pct(fis)} (13 bases) · procura ${pct(proc)} · avance ponderado ${pct(pond)}`), M, y + 4); y += 8;
+    doc.setFontSize(8); doc.setTextColor(110,110,100); ['Base','Físico','Procura','Ponderado'].forEach((t, i) => doc.text(t, M + [0, 70, 100, 130][i], y + 3)); y += 5; doc.setTextColor(27,34,32);
+    (d.bases || []).slice().sort((a, b) => a.n - b.n).forEach(b => { if (y > 282) { doc.addPage(); y = 20; } const pr = procPct(pa, b.n), po = ponderar(b.avance, pr, pa.peso);
+      doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text(pdfTxt(b.nombre), M, y + 4); doc.text(pdfTxt(b.avance == null ? '—' : pct(b.avance)), M + 70, y + 4); doc.text(pdfTxt(pr == null ? '—' : pct(pr) + (procBase(pa, b.n).fuente === 'manual' ? ' *' : '')), M + 100, y + 4);
+      doc.setFont('helvetica','bold'); doc.text(pdfTxt(po == null ? '—' : pct(po)), M + 130, y + 4); y += 6; });
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(110,110,100); const nt = doc.splitTextToSize(pdfTxt(procNotaTxt(pa) + ((pa.bases || []).some(b => b.fuente === 'manual') ? ' (*) % informado por la gerencia.' : '')), 182); nt.forEach(l => { doc.text(l, M, y + 3); y += 3.4; }); doc.setTextColor(27,34,32); y += 2;
+    if (y > 220) { doc.addPage(); y = 20; }
+  }
   y += 4; doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.text('Avance promedio por fase', M, y); y += 5;
   (d.fases || []).forEach(f => { doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text(pdfTxt(f.fase), M, y + 4); doc.setFillColor(238,240,234); doc.rect(M + 58, y + 1, 90, 4, 'F'); doc.setFillColor(75,83,32); doc.rect(M + 58, y + 1, 90 * Math.min(100, f.promedio || 0) / 100, 4, 'F'); doc.setFont('helvetica','bold'); doc.text(pdfTxt(pct(f.promedio)), M + 152, y + 4.5); y += 6.5; });
   const per = (d.personas || []).filter(p => p.reportes > 0);
@@ -5594,6 +5643,74 @@ async function pdfEstadisticas(d){
     per.forEach(p => { if (y > 280) { doc.addPage(); y = 20; } doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text(pdfTxt(`${p.nombre}${p.cargo ? ' (' + p.cargo + ')' : ''}`), M, y + 4); doc.text(pdfTxt(`${p.reportes} reportes`), M + 120, y + 4); doc.text(pdfTxt(p.dias_sin === 0 ? 'reportó hoy' : `${p.dias_sin} días sin reportar`), M + 150, y + 4); y += 6; }); }
   const blob = doc.output('blob');
   const r = await deliver({ name: `Estadisticas_avance_${d.hasta}.pdf`, blob }); if (r === 'declined') toast('Descarga cancelada');
+}
+
+/* ---------- Procura de materiales en los reportes (v4.37.0) ----------
+   Procura de una base = renglones de materiales (MAT) ya comprados / renglones de materiales pedidos (o el % que informe la gerencia).
+   Avance ponderado = avance físico × (100 − peso) % + procura × peso %, con el peso de los materiales en el presupuesto. */
+let procAvCache = null;
+const canProcAv = () => me && (me.es_master || ['gerente_general','compras'].includes(me.rol));
+async function cargarProcAv(force){
+  if (procAvCache && !force && Date.now() - procAvCache.t < 60000) return procAvCache.d;
+  try { const d = await rpc('rq_procura_avance'); procAvCache = { t: Date.now(), d }; return d; } catch (e) { return null; }
+}
+const r1 = v => Math.round(v * 10) / 10;
+const procBase = (pa, n) => pa ? (pa.bases || []).find(b => b.n === +n) || null : null;
+const procPct = (pa, n) => { const b = procBase(pa, n); return b && b.pct != null ? +b.pct : null; };
+// La obra: promedio de las 13 bases (la que no tiene materiales pedidos cuenta 0%, igual que el avance físico).
+const procObra = pa => pa && (pa.bases || []).length === 13 ? r1(pa.bases.reduce((a, b) => a + (b.pct != null ? +b.pct : 0), 0) / 13) : null;
+const ponderar = (fis, proc, peso) => fis == null && proc == null ? null : r1(((fis || 0) * (100 - peso) + (proc || 0) * peso) / 100);
+const procFuente = b => !b || b.pct == null ? 'sin materiales pedidos' : b.fuente === 'manual' ? `informado por ${b.por || 'la gerencia'}${b.actualizado ? ' el ' + fmt(isoLocal(b.actualizado)) : ''}` : `${b.comprados} de ${b.renglones} renglones comprados`;
+const procNotaTxt = pa => `Avance ponderado = avance físico × ${100 - pa.peso}% + procura de materiales × ${pa.peso}% (peso de los materiales en el presupuesto de obra). Procura: renglones de materiales ya comprados (pagados, despachados o en obra) sobre los pedidos en las requisiciones de cada base${(pa.bases || []).some(b => b.fuente === 'manual') ? '; en algunas bases el % lo informó la gerencia' : ''}. La obra es el promedio de las 13 bases.`;
+// Sección del PDF (semanal y avance general): tabla por base con físico, procura y ponderado.
+function pdfProcuraSeccion(doc, h, pa, filas){
+  // filas: [{ n, nombre, fis }]
+  const { M, CW, C } = h, pc = v => v == null ? '—' : (Math.round(v * 10) / 10).toString().replace('.', ',') + '%';
+  h.titulo('PROCURA DE MATERIALES Y AVANCE PONDERADO');
+  const cols = [['Base', 52], ['Avance físico', 30], ['Procura', 30], ['Avance ponderado', 70]];
+  const th = () => { h.fill(C.olive2); doc.rect(M, h.y, CW, 7, 'F'); h.font(8.5, 'bold'); h.color(C.cream); let x = M; cols.forEach(([t, w]) => { doc.text(pdfTxt(t), x + 2, h.y + 4.8); x += w; }); h.y += 7; };
+  th();
+  filas.forEach((f, k) => { const pr = procPct(pa, f.n), po = ponderar(f.fis, pr, pa.peso);
+    h.need(6.6); if (h.y === M) th();
+    if (k % 2) { h.fill(C.pale); doc.rect(M, h.y, CW, 6.6, 'F'); }
+    let x = M; h.font(8.5, 'bold'); h.color(C.dark); doc.text(pdfTxt(f.nombre.replace('B.P.F ', '')), x + 2, h.y + 4.5); x += cols[0][1];
+    h.font(8.5); doc.text(pc(f.fis), x + 2, h.y + 4.5); x += cols[1][1];
+    doc.text(pc(pr) + (procBase(pa, f.n) && procBase(pa, f.n).fuente === 'manual' ? ' *' : ''), x + 2, h.y + 4.5); x += cols[2][1];
+    if (po != null) { h.fill(C.bar || [225,228,215]); doc.rect(x + 2, h.y + 2, 40, 2.6, 'F'); h.fill(C.green); doc.rect(x + 2, h.y + 2, 40 * Math.min(100, po) / 100, 2.6, 'F'); h.font(8.5, 'bold'); doc.text(pc(po), x + 45, h.y + 4.5); }
+    else doc.text('—', x + 2, h.y + 4.5);
+    h.draw(C.line); doc.line(M, h.y + 6.6, M + CW, h.y + 6.6); h.y += 6.6; });
+  h.font(7.5); h.color(C.grey);
+  const nota = doc.splitTextToSize(pdfTxt(procNotaTxt(pa) + ((pa.bases || []).some(b => b.fuente === 'manual') ? ' (*) % informado por la gerencia.' : '')), CW);
+  h.need(nota.length * 3.4 + 3); nota.forEach(l => { doc.text(l, M, h.y + 4); h.y += 3.4; }); h.y += 4;
+}
+
+/* Ajustes: peso de los materiales y % de procura informados a mano */
+let pavDraft = null;
+async function pintarProcAvAj(){
+  $('#pavBlock').hidden = !canProcAv(); if (!canProcAv()) return;
+  const box = $('#pavBody'); box.innerHTML = '<p class="hint">Cargando…</p>';
+  const pa = await cargarProcAv(true); if (!pa) { box.innerHTML = '<p class="err">No se pudo cargar. Corre de nuevo supabase-plataforma.sql (v4.37).</p>'; return; }
+  pavDraft = { peso: pa.peso, bases: pa.bases.map(b => ({ n: b.n, calc: b.calc, renglones: b.renglones, comprados: b.comprados, manual: b.manual, nota: b.nota || '' })) };
+  box.innerHTML = `<label class="f"><span>Peso de los materiales en el presupuesto (%)</span><input class="in" id="pavPeso" inputmode="decimal" value="${esc(String(pa.peso).replace('.', ','))}"></label>
+    <p class="hint" style="margin:-4px 0 8px">Avance ponderado = físico × (100 − peso) + procura × peso.</p>
+    <div class="addrow"><input class="in" id="pavTodas" inputmode="decimal" placeholder="% para todas las bases"><button class="btn" id="pavTodasBtn" type="button">Aplicar a todas</button></div>
+    <div class="pavt"><div class="pavh"><span>Base</span><span>Plataforma</span><span>Informado</span></div>
+    ${pavDraft.bases.map(b => `<div class="pavr"><span><b>${b.n}. ${esc(baseName(b.n).replace('B.P.F ', ''))}</b><small>${b.renglones ? `${b.comprados}/${b.renglones} renglones` : 'sin materiales pedidos'}</small></span>
+      <span>${b.calc != null ? String(b.calc).replace('.', ',') + '%' : '—'}</span>
+      <input class="in" data-pavn="${b.n}" inputmode="decimal" placeholder="—" value="${b.manual != null ? esc(String(b.manual).replace('.', ',')) : ''}"></div>`).join('')}</div>
+    <label class="f" style="margin-top:8px"><span>Nota de soporte (opcional, se guarda con los % informados)</span><input class="in" id="pavNota" placeholder="Ej.: según control de compras al 22-10-2026" value="${esc((pavDraft.bases.find(b => b.nota) || {}).nota || '')}"></label>
+    <p class="err" id="pavErr" hidden></p>
+    <button class="btn dark block100" id="pavGuardar">Guardar</button>`;
+  $('#pavTodasBtn').onclick = () => { const v = $('#pavTodas').value.trim(); $$('#pavBody [data-pavn]').forEach(i => i.value = v); };
+  $('#pavGuardar').onclick = async () => {
+    const num = s => { const t = String(s || '').trim().replace(',', '.'); return t === '' ? null : +t; };
+    const peso = num($('#pavPeso').value), err = m => { $('#pavErr').textContent = m; $('#pavErr').hidden = false; };
+    if (peso == null || isNaN(peso) || peso < 0 || peso > 90) return err('El peso de los materiales debe estar entre 0 y 90%.');
+    const man = []; for (const i of $$('#pavBody [data-pavn]')) { const v = num(i.value); if (v != null && (isNaN(v) || v < 0 || v > 100)) return err('Los % de procura van de 0 a 100.'); man.push({ n: +i.dataset.pavn, pct: v, nota: $('#pavNota').value.trim() }); }
+    const b = $('#pavGuardar'); b.disabled = true;
+    try { const d = await rpc('rq_procura_avance_guardar', { p_peso: peso, p_manual: man }); procAvCache = { t: Date.now(), d }; toast('Guardado. Los reportes ya usan estos valores'); pintarProcAvAj(); }
+    catch (e) { err(e.message); } finally { b.disabled = false; }
+  };
 }
 
 /* ---------- Logística: combustible y traslados ---------- */
