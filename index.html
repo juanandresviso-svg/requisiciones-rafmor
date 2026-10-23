@@ -229,6 +229,7 @@ nav.tabs button.gear .cnt{position:absolute;top:0;right:-4px;margin:0}
 .media .mi .x{position:absolute;top:4px;right:4px;width:30px;height:30px;border-radius:15px;border:0;background:rgba(0,0,0,.65);color:#fff;font-size:18px;cursor:pointer}
 .media .mi .vb{position:absolute;left:4px;bottom:4px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.65);padding:2px 6px;border-radius:5px}
 .pavt{border:1.5px solid var(--rule);border-radius:10px;overflow:hidden;margin-top:8px}.pavh,.pavr{display:grid;grid-template-columns:1fr 72px 84px;gap:8px;align-items:center;padding:6px 10px}.pavh{background:var(--sunk);font-size:12.5px;font-weight:700;color:var(--muted)}.pavr{border-top:1px solid var(--rule)}.pavr small{display:block;color:var(--muted);font-size:12px}.pavr .in{min-height:40px;padding:4px 8px;text-align:right}.pavr>span:nth-child(2){text-align:right;font-weight:600}
+.folders button span.prcf{color:#345C8C;font-weight:600}.folders button span.prcf strong{color:var(--green);font-weight:700}
 .folders{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
 .folders button{text-align:left;padding:10px 12px;border:1.5px solid var(--rule);border-radius:10px;background:var(--sunk);cursor:pointer;min-height:74px}
 .folders button b{display:block;font:700 16px/1.1 "Barlow Condensed",sans-serif}
@@ -3603,7 +3604,10 @@ async function loadArchive(){
   $('#archList').innerHTML = ''; $('#archEmpty').hidden = true;
   try {
     if (archPuesto === null) {
-      const [res, antesN, memL] = await Promise.all([rpc('rq_reportes_resumen', { p_desde: desde, p_hasta: hasta }), rpc('rq_antes_resumen').catch(() => ({})), canMemorias() ? rpc('rq_memorias_listar').catch(() => null) : null]);
+      const [res, antesN, memL, pa] = await Promise.all([rpc('rq_reportes_resumen', { p_desde: desde, p_hasta: hasta }), rpc('rq_antes_resumen').catch(() => ({})), canMemorias() ? rpc('rq_memorias_listar').catch(() => null) : null, cargarProcAv()]);
+      // v4.39.0: compra de materiales y avance ponderado en cada carpeta
+      const procTxt = (n, av) => { const pr = procPct(pa, n); if (!pa || pr == null) return ''; const po = av != null ? ponderar(av, pr, pa.peso) : null;
+        return `<span class="prcf">Compra de materiales ${pct(pr)}${po != null ? `<br><strong>Avance ponderado ${pct(po)}</strong>` : ''}</span>`; };
       if (memL) memLista = memL;
       const memDe = n => (memL || []).filter(m => m.puesto === n);
       const memTxt = n => { const L = memDe(n); if (!L.length) return ''; const f = L.find(m => m.estado === 'final'); return `<span class="memn">Memoria: ${f ? 'final' : L[0].avance + '% (borrador)'}${L.length > 1 ? ` · ${L.length}` : ''}</span>`; };
@@ -3611,7 +3615,7 @@ async function loadArchive(){
       const by = Object.fromEntries((res || []).map(x => [x.puesto, x]));
       const xg = (res || []).find(x => x.puesto == null);
       const genCard = (xg || esGerente()) ? `<button type="button" data-pu="0" class="gen ${xg ? 'has' : ''}"><b>Proyecto general</b><span>${xg ? `${xg.reportes} reporte${xg.reportes === 1 ? '' : 's'} · ${xg.fotos} foto${xg.fotos === 1 ? '' : 's'} · ${xg.videos} video${xg.videos === 1 ? '' : 's'}` : 'Sin reportes este mes'}</span>${xg ? `<span>Último: ${fmt(xg.ultima)}</span>` : ''}</button>` : '';
-      $('#archFolders').innerHTML = memCard + genCard + CECOS.bases.map(b => { const x = by[b.n]; return `<button type="button" data-pu="${b.n}" class="${x ? 'has' : ''}"><b>${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</b><span>${x ? `${x.reportes} reporte${x.reportes === 1 ? '' : 's'} · ${x.fotos} foto${x.fotos === 1 ? '' : 's'} · ${x.videos} video${x.videos === 1 ? '' : 's'}` : 'Sin reportes este mes'}</span>${antesN && antesN[b.n] ? `<span class="antn">Antes: ${antesN[b.n]} foto${antesN[b.n] === 1 ? '' : 's'}</span>` : ''}${x ? `<span>Último: ${fmt(x.ultima)}${x.avance != null ? ' · Avance ' + x.avance + '%' : ''}</span>${x.avance != null ? `<div class="avbar"><i style="width:${Math.min(100, x.avance)}%"></i></div>` : ''}` : ''}${memTxt(b.n)}</button>`; }).join('');
+      $('#archFolders').innerHTML = memCard + genCard + CECOS.bases.map(b => { const x = by[b.n]; return `<button type="button" data-pu="${b.n}" class="${x ? 'has' : ''}"><b>${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</b><span>${x ? `${x.reportes} reporte${x.reportes === 1 ? '' : 's'} · ${x.fotos} foto${x.fotos === 1 ? '' : 's'} · ${x.videos} video${x.videos === 1 ? '' : 's'}` : 'Sin reportes este mes'}</span>${antesN && antesN[b.n] ? `<span class="antn">Antes: ${antesN[b.n]} foto${antesN[b.n] === 1 ? '' : 's'}</span>` : ''}${x ? `<span>Último: ${fmt(x.ultima)}${x.avance != null ? ' · Avance ' + x.avance + '%' : ''}</span>${x.avance != null ? `<div class="avbar"><i style="width:${Math.min(100, x.avance)}%"></i></div>` : ''}` : ''}${procTxt(b.n, x ? x.avance : null)}${memTxt(b.n)}</button>`; }).join('');
       archRows = []; $('#a-autor').innerHTML = '<option value="">Todos</option>';
       return;
     }
@@ -3789,13 +3793,21 @@ async function buildWeeklyPdf(rows, ws, puesto, prog, opts){
   const conAv = bases.filter(b => avFin(b.n) != null), obra = conAv.length ? conAv.reduce((a, b) => a + avFin(b.n), 0) / (puesto ? 1 : 13) : null;
   const obraIni = conAv.length ? conAv.reduce((a, b) => a + (avIni(b.n) || 0), 0) / (puesto ? 1 : 13) : null;
   const tot = { rep: rows.length, fotos: 0, vids: 0 }; rows.forEach(r => (r.archivos || []).forEach(a => a.tipo === 'foto' ? tot.fotos++ : a.tipo === 'video' ? tot.vids++ : 0));
-  // bloque grande del avance
+  // bloque grande del avance (v4.39.0: si hay datos de procura, la cifra grande es el avance ponderado)
+  const pa = await cargarProcAv(), hP = { M, CW, C, need, font, fill, color, draw, titulo: t => { need(16); fill(C.olive); doc.rect(M, y, CW, 8, 'F'); font(10.5, 'bold'); color(C.cream); doc.text(pdfTxt(t), M + 3, y + 5.5); y += 11; }, get y(){ return y; }, set y(v){ y = v; } };
+  const procCover = pa ? (puesto ? procPct(pa, puesto) : procObra(pa)) : null;
+  if (pa && procCover != null && obra != null) {
+    pdfCajaPond(doc, hP, { lbl: puesto ? 'AVANCE PONDERADO DE LA BASE' : 'AVANCE PONDERADO DE LA OBRA (13 BASES)', fis: obra, proc: procCover, peso: pa.peso,
+      varTxt: obraIni != null ? `${pts(obra - obraIni)} esta semana` : '', sub: `${tot.rep} reportes · ${new Set(rows.filter(r => r.puesto != null).map(r => r.puesto)).size} bases con reporte · ${tot.fotos} fotos` });
+    y -= 32;
+  } else {
   fill(C.pale); draw(C.line); doc.roundedRect(M, y, CW, 30, 2, 2, 'FD');
   font(9); color(C.grey); doc.text(pdfTxt(puesto ? 'AVANCE TOTAL DE LA BASE' : 'AVANCE TOTAL DE LA OBRA (13 BASES)'), M + 5, y + 7);
   font(30, 'bold'); color(C.olive); doc.text(obra != null ? pc(obra) : '—', M + 5, y + 21);
   if (obra != null) { font(10, 'bold'); color(obra - obraIni >= 0 ? C.green : C.orange); doc.text(pdfTxt(`${pts(obra - obraIni)} esta semana`), M + 52, y + 15); font(8.5); color(C.grey); doc.text(pdfTxt(`Al inicio de la semana: ${pc(obraIni)}`), M + 52, y + 20.5);
     fill([225,228,215]); doc.rect(M + 5, y + 24.5, CW - 10, 2.6, 'F'); fill(C.green); doc.rect(M + 5, y + 24.5, (CW - 10) * Math.min(100, obra) / 100, 2.6, 'F'); }
   const kx = M + 118; [['Reportes', tot.rep], ['Bases con reporte', new Set(rows.filter(r => r.puesto != null).map(r => r.puesto)).size], ['Fotos', tot.fotos]].forEach(([l, v], i) => { font(13, 'bold'); color(C.dark); doc.text(String(v), kx + i * 22, y + 13); font(7.5); color(C.grey); doc.splitTextToSize(pdfTxt(l), 20).forEach((t, k) => doc.text(t, kx + i * 22, y + 17.5 + k * 3)); });
+  }
   y += 37;
   font(11, 'bold'); color(C.olive); doc.text('AVANCE POR BASE', M, y); y += 3;
   const cols = [['Base', 52], ['Avance total', 54], ['Variación semana', 30], ['Reportes', 20], ['Fotos', 26]];
@@ -3819,7 +3831,6 @@ async function buildWeeklyPdf(rows, ws, puesto, prog, opts){
   { font(7.5); color(C.grey); const nota = doc.splitTextToSize(pdfTxt('Avance total: el último avance reportado de cada base hasta el cierre de la semana.' + (puesto ? '' : ` El de la obra es el promedio de las 13 bases; las que todavía no reportan avance cuentan 0%.${conAv.length && conAv.length < 13 ? ` Promedio de las ${conAv.length} bases con avance reportado: ${pc(conAv.reduce((a, b) => a + avFin(b.n), 0) / conAv.length)}.` : ''}`)), CW);
     need(nota.length * 3.4 + 3); nota.forEach(l => { doc.text(l, M, y + 4); y += 3.4; }); y += 3; }
   // ----- Procura de materiales y avance ponderado (v4.37.0) -----
-  const pa = await cargarProcAv();
   if (pa) { const h = { M, CW, C, need, font, fill, color, draw, titulo: t => { need(16); fill(C.olive); doc.rect(M, y, CW, 8, 'F'); font(10.5, 'bold'); color(C.cream); doc.text(pdfTxt(t), M + 3, y + 5.5); y += 11; }, get y(){ return y; }, set y(v){ y = v; } };
     if (!puesto) { const fo = bases.reduce((a, b) => a + (avFin(b.n) || 0), 0) / 13, po = procObra(pa);
       need(26); y += 2; font(9.5, 'bold'); color(C.dark); doc.text(pdfTxt(`Obra: avance físico ${pc(fo)} · procura de materiales ${pc(po)} · avance ponderado ${pc(ponderar(fo, po, pa.peso))}`), M, y + 4); y += 8; }
@@ -3885,7 +3896,12 @@ async function buildWeeklyPdf(rows, ws, puesto, prog, opts){
     const L = repDe(b.n); if (!L.length) continue;
     newPage(); bandera(b.nombre, `${L.length} reporte${L.length === 1 ? '' : 's'} · ${weekLabel(ws).replace('Semana del ', '')}`);
     const fin = avFin(b.n), ini = avIni(b.n);
-    // avance total
+    // avance total (v4.39.0: ponderado si hay procura de la base)
+    const procB = pa ? procPct(pa, b.n) : null;
+    if (procB != null && fin != null) { const per0 = L.filter(r => r.personal != null), emp0 = [...new Set(L.map(r => r.empresa).filter(Boolean))];
+      pdfCajaPond(doc, hP, { lbl: 'AVANCE PONDERADO DE LA BASE', fis: fin, proc: procB, peso: pa.peso, varTxt: ini != null ? `${pts(fin - ini)} esta semana` : 'primer avance reportado',
+        sub: [`${new Set(L.map(r => r.fecha)).size} día${new Set(L.map(r => r.fecha)).size === 1 ? '' : 's'} con reporte`, per0.length ? `personal promedio ${Math.round(per0.reduce((a, r) => a + +r.personal, 0) / per0.length)}` : '', emp0.join(', ')].filter(Boolean).join(' · ') });
+      y -= 33; } else {
     fill(C.pale); draw(C.line); doc.roundedRect(M, y, CW, 24, 2, 2, 'FD');
     font(8.5); color(C.grey); doc.text('AVANCE TOTAL DE LA BASE', M + 5, y + 6.5);
     font(26, 'bold'); color(C.olive); doc.text(fin != null ? pc(fin) : '—', M + 5, y + 18);
@@ -3893,8 +3909,8 @@ async function buildWeeklyPdf(rows, ws, puesto, prog, opts){
       font(8.5); color(C.grey); doc.text(pdfTxt(ini != null ? `De ${pc(ini)} a ${pc(fin)}` : ''), M + 48, y + 16.5);
       fill([225,228,215]); doc.rect(M + 100, y + 9, CW - 106, 4, 'F'); fill(C.green); doc.rect(M + 100, y + 9, (CW - 106) * Math.min(100, fin) / 100, 4, 'F'); }
     const per = L.filter(r => r.personal != null), emp = [...new Set(L.map(r => r.empresa).filter(Boolean))];
-    if (pa && procPct(pa, b.n) != null) { font(8); color(C.green); doc.text(pdfTxt(`Procura ${pc(procPct(pa, b.n))} · Ponderado ${pc(ponderar(fin, procPct(pa, b.n), pa.peso))}`), M + 100, y + 6.5); }
     font(8); color(C.grey); doc.text(pdfTxt([`${new Set(L.map(r => r.fecha)).size} día${new Set(L.map(r => r.fecha)).size === 1 ? '' : 's'} con reporte`, per.length ? `personal promedio ${Math.round(per.reduce((a, r) => a + +r.personal, 0) / per.length)}` : '', emp.length ? emp.join(', ') : ''].filter(Boolean).join(' · ')).slice(0, 110), M + 100, y + 19);
+    }
     y += 30;
     // avance por fase: primera y última medición de la semana
     const conF = L.filter(r => (r.fases || []).some(f => f.pct != null));
@@ -4110,7 +4126,13 @@ async function buildAvancePdf(all, o){
     if (series.length > 1) { let lx = x0; series.forEach(s => { fill(s.c); doc.rect(lx, y0 + h + 6.5, 4, 1.6, 'F'); font(7.5); color(C.dark); doc.text(pdfTxt(s.t), lx + 5.5, y0 + h + 8); lx += doc.getTextWidth(pdfTxt(s.t)) + 14; }); }
     y = y0 + h + (series.length > 1 ? 12 : 8);
   };
-  const cajaAvance = (lbl, fin, ini, extra) => {
+  const cajaAvance = (lbl, fin, ini, extra, proc) => {
+    // v4.39.0: con procura, la cifra grande es el avance ponderado
+    if (pa && proc != null && fin != null) {
+      pdfCajaPond(doc, hA, { lbl: lbl.replace('AVANCE TOTAL', 'AVANCE PONDERADO'), fis: fin, proc, peso: pa.peso,
+        varTxt: ini != null ? `${pts(fin - ini)} en el período` : '', sub: extra });
+      return;
+    }
     need(30); fill(C.pale); draw(C.line); doc.roundedRect(M, y, CW, 26, 2, 2, 'FD');
     font(8.5); color(C.grey); doc.text(pdfTxt(lbl), M + 5, y + 6.5);
     font(28, 'bold'); color(C.olive); doc.text(fin != null ? pc(fin) : '—', M + 5, y + 19);
@@ -4137,6 +4159,7 @@ async function buildAvancePdf(all, o){
   }
   prog('Armando el PDF…');
 
+  const pa = await cargarProcAv(), hA = { M, CW, C, need, font, fill, color, draw, titulo: t => { need(16); fill(C.olive); doc.rect(M, y, CW, 8, 'F'); font(10.5, 'bold'); color(C.cream); doc.text(pdfTxt(t), M + 3, y + 5.5); y += 11; }, get y(){ return y; }, set y(v){ y = v; } };
   // ----- Portada -----
   fill(C.dark); doc.rect(0, 0, W, 46, 'F'); fill(C.orange); doc.rect(0, 46, W, 1.6, 'F');
   try { const lg = logoNow(); if (lg && lg.data) { const lh = 15, lw = Math.min(52, lg.w * lh / lg.h); fill([255,255,255]); doc.roundedRect(M - 2, 13, lw + 4, lh + 4, 2, 2, 'F'); doc.addImage(lg.data, lg.ext === 'png' ? 'PNG' : 'JPEG', M, 15, lw, lh); } } catch (e) {}
@@ -4147,7 +4170,7 @@ async function buildAvancePdf(all, o){
   const perAll = all.filter(enPer), fotosN = fotosDe(perAll).length, vidsN = perAll.reduce((a, r) => a + (r.archivos || []).filter(x => x.tipo === 'video').length, 0);
   const finObra = puesto ? avFin(puesto) : obraAl(hasta), iniObra = desde ? (puesto ? avIni(puesto) : obraAl(addDays(desde, -1))) : null;
   cajaAvance(puesto ? 'AVANCE TOTAL DE LA BASE' : 'AVANCE TOTAL DE LA OBRA (PROMEDIO DE LAS 13 BASES)', finObra, iniObra,
-    `${perAll.length} reportes · ${puesto ? new Set(perAll.map(r => r.fecha)).size + ' días con reporte' : new Set(perAll.map(r => r.puesto)).size + ' bases con reporte'} · ${fotosN} foto${fotosN === 1 ? '' : 's'}${vidsN ? ' · ' + vidsN + ' video' + (vidsN === 1 ? '' : 's') : ''}`);
+    `${perAll.length} reportes · ${puesto ? new Set(perAll.map(r => r.fecha)).size + ' días con reporte' : new Set(perAll.map(r => r.puesto)).size + ' bases con reporte'} · ${fotosN} foto${fotosN === 1 ? '' : 's'}${vidsN ? ' · ' + vidsN + ' video' + (vidsN === 1 ? '' : 's') : ''}`, pa ? (puesto ? procPct(pa, puesto) : procObra(pa)) : null);
   if (soloPropio()) { font(8); color(C.orange); doc.text(pdfTxt('Incluye solo los reportes registrados por ' + (me.nombre || 'el usuario') + '.'), M, y); y += 5; }
   titulo('EVOLUCIÓN DEL AVANCE');
   grafico(puesto ? [{ t: 'Avance de la base', c: C.green, v: cortes.map(c => avAl(puesto, c)) }] : [{ t: 'Avance de la obra', c: C.green, v: cortes.map(obraAl) }], 34);
@@ -4174,7 +4197,6 @@ async function buildAvancePdf(all, o){
     need(nota.length * 3.4 + 3); nota.forEach(l => { doc.text(l, M, y + 4); y += 3.4; }); y += 3;
   }
   // ----- Procura de materiales y avance ponderado (v4.37.0) -----
-  const pa = await cargarProcAv();
   if (pa) { const h = { M, CW, C, need, font, fill, color, draw, titulo: t => { need(16); fill(C.olive); doc.rect(M, y, CW, 8, 'F'); font(10.5, 'bold'); color(C.cream); doc.text(pdfTxt(t), M + 3, y + 5.5); y += 11; }, get y(){ return y; }, set y(v){ y = v; } };
     if (!puesto) { const po = procObra(pa); need(26); font(9.5, 'bold'); color(C.dark); doc.text(pdfTxt(`Obra: avance físico ${pc(finObra || 0)} · procura de materiales ${pc(po)} · avance ponderado ${pc(ponderar(finObra, po, pa.peso))}`), M, y + 4); y += 8; }
     pdfProcuraSeccion(doc, h, pa, bases.map(b => ({ n: b.n, nombre: b.nombre, fis: avFin(b.n) }))); }
@@ -4185,9 +4207,9 @@ async function buildAvancePdf(all, o){
     if (!L.length) continue;
     if (!puesto) { newPage(); bandera(b.nombre, perTxt.replace('Toda la obra: d', 'D')); } else y += 2;
     const fin = avFin(b.n), ini = avIni(b.n), per = P.filter(r => r.personal != null), emp = [...new Set(P.map(r => r.empresa).filter(Boolean))];
-    if (!puesto) cajaAvance('AVANCE TOTAL DE LA BASE', fin, ini, [`${P.length} reportes en ${new Set(P.map(r => r.fecha)).size} días`, per.length ? `personal promedio ${Math.round(per.reduce((a, r) => a + +r.personal, 0) / per.length)}` : '', emp.join(', ')].filter(Boolean).join(' · '));
+    if (!puesto) cajaAvance('AVANCE TOTAL DE LA BASE', fin, ini, [`${P.length} reportes en ${new Set(P.map(r => r.fecha)).size} días`, per.length ? `personal promedio ${Math.round(per.reduce((a, r) => a + +r.personal, 0) / per.length)}` : '', emp.join(', ')].filter(Boolean).join(' · '), pa ? procPct(pa, b.n) : null);
     else if (emp.length || per.length) { font(8.5); color(C.grey); doc.splitTextToSize(pdfTxt([emp.length ? 'Empresas: ' + emp.join(', ') : '', per.length ? `Personal promedio: ${Math.round(per.reduce((a, r) => a + +r.personal, 0) / per.length)}` : '', `Días con reporte: ${new Set(P.map(r => r.fecha)).size}`].filter(Boolean).join(' · ')), CW).forEach(l => { need(5); doc.text(l, M, y + 3); y += 4.3; }); y += 3; }
-    if (!puesto && pa && procPct(pa, b.n) != null) { const pb = procBase(pa, b.n); need(8); font(9, 'bold'); color(C.green); doc.text(pdfTxt(`Procura de materiales ${pc(procPct(pa, b.n))} (${procFuente(pb)}) · Avance ponderado ${pc(ponderar(fin, procPct(pa, b.n), pa.peso))}`), M, y + 1); y += 6; }
+    if (!puesto && pa && procPct(pa, b.n) != null && procBase(pa, b.n).fuente === 'manual') { font(7.5); color(C.grey); doc.text(pdfTxt(`Compra de materiales ${procFuente(procBase(pa, b.n))}.`), M, y - 2); y += 3; }
     if (!puesto) { titulo('EVOLUCIÓN DEL AVANCE'); grafico([{ t: 'Base', c: C.green, v: cortes.map(c => avAl(b.n, c)) }, { t: 'Promedio de la obra', c: C.orange, v: cortes.map(c => obraAl(c)) }], 36); }
     // Avance por fase: última medición vs. la que había al inicio del período
     const conF = L.filter(r => r.fecha <= hasta && (r.fases || []).some(f => f.pct != null));
@@ -5140,8 +5162,11 @@ $('#prXlsx').onclick = async () => {
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.38.0';
+const APP_VERSION = '4.39.0';
 const NOVEDADES = [
+  { v: '4.39.0', fecha: '2026-10-23', titulo: 'Avance ponderado en el Archivo y el semanal', items: [
+    { r: ['gerente_operaciones','gerente_general','compras','costos','master','reporte_general','comandante_base','contratista'], t: 'El PDF semanal y el reporte de avance general del Archivo ahora destacan el avance ponderado (ejecución física + compra de materiales) como cifra principal, con el avance físico y el % de compra de materiales debajo, en la portada y en cada base. Las carpetas del Archivo también muestran la compra de materiales y el avance ponderado de cada base.' }
+  ] },
   { v: '4.38.0', fecha: '2026-10-23', titulo: 'Corregir la base y contratistas por base', items: [
     { r: ['master','gerente_operaciones','gerente_general'], t: 'Si alguien eligió mal la base, ahora puedes corregirla: en el detalle de una requisición, "Corregir la base de la requisición" (todos sus materiales pasan a la base correcta y el CeCo se rehace); en el detalle de un reporte, "Corregir la base del reporte". Se avisa al autor y queda en el historial.' },
     { r: ['master'], t: 'En Ajustes → Usuarios puedes limitar un contratista a una sola base: elige la base en su tarjeta y toca guardar. Desde ese momento solo puede hacer reportes y llenar la dotación de esa base ("Todas las bases" quita el límite).' },
@@ -5708,6 +5733,22 @@ const procObra = pa => pa && (pa.bases || []).length === 13 ? r1(pa.bases.reduce
 const ponderar = (fis, proc, peso) => fis == null && proc == null ? null : r1(((fis || 0) * (100 - peso) + (proc || 0) * peso) / 100);
 const procFuente = b => !b || b.pct == null ? 'sin materiales pedidos' : b.fuente === 'manual' ? `informado por ${b.por || 'la gerencia'}${b.actualizado ? ' el ' + fmt(isoLocal(b.actualizado)) : ''}` : `${b.comprados} de ${b.renglones} renglones comprados`;
 const procNotaTxt = pa => `Avance ponderado = avance físico × ${100 - pa.peso}% + procura de materiales × ${pa.peso}% (peso de los materiales en el presupuesto de obra). Procura: renglones de materiales ya comprados (pagados, despachados o en obra) sobre los pedidos en las requisiciones de cada base${(pa.bases || []).some(b => b.fuente === 'manual') ? '; en algunas bases el % lo informó la gerencia' : ''}. La obra es el promedio de las 13 bases.`;
+// v4.39.0: caja principal del PDF con el avance ponderado como cifra grande (como el reporte para el cliente).
+function pdfCajaPond(doc, h, o){
+  const { M, CW, C } = h, BL = [52,92,140], pc = v => v == null ? '—' : (Math.round(v * 10) / 10).toString().replace('.', ',') + '%';
+  const pond = ponderar(o.fis, o.proc, o.peso);
+  h.need(40); const y0 = h.y;
+  h.fill(C.pale); h.draw(C.line); doc.roundedRect(M, y0, CW, 35, 2, 2, 'FD');
+  h.font(8.5); h.color(C.grey); doc.text(pdfTxt(o.lbl), M + 5, y0 + 6.5);
+  h.font(28, 'bold'); h.color(C.olive); doc.text(pc(pond), M + 5, y0 + 22);
+  h.font(9.5, 'bold'); h.color(C.green); doc.text(pdfTxt(`${100 - o.peso}% ejecución física + ${o.peso}% procura de materiales`), M + 52, y0 + 13);
+  h.font(8.5); h.color(C.dark); doc.text(pdfTxt(`Avance físico ${pc(o.fis)}${o.varTxt ? ' (' + o.varTxt + ')' : ''} · Compra de materiales ${pc(o.proc)}`), M + 52, y0 + 18.5);
+  if (o.sub) { h.font(7.8); h.color(C.grey); doc.text(doc.splitTextToSize(pdfTxt(o.sub), CW - 57)[0], M + 52, y0 + 23); }
+  const bw = CW - 10, wf = bw * Math.min(100, o.fis || 0) * (100 - o.peso) / 10000, wp = bw * Math.min(100, o.proc || 0) * o.peso / 10000;
+  h.fill([225,228,215]); doc.rect(M + 5, y0 + 27, bw, 2.6, 'F'); h.fill(C.green); doc.rect(M + 5, y0 + 27, wf, 2.6, 'F'); h.fill(BL); doc.rect(M + 5 + wf, y0 + 27, wp, 2.6, 'F');
+  h.font(7); h.fill(C.green); doc.rect(M + 5, y0 + 31.2, 3, 1.6, 'F'); h.color(C.grey); doc.text('Ejecución física', M + 9.5, y0 + 32.7); h.fill(BL); doc.rect(M + 33, y0 + 31.2, 3, 1.6, 'F'); doc.text('Compra de materiales', M + 37.5, y0 + 32.7);
+  h.y = y0 + 40;
+}
 // Sección del PDF (semanal y avance general): tabla por base con físico, procura y ponderado.
 function pdfProcuraSeccion(doc, h, pa, filas){
   // filas: [{ n, nombre, fis }]
