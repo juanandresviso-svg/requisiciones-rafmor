@@ -1846,7 +1846,7 @@ const soloPropio = () => me && !me.es_master && ['contratista','logistica'].incl
 const canGeneralReq = () => me && (me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol));
 const soloSemanal = () => me && !me.es_master && ['comandante_base','reporte_general'].includes(me.rol);
 const seesAll = () => me && (me.es_master || ['gerente_operaciones','compras','costos','gerente_general'].includes(me.rol));
-const roleText = u => ((ROLES[u.rol] || {}).label || u.rol) + (u.rol === 'comandante_base' && u.base ? ' · ' + baseName(u.base).replace('B.P.F ', '') : '') + (u.rol === 'logistica' && u.frente ? ' · ' + u.frente : '');
+const roleText = u => ((ROLES[u.rol] || {}).label || u.rol) + (u.rol === 'comandante_base' && u.base ? ' · ' + baseName(u.base).replace('B.P.F ', '') : '') + (u.rol === 'contratista' && u.base ? ' · solo ' + baseName(u.base).replace('B.P.F ', '') : '') + (u.rol === 'logistica' && u.frente ? ' · ' + u.frente : '');
 const seesUsers = () => me && (me.es_master || me.rol === 'gerente_general');
 
 /* ---------- listas locales (autocompletar) ---------- */
@@ -2709,7 +2709,7 @@ function renderDetail(){
     $('#dTitle').innerHTML = `${esc(r.control)}${bt ? ` <small class="bpf">${esc(bt)}</small>` : ''}`; }
   const fdate = ts => fmt(isoLocal(ts));
   const items = (d.items || []).map((it, i) => `<li class="item" style="grid-template-columns:32px 1fr"><div class="num">${i+1}</div><div><div class="qty">${esc(it.cant)} ${esc(it.und)}</div><div class="d">${esc(it.desc)}</div>${it.det ? `<div class="m mdet">${esc(it.det)}</div>` : ''}<div class="m">${esc([it.locacion, it.equipo].filter(Boolean).join(', '))}</div>${it.ceco ? `<div class="m" style="font-weight:600;color:var(--green)">${esc(it.ceco)}</div>` : ''}<div class="tags">${it.stock === 'com' ? '<span class="tag com">A compras</span>' : it.stock === 'si' ? '<span class="tag ok">En almacén</span>' : it.stock === 'no' ? '<span class="tag">Sin stock</span>' : ''}${it.espec === 'si' ? '<span class="tag">Con especificación</span>' : ''}</div></div></li>`).join('');
-  const cambios = (r.cambios || []).map(c => `${esc(c.nombre)} (${esc(c.etapa)}, ${fdate(c.fecha)})`).join('; ');
+  const cambios = (r.cambios || []).map(c => c.tipo === 'base' ? `${esc(c.nombre)} (base de ${esc(String(c.de || '').replace(/B\.P\.F /g, ''))} a ${esc(String(c.a || '').replace('B.P.F ', ''))}${c.motivo ? ': ' + esc(c.motivo) : ''}, ${fdate(c.fecha)})` : `${esc(c.nombre)} (${esc(c.etapa)}, ${fdate(c.fecha)})`).join('; ');
   const step = (ok, txt, pend) => `<div class="${ok ? 'ok' : ''}">${ok ? txt : pend}</div>`;
   $('#dBody').innerHTML = `
     <div class="appr">
@@ -2733,6 +2733,24 @@ function renderDetail(){
     ${d.notas ? `<div class="sec">Notas</div><p style="margin:0 0 8px;white-space:pre-wrap">${esc(d.notas)}</p>` : ''}
     ${d.adjunto ? `<button class="btn block100" id="dAdj" style="margin:6px 0 4px">📎 Ver documento original (${esc(d.adjunto.mime === 'application/pdf' ? 'PDF' : 'foto')})</button>` : ''}`;
   if (d.adjunto) $('#dAdj').onclick = () => verAdjunto(d.adjunto);
+  // v4.38.0: corregir la base (maestro y gerentes), en cualquier etapa salvo rechazada o histórica
+  if ((me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol)) && r.estado !== 'rechazada' && !d.historica) {
+    const B = [...new Set((d.items || []).map(i => +i.base).filter(n => n >= 1 && n <= 13))];
+    $('#dBody').insertAdjacentHTML('beforeend', `<details class="fixfecha"><summary>Corregir la base de la requisición</summary>
+      <p class="hint" style="margin:8px 0 6px">Todos los materiales pasan a la base elegida y su CeCo se rehace con la tabla oficial. Se avisa al solicitante y queda en el historial.</p>
+      <div class="row2"><label class="f"><span>Base correcta</span><select class="in" id="fbBase"><option value="">Elige…</option>${CECOS.bases.map(b => `<option value="${b.n}" ${B.length === 1 && B[0] === b.n ? 'selected' : ''}>${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</option>`).join('')}</select></label>
+      <label class="f"><span>Motivo (opcional)</span><input class="in" id="fbMot" maxlength="300" placeholder="Ej. el contratista eligió otra base"></label></div>
+      <button class="btn dark block100" id="fbBtn">Guardar base</button></details>`);
+    $('#fbBtn').onclick = async () => {
+      const n = +$('#fbBase').value; if (!n) return toast('Elige la base');
+      if (B.length === 1 && B[0] === n && !d.general) return toast('Ya está en esa base');
+      if (!confirm(`¿Pasar todos los materiales de ${r.control} a ${baseName(n)}?`)) return;
+      const b = $('#fbBtn'); b.disabled = true;
+      try { detRow = await rpc('rq_requisicion_cambiar_base', { p_control: r.control, p_base: n, p_cecos: Object.fromEntries(CECOS.tipos.map(([k]) => [k, cecoFor(n, k)])), p_motivo: $('#fbMot').value.trim() || null });
+        toast('Base corregida: ' + baseName(n)); renderDetail(); reloadActive(); }
+      catch (e) { toast(e.message); b.disabled = false; }
+    };
+  }
   prDetalleAcciones(r);
   const dp = $('#dPrioSel'); if (dp) dp.onclick = e => { const b = e.target.closest('[data-p]'); if (b) cambiarPrioridad(b.dataset.p, b); };
   const p = permsFor(r), btns = [];
@@ -2875,7 +2893,7 @@ async function loadUsers(){
   catch (e) { $('#eUsers').hidden = false; $('#eUsers').textContent = e.message; }
 }
 const roleOpts = sel => Object.entries(ROLES).map(([k, r]) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${r.label}</option>`).join('');
-const baseOpts = (id, sel, show) => `<select class="in sel" data-ubase="${id}" aria-label="Base" ${show ? '' : 'hidden'}><option value="">Base…</option>${CECOS.bases.map(b => `<option value="${b.n}" ${+sel === b.n ? 'selected' : ''}>${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</option>`).join('')}</select>`;
+const baseOpts = (id, sel, show, rol) => `<select class="in sel" data-ubase="${id}" aria-label="Base" ${show ? '' : 'hidden'}><option value="">${rol === 'contratista' ? 'Todas las bases' : 'Base…'}</option>${CECOS.bases.map(b => `<option value="${b.n}" ${+sel === b.n ? 'selected' : ''}>${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</option>`).join('')}</select>`;
 const hace = ts => { if (!ts) return 'Nunca'; const s = (Date.now() - new Date(ts).getTime()) / 1000;
   if (s < 90) return 'Ahora mismo'; if (s < 3600) return 'Hace ' + Math.round(s/60) + ' min'; if (s < 86400) return 'Hace ' + Math.round(s/3600) + ' h';
   const d = Math.round(s/86400); return d === 1 ? 'Ayer' : d < 30 ? 'Hace ' + d + ' días' : 'Hace ' + Math.round(d/30) + ' mes' + (Math.round(d/30) === 1 ? '' : 'es'); };
@@ -2897,8 +2915,8 @@ function renderUsers(){
     const tag = { pendiente:'<span class="tag pend">Por aprobar</span>', activo:'<span class="tag ok">Activo</span>', rechazado:'<span class="tag bad">Rechazado</span>', inactivo:'<span class="tag bad">Desactivado</span>' }[u.estado];
     let acts = '';
     if (me.es_master) {
-      if (u.estado === 'pendiente') acts = `<select class="in sel" data-urol="${u.id}" aria-label="Rol">${roleOpts(u.rol)}</select>${baseOpts(u.id, u.base, u.rol === 'comandante_base')}<button class="btn primary" data-uact="aprobar" data-uid="${u.id}">Aprobar</button><button class="btn ghost danger" data-uact="rechazar" data-uid="${u.id}">Rechazar</button>`;
-      else if (u.estado === 'activo' && u.id !== me.id) acts = `<select class="in sel" data-urol="${u.id}" aria-label="Rol">${roleOpts(u.rol)}</select>${baseOpts(u.id, u.base, u.rol === 'comandante_base')}<button class="btn" data-uact="rol" data-uid="${u.id}">Cambiar rol</button><button class="btn ghost danger" data-uact="desactivar" data-uid="${u.id}">Desactivar</button>`;
+      if (u.estado === 'pendiente') acts = `<select class="in sel" data-urol="${u.id}" aria-label="Rol">${roleOpts(u.rol)}</select>${baseOpts(u.id, u.base, ['comandante_base','contratista'].includes(u.rol), u.rol)}<button class="btn primary" data-uact="aprobar" data-uid="${u.id}">Aprobar</button><button class="btn ghost danger" data-uact="rechazar" data-uid="${u.id}">Rechazar</button>`;
+      else if (u.estado === 'activo' && u.id !== me.id) acts = `<select class="in sel" data-urol="${u.id}" aria-label="Rol">${roleOpts(u.rol)}</select>${baseOpts(u.id, u.base, ['comandante_base','contratista'].includes(u.rol), u.rol)}<button class="btn" data-uact="rol" data-uid="${u.id}">Cambiar rol</button><button class="btn ghost danger" data-uact="desactivar" data-uid="${u.id}">Desactivar</button>`;
       else if (u.estado !== 'activo') acts = `<button class="btn" data-uact="reactivar" data-uid="${u.id}">Reactivar</button>`;
     }
     return `<li><div class="h1"><b>${esc(u.nombre)}</b>${u.es_master ? '<span class="tag com">Maestro</span>' : ''}</div>
@@ -2912,7 +2930,7 @@ function renderUsers(){
   $('#eUsers').hidden = L.length > 0;
   $('#eUsers').textContent = q ? 'Ningún usuario coincide con la búsqueda.' : { pendiente:'No hay registros por aprobar.', activo:'No hay usuarios activos.', otros:'No hay usuarios desactivados.', todos:'No hay usuarios.' }[uFilter];
 }
-$('#lUsers').addEventListener('change', e => { const s = e.target.closest('[data-urol]'); if (!s) return; const bs = document.querySelector(`[data-ubase="${s.dataset.urol}"]`); if (bs) bs.hidden = s.value !== 'comandante_base'; });
+$('#lUsers').addEventListener('change', e => { const s = e.target.closest('[data-urol]'); if (!s) return; const bs = document.querySelector(`[data-ubase="${s.dataset.urol}"]`); if (bs) { bs.hidden = !['comandante_base','contratista'].includes(s.value); bs.options[0].textContent = s.value === 'contratista' ? 'Todas las bases' : 'Base…'; } });
 $('#lUsers').addEventListener('click', async e => {
   const fb = e.target.closest('[data-ufrb]');
   if (fb) { const inp = document.querySelector(`[data-ufr="${fb.dataset.ufrb}"]`); fb.disabled = true;
@@ -2926,7 +2944,7 @@ $('#lUsers').addEventListener('click', async e => {
   if (act === 'desactivar' && !confirm(`¿Desactivar a ${u.nombre}? Ya no podrá entrar.`)) return;
   b.disabled = true;
   try { await rpc('rq_usuario_decidir', { p_id: id, p_accion: act, p_rol: sel ? sel.value : null, p_base: bsel && bsel.value ? +bsel.value : null });
-    toast({ aprobar:'Usuario aprobado. Se le avisó', rechazar:'Registro rechazado', desactivar:'Usuario desactivado', reactivar:'Usuario reactivado', rol:'Rol actualizado' }[act]); loadUsers(); }
+    toast({ aprobar:'Usuario aprobado. Se le avisó', rechazar:'Registro rechazado', desactivar:'Usuario desactivado', reactivar:'Usuario reactivado', rol:'Rol y base actualizados' }[act]); loadUsers(); }
   catch (er) { toast(er.message); b.disabled = false; }
 });
 
@@ -3354,7 +3372,7 @@ let repId = null;
 const FASES = ['Demolición','Albañilería','Aguas Negras','Aguas Blancas','Electricidad','Acabados','Paisajismo','Equipamiento','Obras Complementarias'];
 const repBlank = () => ({ owner: me ? me.id : null, fecha: today(), puesto: '', frente: '', descripcion: '', personal: '', clima: '', observaciones: '', fases: FASES.map(() => ({ pct:'', obs:'' })), prev: null, general: false, tema: '', vc: false, vr: false });
 const esGerente = () => me && (me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol));
-Object.assign(ERRS, { falta_tema:'Escribe el tema del reporte general.' });
+Object.assign(ERRS, { falta_tema:'Escribe el tema del reporte general.', base_asignada:'Solo puedes reportar la base que tienes asignada. Si es un error, pídele al administrador que la cambie.', base_cerrada:'Esta requisición ya no admite cambios de base.', reporte_general:'Es un reporte general del proyecto: no tiene base.' });
 function syncTipo(){
   const g = esGerente() && rep.general;
   $('#r-tipoBlock').hidden = !esGerente();
@@ -3404,8 +3422,12 @@ repBind.forEach(([id,k]) => $('#'+id).addEventListener('input', e => { rep[k] = 
 $('#r-puesto').addEventListener('change', e => { rep.puesto = e.target.value; e.target.classList.remove('bad'); rep.fases = FASES.map(() => ({ pct:'', obs:'' })); saveRep(); loadPrev(); });
 $('#r-clima').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; rep.clima = rep.clima === b.textContent ? '' : b.textContent; saveRep(); syncClima(); });
 function syncClima(){ $$('#r-clima button').forEach(b => b.setAttribute('aria-pressed', b.textContent === rep.clima)); }
+// v4.38.0: contratista con base asignada: solo reporta esa base
+const baseFija = () => me && !me.es_master && me.rol === 'contratista' && me.base >= 1 && me.base <= 13 ? +me.base : null;
 function fillRep(){
   if (!rep || rep.owner !== (me && me.id)) { rep = repBlank(); saveRep(); }
+  if (baseFija() && String(rep.puesto) !== String(baseFija())) { rep.puesto = String(baseFija()); rep.fases = FASES.map(() => ({ pct:'', obs:'' })); rep.prev = null; saveRep(); }
+  $('#r-puesto').disabled = !!baseFija();
   const t = today();
   $('#r-fecha').max = t; $('#r-fecha').min = addDays(t, -3);
   if (rep.fecha && (rep.fecha > t || rep.fecha < addDays(t, -3))) { rep.fecha = t; saveRep(); }
@@ -4275,6 +4297,25 @@ async function openReport(id, row){
         : `<div class="g"><img loading="lazy" alt="Foto ${i+1}" src="${url(a.path)}" data-lb="${lbItems.findIndex(x => x.path === a.path)}"><a href="#" data-dlp="${esc(a.path)}" data-dln="${esc(a.nombre || '')}">Descargar</a></div>`).join('')}</div>`;
     const hist = (r.cambios || []).filter(c => c.tipo === 'fecha');
     if (hist.length) $('#rpBody').insertAdjacentHTML('afterbegin', `<p class="chg">${hist.map(c => `Fecha corregida por ${esc(c.por)}: de ${fmt(c.de)} a ${fmt(c.a)}${c.motivo ? ' (' + esc(c.motivo) + ')' : ''}.`).join('<br>')}</p>`);
+    const histB = (r.cambios || []).filter(c => c.tipo === 'puesto');
+    if (histB.length) $('#rpBody').insertAdjacentHTML('afterbegin', `<p class="chg">${histB.map(c => `Base corregida por ${esc(c.por)}: de ${esc(c.de)} a ${esc(c.a)}${c.motivo ? ' (' + esc(c.motivo) + ')' : ''}`).join('<br>')}</p>`);
+    if (r.puesto != null && (me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol))) {
+      $('#rpBody').insertAdjacentHTML('beforeend', `<details class="fixfecha"><summary>Corregir la base del reporte</summary>
+        <div class="row2" style="margin-top:10px"><label class="f"><span>Base correcta</span><select class="in" id="fpBase">${CECOS.bases.map(b => `<option value="${b.n}" ${b.n === r.puesto ? 'selected' : ''}>${b.n}. ${esc(b.nombre.replace('B.P.F ', ''))}</option>`).join('')}</select></label>
+        <label class="f"><span>Motivo (opcional)</span><input class="in" id="fpMot" maxlength="300" placeholder="Ej. eligió otra base por error"></label></div>
+        <button class="btn dark block100" id="fpBtn">Guardar base</button></details>`);
+      $('#fpBtn').onclick = async () => {
+        const n = +$('#fpBase').value; if (n === r.puesto) return toast('Es la misma base');
+        if (!confirm(`¿Pasar el reporte del ${fmt(r.fecha)} de ${r.puesto_nombre} a ${baseName(n)}? Se le avisará a ${r.autor_nombre}.`)) return;
+        const b = $('#fpBtn'); b.disabled = true;
+        try { const nr = await rpc('rq_reporte_cambiar_puesto', { p_id: r.id, p_puesto: n, p_motivo: $('#fpMot').value.trim() || null });
+          toast('Base corregida'); openReport(nr.id, nr);
+          if ($('#p-rarch').classList.contains('on')) loadRecientes();
+          if ($('#p-rpf').classList.contains('on')) loadArchive();
+          if ($('#p-rsem').classList.contains('on')) loadWeek();
+        } catch (e) { toast(e.message); b.disabled = false; }
+      };
+    }
     if (me.es_master) {
       $('#rpBody').insertAdjacentHTML('beforeend', `<details class="fixfecha"><summary>Corregir la fecha del reporte</summary>
         <div class="row2" style="margin-top:10px"><label class="f"><span>Fecha correcta</span><input class="in" type="date" id="fxFecha" max="${today()}" value="${r.fecha}"></label>
@@ -5099,8 +5140,13 @@ $('#prXlsx').onclick = async () => {
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.37.0';
+const APP_VERSION = '4.38.0';
 const NOVEDADES = [
+  { v: '4.38.0', fecha: '2026-10-23', titulo: 'Corregir la base y contratistas por base', items: [
+    { r: ['master','gerente_operaciones','gerente_general'], t: 'Si alguien eligió mal la base, ahora puedes corregirla: en el detalle de una requisición, "Corregir la base de la requisición" (todos sus materiales pasan a la base correcta y el CeCo se rehace); en el detalle de un reporte, "Corregir la base del reporte". Se avisa al autor y queda en el historial.' },
+    { r: ['master'], t: 'En Ajustes → Usuarios puedes limitar un contratista a una sola base: elige la base en su tarjeta y toca guardar. Desde ese momento solo puede hacer reportes y llenar la dotación de esa base ("Todas las bases" quita el límite).' },
+    { r: ['contratista'], t: 'Si el administrador te asignó una base, el formulario de reporte y la dotación de equipos vienen fijos en esa base.' }
+  ] },
   { v: '4.37.0', fecha: '2026-10-22', titulo: 'Procura de materiales en los reportes', items: [
     { r: ['gerente_general','compras','master'], t: 'Los reportes ahora incluyen la procura de materiales de cada base y el avance ponderado (avance físico + materiales comprados, según su peso en el presupuesto). En Ajustes → Procura de materiales en los reportes defines el peso de los materiales (40% por defecto) y, si hubo compras fuera de la plataforma, el % comprado de cada base; el reporte indica quién lo informó y cuándo.' },
     { r: ['gerente_operaciones','costos','reporte_general','comandante_base','contratista'], t: 'Las estadísticas, el PDF semanal y el reporte de avance general muestran ahora la procura de materiales de cada base (materiales comprados sobre pedidos) y el avance ponderado, además del avance físico.' }
@@ -6265,6 +6311,8 @@ async function loadDot(){
   pintarDot();
 }
 function pintarDot(){
+  if (baseFija() && dt.puesto !== baseFija()) { dt.puesto = baseFija(); LS.set('dtPuesto', dt.puesto); }
+  $('#dtPuesto').disabled = !!baseFija();
   $('#dtPuesto').value = String(dt.puesto); $('#dtCode').textContent = baseName(dt.puesto).replace('B.P.F ', '');
   $('#dtPuesto').querySelectorAll('option').forEach(o => { const a = dt.amb[dtUniId(+o.value)]; o.textContent = `${o.value}. ${baseName(+o.value).replace('B.P.F ', '')}${a && a.revisado ? ' · revisado' : dtTiene(+o.value) ? ' · con datos' : ''}`; });
   $$('#dtTabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === dt.tab));
