@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Cotización Patriota Tiuna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#F2EFE6;--panel:#FBFAF5;--photo:#FFFFFF;--fg:#22281C;--mut:#5F6553;--line:#D8D3C2;--olive:#4E5B35;--olive-2:#3C4729;--brass:#8A6516;--band:#20251B;--bandfg:#EEEBDF;--ok:#2F6B3A;--err:#A23A2A;--sel:#E7ECD9;--onolive:#FFFFFF;
+--display:'Oswald','Arial Narrow',Arial,sans-serif;--body:'IBM Plex Sans',Arial,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#181B15;--panel:#20251C;--photo:#F4F2EC;--fg:#E9E6DA;--mut:#A9AE98;--line:#353C2E;--olive:#9DB27A;--olive-2:#B5C893;--brass:#D2AE5C;--band:#10120E;--bandfg:#E9E6DA;--ok:#8FC79A;--err:#E58C7A;--sel:#2C3523;--onolive:#14170F;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#181B15;--panel:#20251C;--photo:#F4F2EC;--fg:#E9E6DA;--mut:#A9AE98;--line:#353C2E;--olive:#9DB27A;--olive-2:#B5C893;--brass:#D2AE5C;--band:#10120E;--bandfg:#E9E6DA;--ok:#8FC79A;--err:#E58C7A;--sel:#2C3523;--onolive:#14170F;color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.band{background:var(--band);color:var(--bandfg);padding-top:env(safe-area-inset-top,0px)}
+.band .wrap{padding-block:32px 28px;display:grid;gap:12px}
+.eyebrow{font:500 12px/1.3 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--brass);margin:0}
+h1{font:500 clamp(30px,5.5vw,56px)/1.04 var(--display);text-transform:uppercase;letter-spacing:.01em;margin:0;text-wrap:balance}
+.lead{max-width:68ch;margin:0;opacity:.86}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border-radius:6px;border:1px solid var(--olive);background:var(--olive);color:var(--onolive);font-weight:600;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--olive-2);border-color:var(--olive-2)}
+.btn.sec{background:transparent;color:var(--fg);border-color:var(--line)}
+.btn.sec:hover{border-color:var(--olive)}
+.btn.dang{background:transparent;color:var(--err);border-color:var(--err)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:focus-visible,.qty button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.link{background:none;border:0;padding:0;color:var(--mut);text-decoration:underline;cursor:pointer;font-size:13px}
+.hide{display:none!important}
+/* Acceso */
+.gate{max-width:440px;margin:40px auto;padding:28px;background:var(--panel);border:1px solid var(--line);border-radius:8px;display:grid;gap:14px}
+.gate h2{font:500 26px/1.1 var(--display);text-transform:uppercase;margin:0}
+.gate p{margin:0;color:var(--mut)}
+label{display:grid;gap:5px;font-size:13.5px;font-weight:500}
+input[type=text],input[type=email],input[type=password],input[type=tel],input[type=search],select,textarea{width:100%;min-height:44px;padding:9px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-size:16px}
+textarea{min-height:88px;resize:vertical}
+.code-in{font:500 22px var(--mono)!important;letter-spacing:.2em;text-transform:uppercase;text-align:center}
+.msg{font-size:14px;margin:0;min-height:1em}
+.msg.err{color:var(--err)} .msg.ok{color:var(--ok)}
+/* Barra de categorías */
+nav.idx{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+nav.idx .wrap{display:flex;gap:10px;align-items:center;padding-block:10px}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;flex:1;min-width:0}
+.chips a{flex:none;display:flex;gap:6px;align-items:center;padding:6px 12px;border:1px solid var(--line);border-radius:999px;color:var(--fg);text-decoration:none;font-size:13px;white-space:nowrap}
+.chips a span{font:500 11px var(--mono);color:var(--mut)}
+.chips a:hover{border-color:var(--olive)}
+.search{flex:0 0 220px}
+.search input{min-height:36px;padding:6px 10px;font-size:14px}
+@media (max-width:640px){nav.idx .wrap{flex-wrap:wrap}.search{flex:1 1 100%;order:-1}}
+.howto{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;padding-block:20px 4px}
+.howto p{margin:0;padding:12px 14px;border-left:3px solid var(--olive);background:var(--panel);font-size:13.5px;color:var(--mut)}
+.howto b{color:var(--fg)}
+section{padding-block:24px 4px;scroll-margin-top:64px}
+.sh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px;border-bottom:2px solid var(--fg);padding-bottom:8px;margin-bottom:14px}
+.sh h2{font:500 26px/1.1 var(--display);text-transform:uppercase;margin:0}
+.sh p{margin:0;color:var(--mut);font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+@media (max-width:480px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;min-width:0;transition:border-color .15s,box-shadow .15s}
+.card.on{border-color:var(--olive);box-shadow:0 0 0 2px var(--olive) inset;background:var(--sel)}
+.ph{background:var(--photo);aspect-ratio:1/1;position:relative;overflow:hidden}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:8px}
+.ph .none{position:absolute;inset:0;display:grid;place-items:center;color:#7A7F6E;font-size:12.5px;text-align:center;padding:10px}
+.ph .tag{position:absolute;left:8px;top:8px;background:var(--band);color:var(--bandfg);font:500 10.5px var(--mono);padding:3px 6px;border-radius:3px;letter-spacing:.04em}
+.bd{padding:10px 12px 12px;display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}
+.ref{font:500 11.5px var(--mono);color:var(--brass);margin:0;letter-spacing:.03em}
+.card h3{font:600 14.5px/1.3 var(--body);margin:0;overflow-wrap:break-word}
+.bd p{margin:0;font-size:12.5px;color:var(--mut);overflow-wrap:break-word}
+.k{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;margin-right:4px}
+.qty{margin-top:auto;padding-top:8px;display:flex;align-items:center;gap:6px}
+.qty button{flex:none;width:40px;height:40px;border-radius:6px;border:1px solid var(--line);background:var(--bg);font-size:20px;line-height:1;cursor:pointer}
+.qty button:hover{border-color:var(--olive)}
+.qty input{flex:1;min-width:0;height:40px;text-align:center;border:1px solid var(--line);border-radius:6px;background:var(--bg);font:600 16px var(--body);font-variant-numeric:tabular-nums;padding:0 4px}
+.on .qty input{border-color:var(--olive)}
+.qty .u{font-size:11px;color:var(--mut)}
+.empty{padding:28px 0;color:var(--mut)}
+/* Barra inferior */
+.cartbar{position:sticky;bottom:0;z-index:6;background:var(--band);color:var(--bandfg);padding-bottom:env(safe-area-inset-bottom,0px);margin-top:28px}
+.cartbar .wrap{display:flex;align-items:center;gap:14px;padding-block:12px;flex-wrap:wrap}
+.cartbar .sum{flex:1;min-width:180px;font-size:14px}
+.cartbar .sum b{font:600 22px/1 var(--display);color:var(--brass);margin-right:4px}
+.cartbar .btn{background:var(--brass);border-color:var(--brass);color:#14170F}
+.cartbar .btn.sec{background:transparent;color:var(--bandfg);border-color:#4A5240}
+@media (max-width:640px){.cartbar .wrap{gap:8px 10px;padding-block:10px}.cartbar .sum{flex:1 1 100%;min-width:0}.cartbar #b-review{flex:1}}
+/* Revisión */
+.review{padding-block:24px 40px;display:grid;gap:22px}
+.rtable{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.rtable th,.rtable td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle;font-size:14px}
+.rtable th{font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mut);background:var(--bg)}
+.rtable td.n{width:120px}
+.rtable td.n input{width:100%;min-height:40px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums}
+.rtable td.d input{min-height:40px;font-size:14px}
+.rtable .th{width:56px}
+.rtable .th img{width:48px;height:48px;object-fit:contain;background:#fff;border-radius:4px;display:block}
+.rtable tfoot td{font-weight:600;background:var(--bg)}
+.rm{background:none;border:0;color:var(--err);cursor:pointer;font-size:13px;text-decoration:underline;padding:6px}
+@media (max-width:720px){
+ .rtable,.rtable tbody,.rtable tfoot{display:block} .rtable thead{display:none}
+ .rtable tr{display:grid;grid-template-columns:56px 1fr 96px;gap:4px 10px;padding:10px;border-bottom:1px solid var(--line)}
+ .rtable td{border:0;padding:0} .rtable td.n{width:auto}
+ .rtable td.th{grid-row:span 2}
+ .rtable td.d{grid-column:2 / 4}
+ .rtable td.x{grid-column:2 / 4;text-align:right}
+ .rtable tfoot tr{display:flex;gap:12px;flex-wrap:wrap} .rtable tfoot td:empty{display:none}
+}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px}
+.form .full{grid-column:1 / -1}
+.req{color:var(--err);font-style:normal}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.done{max-width:620px;margin:40px auto;padding:28px;background:var(--panel);border:1px solid var(--line);border-radius:8px;display:grid;gap:12px}
+.done .num{font:600 40px/1 var(--display);color:var(--brass);letter-spacing:.02em}
+footer{padding-block:28px 40px;color:var(--mut);font-size:13px;display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between}
+/* Panel maestro */
+.adm{padding-block:20px 48px;display:grid;gap:18px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;cursor:pointer;font-size:14px;min-height:40px}
+.tabs button[aria-selected=true]{background:var(--olive);border-color:var(--olive);color:var(--onolive)}
+.stats{display:flex;gap:10px 28px;flex-wrap:wrap}
+.stats div{font-size:13px;color:var(--mut)} .stats b{display:block;font:600 24px/1 var(--display);color:var(--fg)}
+.list{display:grid;gap:8px}
+.row{display:grid;grid-template-columns:110px 1fr auto;gap:4px 14px;align-items:center;padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:6px;cursor:pointer;text-align:left;width:100%}
+.row:hover{border-color:var(--olive)}
+.row .no{font:500 14px var(--mono);color:var(--brass)}
+.row .who{font-weight:600} .row .meta{font-size:12.5px;color:var(--mut)}
+.pill{display:inline-block;font:500 11px var(--mono);letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.pill.nueva{border-color:var(--brass);color:var(--brass)} .pill.cotizada{border-color:var(--ok);color:var(--ok)} .pill.descartada{opacity:.6}
+.det{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;display:grid;gap:14px}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 18px;font-size:14px}
+.kv span{display:block;font:500 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filters select{width:auto;min-height:38px;font-size:14px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--band);color:var(--bandfg);padding:10px 16px;border-radius:6px;font-size:14px;z-index:20;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:calc(100% - 32px)}
+dialog{border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg);padding:24px;max-width:400px;width:calc(100% - 32px)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog form{display:grid;gap:12px}
+dialog h2{font:500 22px var(--display);text-transform:uppercase;margin:0}
+.print-only{display:none}
+@media print{
+ nav.idx,.cartbar,footer,.actions,.no-print,.band .lead{display:none!important}
+ body{background:#fff;color:#000}
+ .band{background:#fff;color:#000;border-bottom:2px solid #000}
+ .done,.det,.rtable{border-color:#999}
+ .print-only{display:block}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+html{scroll-behavior:smooth}
+</style>
+</head>
+<body>
+<header class="band"><div class="wrap">
+  <p class="eyebrow" id="eyebrow">Propuesta de Renovación de Uniformes FANB · Línea N°4</p>
+  <h1 id="titulo">Solicitud de cotización</h1>
+  <p class="lead" id="lead">Catálogo Patriota Tiuna: seleccione los productos que necesita e indique las unidades de cada uno.</p>
+</div></header>
+
+<main id="app">
+  <!-- Acceso con código -->
+  <div id="v-gate" class="wrap hide">
+    <form class="gate" id="f-gate" autocomplete="off">
+      <h2>Acceso</h2>
+      <p>Ingrese el código de acceso que recibió junto con el enlace.</p>
+      <label>Código de acceso<input type="text" id="g-code" class="code-in" maxlength="20" inputmode="text" autocapitalize="characters" required></label>
+      <button class="btn" type="submit" id="g-btn">Entrar</button>
+      <p class="msg err" id="g-msg" role="alert"></p>
+    </form>
+  </div>
+
+  <!-- Catálogo -->
+  <div id="v-cat" class="hide">
+    <nav class="idx" aria-label="Categorías"><div class="wrap">
+      <div class="chips" id="chips"></div>
+      <div class="search"><input type="search" id="q" placeholder="Buscar producto o referencia" aria-label="Buscar producto"></div>
+    </div></nav>
+    <div class="wrap">
+      <div class="howto">
+        <p><b>1. Elija:</b> indique las unidades de cada producto con los botones + y − o escribiendo la cantidad.</p>
+        <p><b>2. Revise:</b> confirme cantidades y agregue color, talla u otra indicación por producto.</p>
+        <p><b>3. Envíe:</b> complete sus datos de contacto. Recibirá un número de solicitud.</p>
+      </div>
+      <div id="secs"></div>
+      <p class="empty hide" id="noresults">Ningún producto coincide con la búsqueda.</p>
+    </div>
+    <div class="cartbar"><div class="wrap">
+      <div class="sum" id="sum" aria-live="polite"></div>
+      <button class="btn sec hide" type="button" id="b-clear">Vaciar</button>
+      <button class="btn" type="button" id="b-review" disabled>Revisar y enviar</button>
+    </div></div>
+  </div>
+
+  <!-- Revisión y datos -->
+  <div id="v-review" class="wrap hide">
+    <div class="review">
+      <div class="actions"><button class="btn sec" type="button" id="b-back">← Volver al catálogo</button></div>
+      <div class="sh"><h2>Productos seleccionados</h2><p>Puede ajustar cantidades y agregar detalles</p></div>
+      <table class="rtable" id="rtable"><thead><tr><th class="th"></th><th>Producto</th><th>Unidades</th><th>Color, talla u observación</th><th></th></tr></thead><tbody></tbody><tfoot></tfoot></table>
+      <div class="sh"><h2>Datos de contacto</h2><p>Para enviarle la cotización</p></div>
+      <form class="form" id="f-send">
+        <label>Componente<select id="c-componente"><option value="">Seleccione…</option><option>Ejército Bolivariano</option><option>Armada Bolivariana</option><option>Aviación Militar Bolivariana</option><option>Guardia Nacional Bolivariana</option><option>Milicia Bolivariana</option><option>Guardia de Honor Presidencial</option><option>Otro</option></select></label>
+        <label>Unidad o dependencia<input type="text" id="c-unidad" maxlength="160"></label>
+        <label><span>Nombre y apellido <i class="req">*</i></span><input type="text" id="c-contacto" maxlength="120" required autocomplete="name"></label>
+        <label>Grado o cargo<input type="text" id="c-cargo" maxlength="120"></label>
+        <label><span>Teléfono <i class="req">*</i></span><input type="tel" id="c-telefono" maxlength="40" required autocomplete="tel"></label>
+        <label>Correo<input type="email" id="c-correo" maxlength="160" autocomplete="email"></label>
+        <label class="full">Observaciones generales<textarea id="c-obs" maxlength="2000" placeholder="Plazos, lugar de entrega, tallas, presupuesto u otra información útil"></textarea></label>
+        <div class="full actions">
+          <button class="btn" type="submit" id="b-send">Enviar solicitud</button>
+          <p class="msg err" id="s-msg" role="alert"></p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Enviado -->
+  <div id="v-done" class="wrap hide">
+    <div class="done">
+      <p class="eyebrow">Solicitud recibida</p>
+      <div class="num" id="d-num"></div>
+      <p id="d-txt"></p>
+      <div id="d-list"></div>
+      <div class="actions"><button class="btn sec" type="button" onclick="window.print()">Imprimir o guardar en PDF</button><button class="btn" type="button" id="b-new">Nueva solicitud</button></div>
+    </div>
+  </div>
+
+  <!-- Panel del maestro -->
+  <div id="v-adm" class="wrap hide">
+    <div class="adm">
+      <div class="actions" style="justify-content:space-between">
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" data-t="sol" aria-selected="true">Solicitudes</button>
+          <button type="button" role="tab" data-t="con" aria-selected="false">Consolidado</button>
+          <button type="button" role="tab" data-t="acc" aria-selected="false">Acceso del cliente</button>
+        </div>
+        <div class="actions"><span class="meta" id="a-who" style="font-size:13px;color:var(--mut)"></span><button class="btn sec" type="button" id="a-out">Salir</button></div>
+      </div>
+      <div id="t-sol">
+        <div class="filters" style="margin-bottom:12px">
+          <select id="a-filter" aria-label="Filtrar por estado"><option value="">Todos los estados</option><option value="nueva">Nuevas</option><option value="en_revision">En revisión</option><option value="cotizada">Cotizadas</option><option value="cerrada">Cerradas</option><option value="descartada">Descartadas</option></select>
+          <button class="btn sec" type="button" id="a-reload">Actualizar</button>
+        </div>
+        <div class="stats" id="a-stats" style="margin-bottom:14px"></div>
+        <div class="list" id="a-list"></div>
+        <div class="det hide" id="a-det"></div>
+      </div>
+      <div id="t-con" class="hide">
+        <div class="filters" style="margin-bottom:12px">
+          <label style="display:flex;gap:8px;align-items:center;font-weight:400"><input type="checkbox" id="c-desc"> Incluir descartadas</label>
+          <button class="btn" type="button" id="c-xls">Descargar Excel consolidado</button>
+        </div>
+        <div id="c-body"></div>
+      </div>
+      <div id="t-acc" class="hide">
+        <div class="det">
+          <div class="kv">
+            <div><span>Código actual</span><b id="k-code" style="font:600 24px var(--mono);letter-spacing:.15em"></b></div>
+            <div><span>Estado</span><b id="k-act"></b></div>
+            <div><span>Última actualización</span><b id="k-upd"></b></div>
+          </div>
+          <label>Enlace para el cliente<input type="text" id="k-link" readonly></label>
+          <div class="actions">
+            <button class="btn" type="button" id="k-copy">Copiar enlace con código</button>
+            <button class="btn sec" type="button" id="k-copy2">Copiar enlace sin código</button>
+          </div>
+          <form id="f-code" class="form" style="padding:14px">
+            <label>Nuevo código (4 a 20 letras o números)<input type="text" id="k-new" class="code-in" maxlength="20"></label>
+            <label style="display:flex;gap:8px;align-items:center;font-weight:400;align-self:end"><input type="checkbox" id="k-on"> Acceso activo</label>
+            <div class="full actions"><button class="btn" type="submit">Guardar</button><button class="btn sec" type="button" id="k-rand">Generar código</button><p class="msg" id="k-msg"></p></div>
+          </form>
+          <p style="margin:0;font-size:13px;color:var(--mut)">Al cambiar el código, el enlace anterior deja de funcionar. Desactive el acceso para cerrar la recepción de solicitudes.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap no-print">
+  <span>Constructora Rafmor · Propuesta de Renovación de Uniformes FANB</span>
+  <button class="link" type="button" id="b-int">Acceso interno</button>
+</footer>
+
+<dialog id="dlg-login">
+  <form method="dialog" id="f-login">
+    <h2>Acceso interno</h2>
+    <p style="margin:0;color:var(--mut);font-size:14px">Solo para el usuario maestro de Puestos Fronterizos.</p>
+    <label>Correo<input type="email" id="l-mail" required autocomplete="username"></label>
+    <label>Contraseña<input type="password" id="l-pass" required autocomplete="current-password"></label>
+    <p class="msg err" id="l-msg" role="alert"></p>
+    <div class="actions"><button class="btn" type="submit" id="l-btn" value="ok">Entrar</button><button class="btn sec" type="button" id="l-cancel">Cancelar</button></div>
+  </form>
+</dialog>
+
+<div class="toast hide" id="toast" role="status"></div>
+
+<script>
+'use strict';
+const SB_URL = 'https://rekpmxjpfcrikamujvao.supabase.co';
+const SB_KEY = 'sb_publishable_OpUSrWzMjSYsEHL-8FFhRA_trlvUdo1';
+const DATA = {"cats":[{"id":"uniforme","titulo":"Uniforme de campaña","sub":"Base para el N°4 Patriota Tiuna"},{"id":"cubre","titulo":"Gorras, sombreros y cascos","sub":"Cubrecabezas del Patriota Tiuna"},{"id":"calzado","titulo":"Botas y guantes","sub":""},{"id":"chalecos","titulo":"Chalecos y portaplacas","sub":"Chaleco Tiuna, táctico y de orden interno"},{"id":"morrales","titulo":"Morrales","sub":""},{"id":"bolsos","titulo":"Bolsos y duffels","sub":""},{"id":"aviacion","titulo":"Línea paracaidista","sub":"Para Aviación y unidades aerotransportadas"},{"id":"accesorios","titulo":"Accesorios y protección","sub":"MOLLE, rodilleras y coderas"},{"id":"fundas","titulo":"Fundas de arma","sub":""},{"id":"local","titulo":"Producción local","sub":"Prendas sencillas para confeccionar en Venezuela"}],"prods":[{"ref":"PT-UC-01","cat":"uniforme","nombre":"Conjunto camisa de combate + pantalón táctico","colores":"Verde OD","nota":"Camisa tipo combat shirt con mangas ripstop y pantalón con bolsillos de carga.","img":"img/PT-UC-01.jpg"},{"ref":"PT-UC-02","cat":"uniforme","nombre":"Uniforme ACU ripstop (chaqueta + pantalón)","colores":"Verde OD","nota":"Corte más cercano al Patriota Tiuna: cuello mao, bolsillos de pecho inclinados, velcro en mangas.","img":"img/PT-UC-02.jpg"},{"ref":"PT-UC-03","cat":"uniforme","nombre":"Chaqueta táctica con capucha","colores":"Verde, coyote, negro (S–3XL)","nota":"Referencia para la chaqueta Patriota Tiuna de lluvia.","img":"img/PT-UC-03.jpg"},{"ref":"PT-CB-01","cat":"cubre","nombre":"Sombrero boonie ripstop","colores":"Verde ranger, negro, multicam, tan","nota":"Con cinta para camuflaje y velcro para insignia.","img":"img/PT-CB-01.jpg"},{"ref":"PT-CB-02","cat":"cubre","nombre":"Gorra táctica ripstop con velcro","colores":"Verde OD","nota":"Base para la gorra del Patriota Tiuna (escudo bordado en lugar del velcro).","img":"img/PT-CB-02.jpg"},{"ref":"PT-CB-03","cat":"cubre","nombre":"Sombrero boonie de algodón twill","colores":"A-TACS FG, negro, python, CP, caqui, woodland","nota":"Tallas M, L y XXL.","img":"img/PT-CB-03.jpg"},{"ref":"PT-CB-04","cat":"cubre","nombre":"Gorra ajustable","colores":"A-TACS FG, ACU, negro, python, CP, verde OD","nota":"","img":"img/PT-CB-04.jpg"},{"ref":"PT-BG-01","cat":"calzado","nombre":"Botas tácticas de caña alta","colores":"Negro","nota":"Cuero y lona con cordones; tallas EUR.","img":"img/PT-BG-01.jpg"},{"ref":"PT-BG-02","cat":"calzado","nombre":"Guantes tácticos medio dedo con nudillera","colores":"Verde OD","nota":"Protección rígida en nudillos y cierre de velcro.","img":"img/PT-BG-02.jpg"},{"ref":"PT-BG-03","cat":"calzado","nombre":"Guantes medio dedo con protector","colores":"Camuflado, negro, verde, tan","nota":"Se fabrica sin marcas comerciales.","img":"img/PT-BG-03.jpg"},{"ref":"PT-CH-01","cat":"chalecos","nombre":"Chaleco MOLLE","colores":"Negro, verde OD, tan, MC, MCBK","nota":"","img":"img/PT-CH-01.jpg"},{"ref":"PT-CH-02","cat":"chalecos","nombre":"Portaplacas MOLLE","colores":"Negro, verde OD, tan, MC, MCBK","nota":"","img":"img/PT-CH-02.jpg"},{"ref":"PT-CH-03","cat":"chalecos","nombre":"Chaleco MOLLE de malla","colores":"Negro, verde OD, tan, MC, MCBK","nota":"","img":"img/PT-CH-03.jpg"},{"ref":"PT-CH-04","cat":"chalecos","nombre":"Portaplacas táctico","colores":"Negro, ranger green, tan, MCBK","nota":"","img":"img/PT-CH-04.jpg"},{"ref":"PT-CH-05","cat":"chalecos","nombre":"Portaplacas táctico","colores":"Negro, ranger green, tan, MCBK","nota":"","img":"img/PT-CH-05.jpg"},{"ref":"PT-CH-06","cat":"chalecos","nombre":"Chaleco táctico con cargadores","colores":"Negro, ranger green, tan, MCBK","nota":"","img":"img/PT-CH-06.jpg"},{"ref":"PT-CH-07","cat":"chalecos","nombre":"Chaleco táctico de liberación rápida","colores":"Negro, ranger green, tan, MCBK","nota":"","img":"img/PT-CH-07.jpg"},{"ref":"PT-CH-08","cat":"chalecos","nombre":"Portaplacas ligero","colores":"Negro, ranger green, tan, MCBK","nota":"","img":"img/PT-CH-08.jpg"},{"ref":"PT-CH-09","cat":"chalecos","nombre":"Chaleco portaplacas con bolsillos","colores":"Negro, verde OD, tan, gris, MC, MCBK, woodland","nota":"","img":"img/PT-CH-09.jpg"},{"ref":"PT-CH-10","cat":"chalecos","nombre":"Chaleco de asalto MOLLE","colores":"Negro, coyote, verde, MC","nota":"","img":"img/PT-CH-10.jpg"},{"ref":"PT-CH-11","cat":"chalecos","nombre":"Chaleco corte láser","colores":"Verde OD, tan, gris","nota":"","img":"img/PT-CH-11.jpg"},{"ref":"PT-CH-12","cat":"chalecos","nombre":"Portaplacas Sentry","colores":"Negro, verde OD, tan, MC, MCBK","nota":"","img":"img/PT-CH-12.jpg"},{"ref":"PT-CH-13","cat":"chalecos","nombre":"Chaleco policial","colores":"Negro","nota":"Referencia para chaleco de orden interno (GNB).","img":"img/PT-CH-13.jpg"},{"ref":"PT-MR-01","cat":"morrales","nombre":"Morral de expedición 65 L","colores":"Negro, verde OD, tan, MC, MCBK","nota":"","img":"img/PT-MR-01.jpg"},{"ref":"PT-MR-02","cat":"morrales","nombre":"Morral táctico","colores":"Negro, verde OD, tan, MC, MCBK","nota":"","img":"img/PT-MR-02.jpg"},{"ref":"PT-MR-03","cat":"morrales","nombre":"Morral táctico","colores":"Negro, verde OD, tan, MC, MCBK","nota":"","img":"img/PT-MR-03.jpg"},{"ref":"PT-MR-04","cat":"morrales","nombre":"Morral médico","colores":"Negro, verde OD, rojo","nota":"","img":"img/PT-MR-04.jpg"},{"ref":"PT-MR-05","cat":"morrales","nombre":"Morral corte láser","colores":"Negro, verde OD, tan, MC, MCBK, woodland","nota":"","img":"img/PT-MR-05.jpg"},{"ref":"PT-MR-06","cat":"morrales","nombre":"Morral táctico","colores":"Negro, gris, verde OD, tan, ATACS, MC, MCBK, woodland","nota":"","img":"img/PT-MR-06.jpg"},{"ref":"PT-MR-07","cat":"morrales","nombre":"Morral táctico","colores":"Negro, ranger green, tan, MCBK, gris, MC","nota":"","img":"img/PT-MR-07.jpg"},{"ref":"PT-MR-08","cat":"morrales","nombre":"Morral táctico","colores":"Negro, ranger green, tan, MCBK, gris, MC","nota":"","img":"img/PT-MR-08.jpg"},{"ref":"PT-MR-09","cat":"morrales","nombre":"Morral táctico","colores":"Negro, ranger green, tan, MCBK, gris, MC","nota":"","img":"img/PT-MR-09.jpg"},{"ref":"PT-MR-10","cat":"morrales","nombre":"Morral táctico","colores":"Negro, ranger green, tan, MCBK, gris, MC","nota":"","img":"img/PT-MR-10.jpg"},{"ref":"PT-MR-11","cat":"morrales","nombre":"Morral táctico","colores":"Negro, ranger green, tan, MCBK, gris, MC","nota":"","img":"img/PT-MR-11.jpg"},{"ref":"PT-MR-12","cat":"morrales","nombre":"Morral táctico","colores":"Negro, ranger green, tan, MCBK, gris, MC","nota":"","img":"img/PT-MR-12.jpg"},{"ref":"PT-MR-13","cat":"morrales","nombre":"Morral de operaciones 40 L","colores":"Negro, verde OD, tan, MCBK, OCP, gris","nota":"","img":"img/PT-MR-13.jpg"},{"ref":"PT-MR-14","cat":"morrales","nombre":"Morral expandible 39–60 L","colores":"Verde OD, negro, coyote, MC, woodland y otros","nota":"","img":"img/PT-MR-14.jpg"},{"ref":"PT-MR-15","cat":"morrales","nombre":"Morral expandible con riñonera","colores":"Verde OD, negro, gris, MC, woodland, tan","nota":"","img":"img/PT-MR-15.jpg"},{"ref":"PT-MR-16","cat":"morrales","nombre":"Morral de asalto","colores":"Verde OD, negro, coyote, gris, MC, OCP","nota":"","img":"img/PT-MR-16.jpg"},{"ref":"PT-MR-17","cat":"morrales","nombre":"Morral negro","colores":"Negro","nota":"","img":"img/PT-MR-17.jpg"},{"ref":"PT-BL-01","cat":"bolsos","nombre":"Bolso duffel con correas de hombro","colores":"Negro, verde OD, tan, MC, MCBK","nota":"","img":"img/PT-BL-01.jpg"},{"ref":"PT-BL-02","cat":"bolsos","nombre":"Bolso duffel","colores":"Negro, verde OD, tan, MCBK","nota":"","img":"img/PT-BL-02.jpg"},{"ref":"PT-BL-03","cat":"bolsos","nombre":"Bolso duffel 80 L","colores":"Negro, verde OD, coyote, OCP","nota":"","img":"img/PT-BL-03.jpg"},{"ref":"PT-BL-04","cat":"bolsos","nombre":"Bolso duffel 60 L","colores":"Negro, verde OD, coyote, OCP","nota":"","img":"img/PT-BL-04.jpg"},{"ref":"PT-BL-05","cat":"bolsos","nombre":"Bolso duffel 40 L","colores":"Negro, verde OD, coyote, OCP","nota":"","img":"img/PT-BL-05.jpg"},{"ref":"PT-BL-06","cat":"bolsos","nombre":"Bolso de despliegue con ruedas","colores":"Verde OD, negro, gris, tan, woodland","nota":"","img":"img/PT-BL-06.jpg"},{"ref":"PT-BL-07","cat":"bolsos","nombre":"Bolso táctico de entrenamiento","colores":"Verde, negro, gris, MC, tan","nota":"","img":"img/PT-BL-07.jpg"},{"ref":"PT-BL-08","cat":"bolsos","nombre":"Bolso para casco","colores":"Verde","nota":"","img":"img/PT-BL-08.jpg"},{"ref":"PT-BL-09","cat":"bolsos","nombre":"Bolso táctico para laptop","colores":"Gris, multicam","nota":"","img":"img/PT-BL-09.jpg"},{"ref":"PT-BL-10","cat":"bolsos","nombre":"Bolso bandolera para laptop","colores":"Verde OD, negro, MC, coyote, gris","nota":"","img":"img/PT-BL-10.jpg"},{"ref":"PT-BL-11","cat":"bolsos","nombre":"Bolso bandolera táctico","colores":"Coyote, gris","nota":"","img":"img/PT-BL-11.jpg"},{"ref":"PT-LP-01","cat":"aviacion","nombre":"Bolso tipo paracaídas","colores":"Negro, verde OD, gris","nota":"Estilo Air Force, con hebilla de paracaídas.","img":"img/PT-LP-01.jpg"},{"ref":"PT-LP-02","cat":"aviacion","nombre":"Bolso tipo paracaídas","colores":"Negro, verde OD, gris","nota":"Estilo Air Force, con hebilla de paracaídas.","img":"img/PT-LP-02.jpg"},{"ref":"PT-LP-03","cat":"aviacion","nombre":"Bolso tipo paracaídas","colores":"Negro, verde OD, gris","nota":"Estilo Air Force, con hebilla de paracaídas.","img":"img/PT-LP-03.jpg"},{"ref":"PT-LP-04","cat":"aviacion","nombre":"Morral tipo paracaídas","colores":"Negro, verde OD, gris","nota":"Estilo Air Force, con hebilla de paracaídas.","img":"img/PT-LP-04.jpg"},{"ref":"PT-LP-05","cat":"aviacion","nombre":"Morral tipo paracaídas","colores":"Negro, verde OD, gris","nota":"Estilo Air Force, con hebilla de paracaídas.","img":"img/PT-LP-05.jpg"},{"ref":"PT-LP-06","cat":"aviacion","nombre":"Morral tipo paracaídas","colores":"Negro, verde OD, gris","nota":"Estilo Air Force, con hebilla de paracaídas.","img":"img/PT-LP-06.jpg"},{"ref":"PT-LP-07","cat":"aviacion","nombre":"Bolso tipo paracaídas","colores":"Negro, verde OD, gris","nota":"Estilo Air Force, con hebilla de paracaídas.","img":"img/PT-LP-07.jpg"},{"ref":"PT-LP-08","cat":"aviacion","nombre":"Morral tipo paracaídas","colores":"Negro, verde OD, gris","nota":"Estilo Air Force, con hebilla de paracaídas.","img":"img/PT-LP-08.jpg"},{"ref":"PT-AC-01","cat":"accesorios","nombre":"Portacargador","colores":"Negro, ranger green, tan, MCBK","nota":"","img":"img/PT-AC-01.jpg"},{"ref":"PT-AC-02","cat":"accesorios","nombre":"Portacargador","colores":"Negro, ranger green, tan, MCBK","nota":"","img":"img/PT-AC-02.jpg"},{"ref":"PT-AC-03","cat":"accesorios","nombre":"Portacargador","colores":"Negro, ranger green, tan, MCBK","nota":"","img":"img/PT-AC-03.jpg"},{"ref":"PT-AC-04","cat":"accesorios","nombre":"Portacargador de pistola","colores":"Negro, ranger green, tan, MCBK","nota":"","img":"img/PT-AC-04.jpg"},{"ref":"PT-AC-05","cat":"accesorios","nombre":"Portacargador","colores":"Negro, ranger green, tan, MCBK","nota":"","img":"img/PT-AC-05.jpg"},{"ref":"PT-AC-06","cat":"accesorios","nombre":"Funda de pistola (6 modelos)","colores":"Negro","nota":"","img":"img/PT-AC-06.jpg"},{"ref":"PT-AC-07","cat":"accesorios","nombre":"Muslera con portacargador","colores":"Negro, coyote, verde, gris","nota":"","img":"img/PT-AC-07.jpg"},{"ref":"PT-AC-08","cat":"accesorios","nombre":"Muslera táctica","colores":"Negro, coyote","nota":"","img":"img/PT-AC-08.jpg"},{"ref":"PT-AC-09","cat":"accesorios","nombre":"Bolsa de hidratación 2–3 L","colores":"Negro, verde","nota":"","img":"img/PT-AC-09.jpg"},{"ref":"PT-AC-10","cat":"accesorios","nombre":"Bolsa de descarga plegable","colores":"Negro, tan, verde OD, gris","nota":"","img":"img/PT-AC-10.jpg"},{"ref":"PT-AC-11","cat":"accesorios","nombre":"Bolsa multiuso","colores":"Negro, verde OD, gris, tan, MC","nota":"","img":"img/PT-AC-11.jpg"},{"ref":"PT-AC-12","cat":"accesorios","nombre":"Bolsa médica MOLLE","colores":"Negro, coyote, gris, rojo","nota":"","img":"img/PT-AC-12.jpg"},{"ref":"PT-AC-13","cat":"accesorios","nombre":"Bolsa modular MOLLE","colores":"Negro, coyote, multicam","nota":"","img":"img/PT-AC-13.jpg"},{"ref":"PT-AC-14","cat":"accesorios","nombre":"Parche de grupo sanguíneo","colores":"Varios","nota":"","img":"img/PT-AC-14.jpg"},{"ref":"PT-AC-15","cat":"accesorios","nombre":"Mosquetón porta equipo","colores":"Negro, verde OD, gris, MC, coyote","nota":"","img":"img/PT-AC-15.jpg"},{"ref":"PT-FA-01","cat":"fundas","nombre":"Estuche de arma 28\"","colores":"Negro","nota":"","img":"img/PT-FA-01.jpg"},{"ref":"PT-FA-02","cat":"fundas","nombre":"Funda de fusil 38\" / 42\"","colores":"Negro, multicam, verde, gris","nota":"","img":"img/PT-FA-02.jpg"},{"ref":"PT-FA-03","cat":"fundas","nombre":"Funda de arma 40\"","colores":"Verde OD, negro, ACU y otros","nota":"","img":"img/PT-FA-03.jpg"},{"ref":"PT-FA-04","cat":"fundas","nombre":"Funda doble de fusil","colores":"Negro, multicam, verde OD, tan, gris, OCP","nota":"","img":"img/PT-FA-04.jpg"},{"ref":"PT-CB-05","cat":"cubre","nombre":"Casco táctico tipo FAST","colores":"Negro","nota":"Rieles laterales, montura frontal NVG, paneles de velcro y arnés regulable.","img":"img/PT-CB-05.jpg"},{"ref":"PT-CH-14","cat":"chalecos","nombre":"Chaleco reflectivo de alta visibilidad","colores":"Amarillo fluorescente","nota":"Cintas reflectivas y bolsillos. Se personaliza con texto o insignia para control vial y puestos de control.","img":"img/PT-CH-14.jpg"},{"ref":"PT-AC-16","cat":"accesorios","nombre":"Rodilleras y coderas tácticas (juego)","colores":"Verde OD","nota":"Concha rígida sobre acolchado, correas elásticas con velcro.","img":"img/PT-AC-16.jpg"},{"ref":"PT-PL-01","cat":"local","nombre":"Franelas","colores":"","nota":"Verde oliva (dotación general) y negra (5B). Algodón 160–180 g/m², cuello redondo, sin estampado.","img":"img/PT-PL-01.jpg"},{"ref":"PT-PL-02","cat":"local","nombre":"Uniforme de educación física N°9","colores":"","nota":"Franela y short sprinter dry-fit 140–160 g/m²: verde para profesionales, azul para tropa, “FANB” en amarillo.","img":"img/PT-PL-02.jpg"},{"ref":"PT-PL-03","cat":"local","nombre":"Mono deportivo N°10","colores":"","nota":"Chaqueta y pantalón en la paleta de cada cuerpo, sin rojo. En foto: Armada y Aviación.","img":"img/PT-PL-03.jpg"},{"ref":"PT-PL-04","cat":"local","nombre":"Bufanda triangular de unidad","colores":"","nota":"Poliéster, base negra con el color de la unidad al reverso y escudo bordado de 12 × 10 cm.","img":"img/PT-PL-04.jpg"},{"ref":"PT-PL-05","cat":"local","nombre":"Bufanda de parada","colores":"","nota":"25 × 25 cm en el color de la unidad, exclusiva de paradas y desfiles.","img":"img/PT-PL-05.jpg"},{"ref":"PT-PL-06","cat":"local","nombre":"Bufanda táctica y pañoleta","colores":"","nota":"Malla de algodón, verde o negra (19 × 90 cm); pañoleta de 110 × 110 cm.","img":"img/PT-PL-06.jpg"},{"ref":"PT-PL-07","cat":"local","nombre":"Pasamontañas","colores":"","nota":"Malla de algodón, negro o camuflado.","img":"img/PT-PL-07.jpg"},{"ref":"PT-PL-08","cat":"local","nombre":"Medias","colores":"","nota":"Verde oliva o negras, caña alta.","img":""},{"ref":"PT-PL-09","cat":"local","nombre":"Parches bordados","colores":"","nota":"Porta nombre, FANB, escudo Patriota, grado, REDI, componente y bandera, según medidas del reglamento.","img":"img/PT-PL-09.jpg"}]};
+const IMG_BASE = '/cotizar/';
+const ESTADOS = { nueva: 'Nueva', en_revision: 'En revisión', cotizada: 'Cotizada', cerrada: 'Cerrada', descartada: 'Descartada' };
+const ERRORES = {
+  codigo_invalido: 'El código de acceso no es válido o el acceso fue cerrado. Solicite un código nuevo.',
+  falta_contacto: 'Indique su nombre y apellido.',
+  sin_items: 'Seleccione al menos un producto.',
+  demasiados_items: 'La solicitud tiene demasiados productos.',
+  cantidad_invalida: 'Revise las cantidades: deben ser números enteros mayores que cero.',
+  limite_envios: 'Se recibieron muchas solicitudes en poco tiempo. Intente de nuevo en unos minutos.',
+  solo_maestro: 'Esta cuenta no tiene acceso al panel. Solo el usuario maestro puede entrar.',
+  sin_sesion: 'La sesión expiró. Vuelva a entrar.',
+  codigo_corto: 'El código debe tener entre 4 y 20 letras o números.'
+};
+const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'rafmor-req-auth' } });
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = n => Number(n || 0).toLocaleString('es-VE');
+const BY = Object.fromEntries(DATA.prods.map(p => [p.ref, p]));
+function err(e) {
+  const m = String(e?.message || e || '');
+  for (const k in ERRORES) if (m.includes(k)) return ERRORES[k];
+  if (/Invalid login/i.test(m)) return 'Correo o contraseña incorrectos.';
+  if (/fetch|network|Failed/i.test(m)) return 'Sin conexión. Revise su internet e intente de nuevo.';
+  return 'Ocurrió un error: ' + m;
+}
+function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.remove('hide'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.add('hide'), 3200); }
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('cotfanb:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('cotfanb:' + k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem('cotfanb:' + k); } catch (e) {} }
+};
+function sget(k) { try { return sessionStorage.getItem('cotfanb:' + k); } catch (e) { return null; } }
+function sset(k, v) { try { sessionStorage.setItem('cotfanb:' + k, v); } catch (e) {} }
+
+function show(id) {
+  for (const v of ['v-gate', 'v-cat', 'v-review', 'v-done', 'v-adm']) $('#' + v).classList.toggle('hide', v !== id);
+  window.scrollTo(0, 0);
+}
+function header(t, l) { $('#titulo').textContent = t; $('#lead').textContent = l; }
+
+/* ---------------- Cliente ---------------- */
+let CODE = '';
+let cart = store.get('cart', {});          // ref -> {cantidad, detalle}
+const saveCart = () => store.set('cart', cart);
+
+async function validar(code) {
+  const { data, error } = await sb.rpc('cf_validar', { p_codigo: code });
+  if (error) throw error;
+  return data === true;
+}
+async function entrar(code, silent) {
+  const btn = $('#g-btn'); btn.disabled = true; $('#g-msg').textContent = '';
+  try {
+    if (await validar(code)) { CODE = code.toUpperCase(); sset('code', CODE); abrirCatalogo(); }
+    else { show('v-gate'); if (!silent) $('#g-msg').textContent = ERRORES.codigo_invalido; }
+  } catch (e) { show('v-gate'); $('#g-msg').textContent = err(e); }
+  finally { btn.disabled = false; }
+}
+$('#f-gate').addEventListener('submit', e => { e.preventDefault(); const c = $('#g-code').value.trim(); if (c) entrar(c); });
+
+function card(p) {
+  const it = cart[p.ref]; const n = it ? it.cantidad : 0;
+  const img = p.img ? `<img src="${IMG_BASE + p.img}" alt="" loading="lazy" decoding="async">` : '<span class="none">Sin foto en el reglamento</span>';
+  return `<article class="card${n ? ' on' : ''}" data-ref="${p.ref}" data-q="${esc((p.ref + ' ' + p.nombre + ' ' + p.colores + ' ' + p.nota).toLowerCase())}">
+    <div class="ph">${img}${p.cat === 'local' ? '<span class="tag">Hecho en Venezuela</span>' : ''}</div>
+    <div class="bd"><p class="ref">${p.ref}</p><h3>${esc(p.nombre)}</h3>
+    ${p.colores ? `<p><span class="k">Colores</span>${esc(p.colores)}</p>` : ''}
+    ${p.nota ? `<p>${esc(p.nota)}</p>` : ''}
+    <div class="qty"><button type="button" data-d="-1" aria-label="Quitar una unidad de ${esc(p.nombre)}">−</button>
+    <input type="text" inputmode="numeric" pattern="[0-9]*" value="${n || ''}" placeholder="0" aria-label="Unidades de ${esc(p.nombre)}">
+    <button type="button" data-d="1" aria-label="Agregar una unidad de ${esc(p.nombre)}">+</button></div></div></article>`;
+}
+function abrirCatalogo() {
+  header('Cotización Patriota Tiuna', 'Seleccione los productos que necesita e indique las unidades de cada uno. Al final revise y envíe la solicitud con sus datos de contacto.');
+  if (!$('#secs').childElementCount) {
+    const byCat = {};
+    for (const p of DATA.prods) (byCat[p.cat] ||= []).push(p);
+    $('#chips').innerHTML = DATA.cats.map(c => `<a href="#s-${c.id}">${esc(c.titulo)}<span>${(byCat[c.id] || []).length}</span></a>`).join('');
+    $('#secs').innerHTML = DATA.cats.map(c => `<section id="s-${c.id}"><header class="sh"><h2>${esc(c.titulo)}</h2>${c.sub ? `<p>${esc(c.sub)}</p>` : ''}</header><div class="grid">${(byCat[c.id] || []).map(card).join('')}</div></section>`).join('');
+  }
+  resumen(); show('v-cat');
+}
+function setQty(ref, n, el) {
+  n = Math.max(0, Math.min(1000000, Math.floor(Number(n) || 0)));
+  if (n) cart[ref] = { cantidad: n, detalle: cart[ref]?.detalle || '' }; else delete cart[ref];
+  saveCart();
+  const c = el || document.querySelector(`.card[data-ref="${ref}"]`);
+  if (c) { c.classList.toggle('on', !!n); const i = c.querySelector('.qty input'); if (document.activeElement !== i) i.value = n || ''; }
+  resumen();
+}
+$('#secs').addEventListener('click', e => {
+  const b = e.target.closest('.qty button'); if (!b) return;
+  const c = b.closest('.card'); const ref = c.dataset.ref;
+  setQty(ref, (cart[ref]?.cantidad || 0) + Number(b.dataset.d), c);
+  c.querySelector('.qty input').value = cart[ref]?.cantidad || '';
+});
+$('#secs').addEventListener('input', e => {
+  const i = e.target.closest('.qty input'); if (!i) return;
+  i.value = i.value.replace(/\D/g, '').slice(0, 7);
+  setQty(i.closest('.card').dataset.ref, i.value, i.closest('.card'));
+});
+$('#q').addEventListener('input', () => {
+  const q = $('#q').value.trim().toLowerCase(); let vis = 0;
+  document.querySelectorAll('#secs section').forEach(s => {
+    let n = 0; s.querySelectorAll('.card').forEach(c => { const ok = !q || c.dataset.q.includes(q); c.classList.toggle('hide', !ok); if (ok) n++; });
+    s.classList.toggle('hide', !n); vis += n;
+  });
+  $('#noresults').classList.toggle('hide', vis > 0);
+});
+function totales() { const v = Object.values(cart); return { items: v.length, unidades: v.reduce((a, b) => a + b.cantidad, 0) }; }
+function resumen() {
+  const t = totales();
+  $('#sum').innerHTML = t.items ? `<b>${t.items}</b> ${t.items === 1 ? 'producto' : 'productos'} · <b>${fmt(t.unidades)}</b> unidades` : 'Aún no ha seleccionado productos';
+  $('#b-review').disabled = !t.items; $('#b-clear').classList.toggle('hide', !t.items);
+}
+$('#b-clear').addEventListener('click', () => {
+  if (!confirmar('¿Vaciar todos los productos seleccionados?')) return;
+  cart = {}; saveCart(); document.querySelectorAll('.card.on').forEach(c => { c.classList.remove('on'); c.querySelector('.qty input').value = ''; }); resumen();
+});
+function confirmar(t) { try { return window.confirm(t); } catch (e) { return true; } }
+
+function abrirRevision() {
+  header('Revisar solicitud', 'Confirme las unidades, agregue el color, la talla u otra indicación por producto y complete sus datos.');
+  pintarRevision();
+  const d = store.get('contacto', {});
+  for (const k of ['componente', 'unidad', 'contacto', 'cargo', 'telefono', 'correo']) if (d[k] && !$('#c-' + k).value) $('#c-' + k).value = d[k];
+  show('v-review');
+}
+function orden() { const pos = Object.fromEntries(DATA.prods.map((p, i) => [p.ref, i])); return Object.keys(cart).sort((a, b) => pos[a] - pos[b]); }
+function pintarRevision() {
+  const refs = orden();
+  if (!refs.length) { abrirCatalogo(); return; }
+  $('#rtable tbody').innerHTML = refs.map(r => {
+    const p = BY[r]; const it = cart[r];
+    return `<tr data-ref="${r}"><td class="th">${p.img ? `<img src="${IMG_BASE + p.img}" alt="">` : ''}</td>
+      <td><span class="ref">${r}</span><br><b style="font-weight:600">${esc(p.nombre)}</b></td>
+      <td class="n"><input type="text" inputmode="numeric" value="${it.cantidad}" aria-label="Unidades de ${esc(p.nombre)}"></td>
+      <td class="d"><input type="text" maxlength="300" value="${esc(it.detalle)}" placeholder="${p.colores ? 'Ej.: ' + esc(p.colores.split(',')[0].trim()) : 'Opcional'}" aria-label="Detalle de ${esc(p.nombre)}"></td>
+      <td class="x"><button class="rm" type="button">Quitar</button></td></tr>`;
+  }).join('');
+  pieRevision();
+}
+function pieRevision() { const t = totales(); $('#rtable tfoot').innerHTML = `<tr><td></td><td>${t.items} ${t.items === 1 ? 'producto' : 'productos'}</td><td style="text-align:center">${fmt(t.unidades)}</td><td colspan="2">unidades en total</td></tr>`; }
+$('#rtable').addEventListener('input', e => {
+  const tr = e.target.closest('tr[data-ref]'); if (!tr) return; const r = tr.dataset.ref;
+  if (e.target.closest('td.n')) { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 7); const n = Number(e.target.value); if (n > 0) { cart[r].cantidad = n; saveCart(); pieRevision(); resumen(); } }
+  else if (e.target.closest('td.d')) { cart[r].detalle = e.target.value; saveCart(); }
+});
+$('#rtable').addEventListener('change', e => {
+  const tr = e.target.closest('tr[data-ref]'); if (!tr || !e.target.closest('td.n')) return;
+  if (!(Number(e.target.value) > 0)) e.target.value = cart[tr.dataset.ref].cantidad;
+});
+$('#rtable').addEventListener('click', e => {
+  if (!e.target.closest('.rm')) return; const r = e.target.closest('tr').dataset.ref;
+  setQty(r, 0); pintarRevision();
+});
+$('#b-review').addEventListener('click', abrirRevision);
+$('#b-back').addEventListener('click', () => { abrirCatalogo(); });
+$('#f-send').addEventListener('submit', async e => {
+  e.preventDefault();
+  const m = $('#s-msg'); m.textContent = '';
+  const datos = {}; for (const k of ['componente', 'unidad', 'contacto', 'cargo', 'telefono', 'correo']) datos[k] = $('#c-' + k).value.trim();
+  datos.observaciones = $('#c-obs').value.trim();
+  if (!datos.contacto) { m.textContent = ERRORES.falta_contacto; $('#c-contacto').focus(); return; }
+  if (!datos.telefono) { m.textContent = 'Indique un teléfono de contacto.'; $('#c-telefono').focus(); return; }
+  const refs = orden(); if (!refs.length) { m.textContent = ERRORES.sin_items; return; }
+  datos.items = refs.map(r => ({ ref: r, nombre: BY[r].nombre, cantidad: cart[r].cantidad, detalle: (cart[r].detalle || '').trim() }));
+  const b = $('#b-send'); b.disabled = true; b.textContent = 'Enviando…';
+  try {
+    const { data, error } = await sb.rpc('cf_enviar', { p_codigo: CODE, p_datos: datos });
+    if (error) throw error;
+    store.set('contacto', { componente: datos.componente, unidad: datos.unidad, contacto: datos.contacto, cargo: datos.cargo, telefono: datos.telefono, correo: datos.correo });
+    enviado(data, datos);
+    cart = {}; saveCart(); $('#c-obs').value = '';
+    document.querySelectorAll('.card.on').forEach(c => { c.classList.remove('on'); c.querySelector('.qty input').value = ''; });
+  } catch (x) { m.textContent = err(x); }
+  finally { b.disabled = false; b.textContent = 'Enviar solicitud'; }
+});
+function enviado(num, d) {
+  header('Solicitud enviada', 'Gracias. Le contactaremos con la cotización.');
+  const uni = d.items.reduce((a, b) => a + b.cantidad, 0);
+  $('#d-num').textContent = num;
+  $('#d-txt').textContent = `Recibimos su solicitud de ${d.items.length} ${d.items.length === 1 ? 'producto' : 'productos'} (${fmt(uni)} unidades). Guarde este número para cualquier consulta.`;
+  $('#d-list').innerHTML = `<table class="rtable"><thead><tr><th>Ref.</th><th>Producto</th><th>Unidades</th><th>Detalle</th></tr></thead><tbody>${d.items.map(i => `<tr><td class="ref">${i.ref}</td><td>${esc(i.nombre)}</td><td style="text-align:center">${fmt(i.cantidad)}</td><td>${esc(i.detalle)}</td></tr>`).join('')}</tbody></table>
+    <p style="font-size:13px;color:var(--mut)">${esc([d.contacto, d.cargo, d.componente, d.unidad, d.telefono, d.correo].filter(Boolean).join(' · '))}</p>`;
+  show('v-done'); resumen();
+}
+$('#b-new').addEventListener('click', abrirCatalogo);
+
+/* ---------------- Maestro ---------------- */
+let SOL = [], CUR = null;
+$('#b-int').addEventListener('click', async () => {
+  const { data } = await sb.auth.getSession();
+  if (data?.session && await esMaestro()) { abrirPanel(); return; }
+  $('#l-msg').textContent = ''; $('#dlg-login').showModal();
+});
+$('#l-cancel').addEventListener('click', () => $('#dlg-login').close());
+$('#f-login').addEventListener('submit', async e => {
+  e.preventDefault(); const b = $('#l-btn'); b.disabled = true; $('#l-msg').textContent = '';
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email: $('#l-mail').value.trim(), password: $('#l-pass').value });
+    if (error) throw error;
+    if (!(await esMaestro())) { await sb.auth.signOut({ scope: 'local' }); throw new Error('solo_maestro'); }
+    $('#l-pass').value = ''; $('#dlg-login').close(); abrirPanel();
+  } catch (x) { $('#l-msg').textContent = err(x); }
+  finally { b.disabled = false; }
+});
+async function esMaestro() { const { data, error } = await sb.rpc('cf_soy_maestro'); return !error && data === true; }
+async function abrirPanel() {
+  header('Cotizaciones FANB', 'Panel interno: solicitudes recibidas desde el catálogo Patriota Tiuna.');
+  $('#eyebrow').textContent = 'Constructora Rafmor · Uso interno';
+  const { data } = await sb.auth.getUser(); $('#a-who').textContent = data?.user?.email || '';
+  show('v-adm'); tab('sol'); await cargar();
+}
+$('#a-out').addEventListener('click', async () => {
+  if (!confirmar('¿Cerrar la sesión? También se cerrará en Puestos Fronterizos en este navegador.')) return;
+  await sb.auth.signOut({ scope: 'local' }); location.href = location.pathname;
+});
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => tab(b.dataset.t)));
+function tab(t) {
+  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.t === t)));
+  for (const x of ['sol', 'con', 'acc']) $('#t-' + x).classList.toggle('hide', x !== t);
+  if (t === 'con') consolidado(); if (t === 'acc') acceso();
+}
+async function cargar() {
+  $('#a-list').innerHTML = '<p class="empty">Cargando…</p>';
+  try { const { data, error } = await sb.rpc('cf_listar'); if (error) throw error; SOL = data || []; lista(); }
+  catch (e) { $('#a-list').innerHTML = `<p class="msg err">${esc(err(e))}</p>`; }
+}
+$('#a-reload').addEventListener('click', cargar);
+$('#a-filter').addEventListener('change', lista);
+function fecha(s) { try { return new Date(s).toLocaleString('es-VE', { timeZone: 'America/Caracas', dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { return s; } }
+function lista() {
+  CUR = null; $('#a-det').classList.add('hide'); $('#a-list').classList.remove('hide'); $('#a-stats').classList.remove('hide');
+  const f = $('#a-filter').value; const L = SOL.filter(s => !f || s.estado === f);
+  const n = k => SOL.filter(s => s.estado === k).length;
+  $('#a-stats').innerHTML = `<div><b>${SOL.length}</b>solicitudes</div><div><b>${n('nueva')}</b>nuevas</div><div><b>${n('cotizada')}</b>cotizadas</div><div><b>${fmt(SOL.filter(s => s.estado !== 'descartada').reduce((a, s) => a + s.total_unidades, 0))}</b>unidades solicitadas</div>`;
+  $('#a-list').innerHTML = L.length ? L.map(s => `<button class="row" type="button" data-id="${s.id}">
+      <span class="no">${esc(s.numero)}</span>
+      <span><span class="who">${esc(s.contacto)}</span>${s.cargo ? ' · ' + esc(s.cargo) : ''}<br><span class="meta">${esc([s.componente, s.unidad].filter(Boolean).join(' · ') || 'Sin componente')} · ${fecha(s.creado)}</span></span>
+      <span style="text-align:right"><span class="pill ${s.estado}">${ESTADOS[s.estado]}</span><br><span class="meta">${s.total_items} prod. · ${fmt(s.total_unidades)} u.</span></span></button>`).join('')
+    : '<p class="empty">No hay solicitudes' + (f ? ' con este estado' : ' todavía') + '.</p>';
+}
+$('#a-list').addEventListener('click', e => { const r = e.target.closest('.row'); if (r) detalle(Number(r.dataset.id)); });
+function detalle(id) {
+  const s = SOL.find(x => x.id === id); if (!s) return; CUR = s;
+  $('#a-list').classList.add('hide'); $('#a-stats').classList.add('hide');
+  const d = $('#a-det'); d.classList.remove('hide');
+  d.innerHTML = `<div class="actions" style="justify-content:space-between"><button class="btn sec" type="button" id="x-back">← Solicitudes</button><span class="pill ${s.estado}">${ESTADOS[s.estado]}</span></div>
+    <div><p class="eyebrow">${fecha(s.creado)}</p><h2 style="font:500 34px/1 var(--display);margin:4px 0 0">${esc(s.numero)}</h2></div>
+    <div class="kv">
+      <div><span>Contacto</span>${esc(s.contacto)}</div><div><span>Grado o cargo</span>${esc(s.cargo || '—')}</div>
+      <div><span>Componente</span>${esc(s.componente || '—')}</div><div><span>Unidad</span>${esc(s.unidad || '—')}</div>
+      <div><span>Teléfono</span>${s.telefono ? `<a href="tel:${esc(s.telefono)}">${esc(s.telefono)}</a>` : '—'}</div><div><span>Correo</span>${s.correo ? `<a href="mailto:${esc(s.correo)}">${esc(s.correo)}</a>` : '—'}</div>
+    </div>
+    ${s.observaciones ? `<div class="kv"><div style="grid-column:1/-1"><span>Observaciones</span>${esc(s.observaciones).replace(/\n/g, '<br>')}</div></div>` : ''}
+    <table class="rtable"><thead><tr><th class="th"></th><th>Producto</th><th>Unidades</th><th>Detalle</th></tr></thead><tbody>
+    ${s.items.map(i => { const p = BY[i.ref]; return `<tr><td class="th">${p && p.img ? `<img src="${IMG_BASE + p.img}" alt="">` : ''}</td><td><span class="ref">${esc(i.ref)}</span><br>${esc(i.nombre)}</td><td style="text-align:center;font-weight:600">${fmt(i.cantidad)}</td><td>${esc(i.detalle || '')}</td></tr>`; }).join('')}
+    </tbody><tfoot><tr><td></td><td>${s.total_items} ${s.total_items === 1 ? 'producto' : 'productos'}</td><td style="text-align:center">${fmt(s.total_unidades)}</td><td>unidades</td></tr></tfoot></table>
+    <form class="form" id="f-est">
+      <label>Estado<select id="x-est">${Object.entries(ESTADOS).map(([k, v]) => `<option value="${k}"${k === s.estado ? ' selected' : ''}>${v}</option>`).join('')}</select></label>
+      <label class="full">Nota interna (no la ve el cliente)<textarea id="x-nota" maxlength="2000">${esc(s.nota_interna || '')}</textarea></label>
+      <div class="full actions"><button class="btn" type="submit">Guardar</button><button class="btn sec" type="button" id="x-xls">Descargar Excel</button><button class="btn sec" type="button" id="x-wa">Copiar resumen</button><button class="btn dang" type="button" id="x-del">Borrar</button><p class="msg" id="x-msg"></p></div>
+    </form>`;
+  $('#x-back').onclick = lista;
+  $('#f-est').onsubmit = async e => {
+    e.preventDefault(); const m = $('#x-msg'); m.className = 'msg'; m.textContent = 'Guardando…';
+    try {
+      const { error } = await sb.rpc('cf_actualizar', { p_id: s.id, p_estado: $('#x-est').value, p_nota: $('#x-nota').value.trim() || null });
+      if (error) throw error;
+      s.estado = $('#x-est').value; s.nota_interna = $('#x-nota').value.trim(); toast('Solicitud ' + s.numero + ' actualizada'); detalle(s.id);
+    } catch (x) { m.className = 'msg err'; m.textContent = err(x); }
+  };
+  $('#x-xls').onclick = () => excel([s], s.numero);
+  $('#x-wa').onclick = () => copiar(textoResumen(s), 'Resumen copiado');
+  $('#x-del').onclick = async () => {
+    if (!confirmar('¿Borrar la solicitud ' + s.numero + '? No se puede deshacer.')) return;
+    const { error } = await sb.rpc('cf_borrar', { p_id: s.id });
+    if (error) { toast(err(error)); return; }
+    SOL = SOL.filter(x => x.id !== s.id); toast('Solicitud borrada'); lista();
+  };
+  window.scrollTo(0, 0);
+}
+function textoResumen(s) {
+  return `*${s.numero}* · ${fecha(s.creado)}\n${[s.contacto, s.cargo].filter(Boolean).join(', ')}\n${[s.componente, s.unidad].filter(Boolean).join(' · ')}\n${[s.telefono, s.correo].filter(Boolean).join(' · ')}\n\n` +
+    s.items.map(i => `• ${i.ref} ${i.nombre}: ${fmt(i.cantidad)}${i.detalle ? ' (' + i.detalle + ')' : ''}`).join('\n') +
+    `\n\nTotal: ${s.total_items} productos, ${fmt(s.total_unidades)} unidades` + (s.observaciones ? `\nObservaciones: ${s.observaciones}` : '');
+}
+async function copiar(t, ok) {
+  try { await navigator.clipboard.writeText(t); toast(ok); }
+  catch (e) { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); toast(ok); } catch (x) { toast('No se pudo copiar'); } a.remove(); }
+}
+function agregado(incl) {
+  const m = {};
+  for (const s of SOL) {
+    if (!incl && s.estado === 'descartada') continue;
+    for (const i of s.items) { const x = (m[i.ref] ||= { ref: i.ref, nombre: i.nombre, cantidad: 0, sol: [] }); x.cantidad += i.cantidad; x.sol.push(s.numero + ': ' + i.cantidad); }
+  }
+  const pos = Object.fromEntries(DATA.prods.map((p, i) => [p.ref, i]));
+  return Object.values(m).sort((a, b) => (pos[a.ref] ?? 999) - (pos[b.ref] ?? 999));
+}
+function consolidado() {
+  const A = agregado($('#c-desc').checked);
+  $('#c-body').innerHTML = A.length ? `<table class="rtable"><thead><tr><th class="th"></th><th>Producto</th><th>Unidades</th><th>Por solicitud</th></tr></thead><tbody>
+    ${A.map(a => { const p = BY[a.ref]; return `<tr><td class="th">${p && p.img ? `<img src="${IMG_BASE + p.img}" alt="">` : ''}</td><td><span class="ref">${esc(a.ref)}</span><br>${esc(a.nombre)}</td><td style="text-align:center;font-weight:600">${fmt(a.cantidad)}</td><td style="font-size:12.5px;color:var(--mut)">${esc(a.sol.join(' · '))}</td></tr>`; }).join('')}
+    </tbody><tfoot><tr><td></td><td>${A.length} ${A.length === 1 ? 'producto' : 'productos'}</td><td style="text-align:center">${fmt(A.reduce((x, y) => x + y.cantidad, 0))}</td><td>unidades</td></tr></tfoot></table>` : '<p class="empty">Todavía no hay solicitudes.</p>';
+}
+$('#c-desc').addEventListener('change', consolidado);
+$('#c-xls').addEventListener('click', () => excel(SOL.filter(s => $('#c-desc').checked || s.estado !== 'descartada'), 'Consolidado'));
+
+let EXJS = null;
+function cargarExcelJS() {
+  if (window.ExcelJS) return Promise.resolve();
+  return EXJS ||= new Promise((ok, ko) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js'; s.onload = ok; s.onerror = () => { EXJS = null; ko(new Error('No se pudo cargar el generador de Excel')); }; document.head.appendChild(s); });
+}
+async function imgB64(src) {
+  try { const r = await fetch(src); const b = await r.blob(); return await new Promise(ok => { const f = new FileReader(); f.onload = () => ok(f.result); f.readAsDataURL(b); }); } catch (e) { return null; }
+}
+async function excel(lista, nombre) {
+  if (!lista.length) { toast('No hay solicitudes para exportar'); return; }
+  toast('Preparando Excel…');
+  try {
+    await cargarExcelJS();
+    const wb = new ExcelJS.Workbook(); wb.creator = 'Constructora Rafmor';
+    const head = { font: { bold: true, color: { argb: 'FFEEEBDF' } }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF20251B' } }, alignment: { vertical: 'middle' } };
+    const cache = {};
+    async function foto(ws, ref, row) {
+      const p = BY[ref]; if (!p || !p.img) return;
+      if (!(ref in cache)) { const d = await imgB64(IMG_BASE + p.img); cache[ref] = d ? wb.addImage({ base64: d, extension: 'jpeg' }) : null; }
+      if (cache[ref] != null) ws.addImage(cache[ref], { tl: { col: 0.1, row: row - 1 + 0.08 }, ext: { width: 64, height: 64 }, editAs: 'oneCell' });
+    }
+    // Hoja 1: consolidado por producto
+    const A = (() => { const m = {}; for (const s of lista) for (const i of s.items) { const x = (m[i.ref] ||= { ref: i.ref, nombre: i.nombre, cantidad: 0, det: [] }); x.cantidad += i.cantidad; x.det.push(s.numero + ': ' + i.cantidad + (i.detalle ? ' (' + i.detalle + ')' : '')); } const pos = Object.fromEntries(DATA.prods.map((p, i) => [p.ref, i])); return Object.values(m).sort((a, b) => (pos[a.ref] ?? 999) - (pos[b.ref] ?? 999)); })();
+    const w1 = wb.addWorksheet('Por producto', { views: [{ state: 'frozen', ySplit: 3 }] });
+    w1.columns = [{ width: 11 }, { width: 13 }, { width: 44 }, { width: 13 }, { width: 60 }];
+    w1.mergeCells('A1:E1'); w1.getCell('A1').value = 'Cotización Patriota Tiuna · ' + nombre; w1.getCell('A1').font = { bold: true, size: 14 };
+    w1.mergeCells('A2:E2'); w1.getCell('A2').value = `${lista.length} solicitud(es) · ${A.length} productos · ${A.reduce((a, b) => a + b.cantidad, 0)} unidades · generado ${fecha(new Date().toISOString())}`;
+    const h1 = w1.getRow(3); h1.values = ['Foto', 'Ref.', 'Producto', 'Unidades', 'Detalle por solicitud']; h1.eachCell(c => Object.assign(c, head)); h1.height = 22;
+    let r = 4;
+    for (const a of A) { const row = w1.getRow(r); row.values = ['', a.ref, a.nombre, a.cantidad, a.det.join('\n')]; row.height = 54; row.alignment = { vertical: 'middle', wrapText: true }; row.getCell(4).font = { bold: true }; row.getCell(4).alignment = { vertical: 'middle', horizontal: 'center' }; await foto(w1, a.ref, r); r++; }
+    const tr = w1.getRow(r); tr.values = ['', '', 'TOTAL', { formula: `SUM(D4:D${r - 1})` }, '']; tr.font = { bold: true }; tr.height = 20; tr.getCell(4).alignment = { horizontal: 'center' };
+    // Hoja 2: detalle por solicitud
+    const w2 = wb.addWorksheet('Por solicitud', { views: [{ state: 'frozen', ySplit: 1 }] });
+    w2.columns = [{ width: 11 }, { width: 18 }, { width: 24 }, { width: 22 }, { width: 26 }, { width: 24 }, { width: 16 }, { width: 26 }, { width: 11 }, { width: 40 }, { width: 11 }, { width: 30 }, { width: 13 }];
+    const h2 = w2.getRow(1); h2.values = ['Número', 'Fecha', 'Contacto', 'Grado o cargo', 'Componente', 'Unidad', 'Teléfono', 'Correo', 'Ref.', 'Producto', 'Unidades', 'Detalle', 'Estado']; h2.eachCell(c => Object.assign(c, head)); h2.height = 22;
+    let r2 = 2;
+    for (const s of lista) for (const i of s.items) { w2.getRow(r2).values = [s.numero, fecha(s.creado), s.contacto, s.cargo || '', s.componente || '', s.unidad || '', s.telefono || '', s.correo || '', i.ref, i.nombre, i.cantidad, i.detalle || '', ESTADOS[s.estado]]; r2++; }
+    w2.autoFilter = { from: 'A1', to: 'M1' };
+    // Hoja 3: datos de contacto
+    const w3 = wb.addWorksheet('Solicitudes');
+    w3.columns = [{ width: 11 }, { width: 18 }, { width: 24 }, { width: 22 }, { width: 26 }, { width: 24 }, { width: 16 }, { width: 26 }, { width: 10 }, { width: 11 }, { width: 13 }, { width: 50 }, { width: 40 }];
+    const h3 = w3.getRow(1); h3.values = ['Número', 'Fecha', 'Contacto', 'Grado o cargo', 'Componente', 'Unidad', 'Teléfono', 'Correo', 'Productos', 'Unidades', 'Estado', 'Observaciones', 'Nota interna']; h3.eachCell(c => Object.assign(c, head)); h3.height = 22;
+    lista.forEach((s, k) => { const row = w3.getRow(k + 2); row.values = [s.numero, fecha(s.creado), s.contacto, s.cargo || '', s.componente || '', s.unidad || '', s.telefono || '', s.correo || '', s.total_items, s.total_unidades, ESTADOS[s.estado], s.observaciones || '', s.nota_interna || '']; row.alignment = { vertical: 'top', wrapText: true }; });
+    const buf = await wb.xlsx.writeBuffer();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+    a.download = `Cotizacion_Patriota_Tiuna_${nombre.replace(/[^A-Za-z0-9-]/g, '_')}.xlsx`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    toast('Excel descargado');
+  } catch (e) { toast(err(e)); }
+}
+
+function linkCliente(conCodigo, code) { const u = new URL(location.origin + location.pathname); if (conCodigo && code) u.searchParams.set('c', code); return u.href; }
+let CFG = null;
+async function acceso() {
+  $('#k-msg').textContent = '';
+  try {
+    const { data, error } = await sb.rpc('cf_config'); if (error) throw error; CFG = data;
+    $('#k-code').textContent = data.codigo; $('#k-act').textContent = data.activo ? 'Activo' : 'Cerrado';
+    $('#k-upd').textContent = fecha(data.actualizado); $('#k-link').value = linkCliente(true, data.codigo);
+    $('#k-new').value = data.codigo; $('#k-on').checked = !!data.activo;
+  } catch (e) { $('#k-msg').className = 'msg err'; $('#k-msg').textContent = err(e); }
+}
+$('#k-copy').addEventListener('click', () => CFG && copiar(linkCliente(true, CFG.codigo), 'Enlace con código copiado'));
+$('#k-copy2').addEventListener('click', () => copiar(linkCliente(false), 'Enlace copiado (el cliente deberá escribir el código)'));
+$('#k-rand').addEventListener('click', () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; const v = new Uint32Array(8); crypto.getRandomValues(v); $('#k-new').value = Array.from(v, x => A[x % A.length]).join(''); });
+$('#f-code').addEventListener('submit', async e => {
+  e.preventDefault(); const m = $('#k-msg'); m.className = 'msg'; m.textContent = 'Guardando…';
+  try { const { error } = await sb.rpc('cf_config_guardar', { p_codigo: $('#k-new').value.trim(), p_activo: $('#k-on').checked }); if (error) throw error; await acceso(); m.className = 'msg ok'; m.textContent = 'Guardado.'; }
+  catch (x) { m.className = 'msg err'; m.textContent = err(x); }
+});
+
+/* ---------------- Inicio ---------------- */
+(async function inicio() {
+  const u = new URL(location.href);
+  if (u.searchParams.has('interno')) { const { data } = await sb.auth.getSession(); if (data?.session && await esMaestro()) { abrirPanel(); return; } }
+  const c = (u.searchParams.get('c') || sget('code') || '').trim();
+  if (c) { $('#g-code').value = c; await entrar(c, false); }
+  else show('v-gate');
+  if (u.searchParams.has('c')) { u.searchParams.delete('c'); history.replaceState(null, '', u.pathname + u.search + u.hash); }
+})();
+</script>
+</body>
+</html>
