@@ -29,8 +29,6 @@ a{color:var(--brass2)}
 .btn.sec{background:transparent;color:var(--fg);border-color:var(--line2)}
 .btn.sec:hover{border-color:var(--brass)}
 .btn.dang{background:transparent;color:var(--err);border-color:var(--err)}
-.btn.wa{background:#1F8A4C;border-color:#1F8A4C;color:#fff}
-.btn.wa:hover{background:#25A35A;border-color:#25A35A}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 :focus-visible{outline:2px solid var(--brass2);outline-offset:2px}
 .link{background:none;border:0;padding:0;color:var(--mut);text-decoration:underline;cursor:pointer;font-size:13px}
@@ -451,11 +449,9 @@ footer.f .wrap{padding-block:26px 34px;color:var(--dim);font-size:13px;display:f
           <form id="f-code" class="form" style="padding:14px">
             <label>Nuevo código (4 a 20 letras o números)<input type="text" id="k-new" class="code-in" maxlength="20"></label>
             <label style="display:flex;gap:8px;align-items:center;font-weight:400;align-self:end"><input type="checkbox" id="k-on"> Acceso activo</label>
-            <label>WhatsApp de ventas (con código de país)<input type="tel" id="k-wa" maxlength="20" placeholder="584141234567"></label>
-            <label>Correo de ventas<input type="email" id="k-mail" maxlength="160" placeholder="ventas@empresa.com"></label>
             <div class="full actions"><button class="btn" type="submit">Guardar</button><button class="btn sec" type="button" id="k-rand">Generar código</button><p class="msg" id="k-msg"></p></div>
           </form>
-          <p style="margin:0;font-size:13px;color:var(--mut)">Al cambiar el código, el enlace anterior deja de funcionar. Desactive el acceso para cerrar la recepción de solicitudes. El WhatsApp y el correo de ventas son los destinos de los botones que ve el cliente al enviar su solicitud.</p>
+          <p style="margin:0;font-size:13px;color:var(--mut)">Al cambiar el código, el enlace anterior deja de funcionar. Desactive el acceso para cerrar la recepción de solicitudes. Cada pedido nuevo le llega al usuario maestro como aviso en la app (y al teléfono y correo si están activos).</p>
         </div>
       </div>
     </div>
@@ -575,7 +571,7 @@ function header(t, l) { $('#titulo').textContent = t; $('#lead').textContent = l
 const groupOf = p => GROUPS.find(g => g.id !== 'todo' && ((g.refs || []).includes(p.ref) || ((g.cats || []).includes(p.cat) && !(g.not || []).includes(p.ref)))).id;
 
 /* ================= Acceso ================= */
-let CODE = '', CONTACTO = { whatsapp: '', correo: '' };
+let CODE = '';
 async function entrar(code, silent) {
   const btn = $('#g-btn'); btn.disabled = true; $('#g-msg').textContent = '';
   try {
@@ -583,7 +579,6 @@ async function entrar(code, silent) {
     if (error) throw error;
     if (data === true) {
       CODE = code.toUpperCase(); sset('code', CODE);
-      try { const r = await sb.rpc('cf_contacto', { p_codigo: CODE }); if (!r.error && r.data) CONTACTO = r.data; } catch (e) {}
       abrirTienda();
     } else { show('v-gate'); if (!silent) $('#g-msg').textContent = ERRORES.codigo_invalido; }
   } catch (e) { show('v-gate'); $('#g-msg').textContent = err(e); }
@@ -787,7 +782,7 @@ function pintarCarrito() {
     <div class="ctl"><div class="step"><button type="button" data-d="-1" aria-label="Menos">−</button><input type="text" inputmode="numeric" value="${l.cantidad}" aria-label="Unidades"><button type="button" data-d="1" aria-label="Más">+</button></div><button class="rm" type="button">Quitar</button></div></div></div>`; }).join('');
   if (ETAPA === 'datos') return pintarDatos();
   F.innerHTML = `<div class="tot"><span>${cart.length} ${cart.length === 1 ? 'renglón' : 'renglones'}</span><span><b>${fmt(totU())}</b> unidades</span></div>
-    <button class="btn" type="button" id="dr-next">Generar solicitud de cotización</button>
+    <button class="btn" type="button" id="dr-next">Continuar con el pedido</button>
     <button class="back" type="button" id="dr-clear">Vaciar pedido</button>`;
   $('#dr-next').onclick = () => { ETAPA = 'datos'; pintarCarrito(); };
   $('#dr-clear').onclick = () => { if (!confirmar('¿Vaciar todo el pedido?')) return; const refs = cart.map(l => l.ref); cart = []; saveCart(); pintarCarrito(); [...new Set(refs)].forEach(refrescarCard); };
@@ -814,7 +809,7 @@ function pintarDatos() {
     <label>Observaciones<textarea id="c-obs" maxlength="2000" placeholder="Plazos, lugar de entrega, tallas u otra información"></textarea></label>
   </form>`;
   $('#dr-foot').innerHTML = `<div class="tot"><span>${cart.length} ${cart.length === 1 ? 'renglón' : 'renglones'}</span><span><b>${fmt(totU())}</b> unidades</span></div>
-    <button class="btn" type="submit" form="f-send" id="b-send">Enviar solicitud</button><p class="msg err" id="s-msg" role="alert"></p>`;
+    <button class="btn" type="submit" form="f-send" id="b-send">Enviar pedido</button><p class="msg err" id="s-msg" role="alert"></p>`;
   $('#dr-body').scrollTop = 0;
   $('#dr-back').onclick = () => { ETAPA = 'lista'; pintarCarrito(); };
   $('#f-send').onsubmit = enviar;
@@ -835,7 +830,7 @@ async function enviar(e) {
     ULTIMA = { numero: data, ...datos, fecha: new Date() };
     const refs = cart.map(l => l.ref); cart = []; saveCart(); [...new Set(refs)].forEach(refrescarCard);
     ETAPA = 'ok'; pintarCarrito();
-  } catch (x) { m.textContent = err(x); b.disabled = false; b.textContent = 'Enviar solicitud'; }
+  } catch (x) { m.textContent = err(x); b.disabled = false; b.textContent = 'Enviar pedido'; }
 }
 function textoPedido(u) {
   const L = u.items.map(i => `• ${i.ref} — ${i.nombre}: *${fmt(i.cantidad)}*${i.detalle ? ' (' + i.detalle + ')' : ''}`).join('\n');
@@ -844,19 +839,14 @@ function textoPedido(u) {
 }
 function pintarOk() {
   const u = ULTIMA; const uni = u.items.reduce((a, b) => a + b.cantidad, 0);
-  $('#dr-body').innerHTML = `<div class="ok"><p class="eyebrow">Solicitud registrada</p><div class="num">${esc(u.numero)}</div>
-    <p style="margin:0;color:var(--mut)">Recibimos ${u.items.length} ${u.items.length === 1 ? 'renglón' : 'renglones'} y ${fmt(uni)} unidades. Guarde este número; le contactaremos con la cotización.</p>
+  $('#dr-body').innerHTML = `<div class="ok"><p class="eyebrow">Pedido enviado</p><div class="num">${esc(u.numero)}</div>
+    <p style="margin:0;color:var(--mut)">Recibimos ${u.items.length} ${u.items.length === 1 ? 'renglón' : 'renglones'} y ${fmt(uni)} unidades. Guarde este número: le contactaremos con la cotización.</p>
     <table class="rtable"><tbody>${u.items.map(i => `<tr><td><span class="ref">${i.ref}</span><br>${esc(i.nombre)}${i.detalle ? `<br><span class="meta">${esc(i.detalle)}</span>` : ''}</td><td style="text-align:right;font-weight:600">${fmt(i.cantidad)}</td></tr>`).join('')}</tbody></table></div>`;
-  const tel = (CONTACTO.whatsapp || '').replace(/\D/g, '');
   $('#dr-foot').innerHTML = `<div class="ok acts">
-    <p class="meta" style="margin:0">${tel ? 'Si desea, envíe también el resumen por WhatsApp o correo:' : 'Si desea, comparta el resumen por WhatsApp o correo:'}</p>
-    <a class="btn wa" id="o-wa" target="_blank" rel="noopener">Enviar por WhatsApp</a>
-    <div class="two" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><a class="btn sec" id="o-mail">Enviar por correo</a><button class="btn sec" type="button" id="o-copy">Copiar resumen</button></div>
-    <button class="back" type="button" id="o-new">Hacer otra solicitud</button></div>`;
-  const txt = textoPedido(u);
-  $('#o-wa').href = (tel ? 'https://wa.me/' + tel : 'https://wa.me/') + '?text=' + encodeURIComponent(txt);
-  $('#o-mail').href = 'mailto:' + encodeURIComponent(CONTACTO.correo || '').replace('%40', '@') + '?subject=' + encodeURIComponent('Solicitud de cotización ' + u.numero + ' · Patriota Tiuna') + '&body=' + encodeURIComponent(txt.replace(/\*/g, ''));
-  $('#o-copy').onclick = () => copiar(txt.replace(/\*/g, ''), 'Resumen copiado');
+    <p class="meta" style="margin:0">Su pedido llegó al equipo de ventas como notificación. Puede guardar una copia del resumen.</p>
+    <button class="btn sec" type="button" id="o-copy">Copiar resumen</button>
+    <button class="back" type="button" id="o-new">Hacer otro pedido</button></div>`;
+  $('#o-copy').onclick = () => copiar(textoPedido(u).replace(/\*/g, ''), 'Resumen copiado');
   $('#o-new').onclick = () => { ETAPA = 'lista'; ULTIMA = null; cerrarCarrito(); location.hash = '#catalogo'; };
 }
 
@@ -1040,7 +1030,7 @@ async function acceso() {
     const { data, error } = await sb.rpc('cf_config'); if (error) throw error; CFG = data;
     $('#k-code').textContent = data.codigo; $('#k-act').textContent = data.activo ? 'Activo' : 'Cerrado';
     $('#k-upd').textContent = fecha(data.actualizado); $('#k-link').value = linkCliente(true, data.codigo);
-    $('#k-new').value = data.codigo; $('#k-on').checked = !!data.activo; $('#k-wa').value = data.whatsapp || ''; $('#k-mail').value = data.correo || '';
+    $('#k-new').value = data.codigo; $('#k-on').checked = !!data.activo;
   } catch (e) { $('#k-msg').className = 'msg err'; $('#k-msg').textContent = err(e); }
 }
 $('#k-copy').addEventListener('click', () => CFG && copiar(linkCliente(true, CFG.codigo), 'Enlace con código copiado'));
@@ -1048,7 +1038,7 @@ $('#k-copy2').addEventListener('click', () => copiar(linkCliente(false), 'Enlace
 $('#k-rand').addEventListener('click', () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; const v = new Uint32Array(8); crypto.getRandomValues(v); $('#k-new').value = Array.from(v, x => A[x % A.length]).join(''); });
 $('#f-code').addEventListener('submit', async e => {
   e.preventDefault(); const m = $('#k-msg'); m.className = 'msg'; m.textContent = 'Guardando…';
-  try { const { error } = await sb.rpc('cf_config_guardar', { p_codigo: $('#k-new').value.trim(), p_activo: $('#k-on').checked, p_whatsapp: $('#k-wa').value.replace(/\D/g, ''), p_correo: $('#k-mail').value.trim() }); if (error) throw error; await acceso(); m.className = 'msg ok'; m.textContent = 'Guardado.'; }
+  try { const { error } = await sb.rpc('cf_config_guardar', { p_codigo: $('#k-new').value.trim(), p_activo: $('#k-on').checked }); if (error) throw error; await acceso(); m.className = 'msg ok'; m.textContent = 'Guardado.'; }
   catch (x) { m.className = 'msg err'; m.textContent = err(x); }
 });
 
