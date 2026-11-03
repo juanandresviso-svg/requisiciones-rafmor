@@ -316,6 +316,7 @@ footer.f .wrap{padding-block:26px 34px;color:var(--dim);font-size:13px;display:f
     <label>Código de acceso<input type="text" id="g-code" class="code-in" maxlength="20" autocapitalize="characters" required></label>
     <button class="btn" type="submit" id="g-btn">Entrar</button>
     <p class="msg err" id="g-msg" role="alert"></p>
+    <button class="link" type="button" id="g-int" style="justify-self:center">Acceso interno</button>
   </form>
 </div>
 
@@ -1056,7 +1057,8 @@ $('#f-code').addEventListener('submit', async e => {
 /* ================= Inicio ================= */
 (async function inicio() {
   const u = new URL(location.href);
-  if (u.searchParams.has('interno')) { const { data } = await sb.auth.getSession(); if (data?.session && await esMaestro()) { abrirPanel(); return; } }
+  $('#g-int').onclick = () => $('#b-int').click();
+  if (u.searchParams.has('interno')) { const { data } = await sb.auth.getSession(); if (data?.session && await esMaestro()) { abrirPanel(); return; } show('v-gate'); $('#l-msg').textContent = ''; $('#dlg-login').showModal(); return; }
   const c = (u.searchParams.get('c') || sget('code') || '').trim();
   if (c) { $('#g-code').value = c; await entrar(c, false); } else show('v-gate');
   if (u.searchParams.has('c')) { u.searchParams.delete('c'); history.replaceState(null, '', u.pathname + u.search + u.hash); }
