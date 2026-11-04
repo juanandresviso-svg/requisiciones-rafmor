@@ -671,6 +671,23 @@ nav.tabs button{flex:0 0 auto}
 .prup .btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:54px}
 .prdocs{list-style:none;margin:0;padding:0}.prdocs li{padding:6px 0;border-bottom:1px solid var(--rule);display:grid;gap:2px}.prdocs .lnk{background:none;border:0;padding:0;font-weight:700;text-decoration:underline;color:var(--ink);text-align:left;cursor:pointer}.prdocs small{color:var(--muted)}
 .dteq.vacio .dtnm b{color:var(--muted);font-weight:600}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.row3>*{min-width:0}.row3 .in{width:100%;min-width:0}
+.valvol{margin-top:8px;font-size:14px;line-height:1.5}
+.valtab{width:100%;border-collapse:collapse;font-size:14px}.valtab th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:4px 6px;border-bottom:1px solid var(--rule)}
+.valtab td{padding:9px 6px;border-bottom:1px solid var(--rule)}.valtab tr[data-vb]{cursor:pointer}
+.vatot{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.vatot>div{background:var(--sunk);border:1px solid var(--rule);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.vatot span{font-size:12px;color:var(--muted)}.vatot b{font:700 18px/1.1 "Barlow Condensed",sans-serif}
+.vafirm{margin-top:10px}.vafirm summary{cursor:pointer;font-weight:600;padding:6px 0}
+.valps{list-style:none;margin:0;padding:0}.valps .vacap{font:600 15px/1.2 "Barlow Condensed",sans-serif;color:var(--muted);text-transform:uppercase;padding:12px 0 4px}
+.valps .vap{border-top:1px solid var(--rule)}.valps summary{list-style:none;cursor:pointer;padding:10px 0}.valps summary::-webkit-details-marker{display:none}
+.vah{display:flex;gap:8px;align-items:baseline}.vah b{font:700 17px/1 "Barlow Condensed",sans-serif;flex:0 0 auto}.vad{font-size:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.van{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted);margin-top:4px}
+.vaform{padding:4px 0 14px}.vacalc{font-size:13px;background:var(--sunk);border-radius:8px;padding:8px 10px;margin:8px 0}
+.vafotos{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.vafotos figure{position:relative;margin:0;width:31%;max-width:140px}.vafotos img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;background:var(--sunk)}
+.vafotos figcaption{font-size:11px;color:var(--muted)}.vaquitar{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;font-size:18px;cursor:pointer}
+.vfrep{border-top:1px solid var(--rule);padding:10px 0}.vfgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.vfimg{padding:0;border:3px solid transparent;border-radius:9px;background:none;cursor:pointer}.vfimg img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;background:var(--sunk)}
+.vfimg[aria-pressed="true"]{border-color:var(--amber)}
 </style>
 </head>
 <body>
@@ -766,7 +783,7 @@ nav.tabs button{flex:0 0 auto}
       <button class="bell" id="bellBtn" aria-label="Avisos"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1z"/></svg><span class="cnt" id="bellCnt" hidden></span></button>
     </div>
     <div class="simbar" id="simBar" hidden role="status"><span><b>Modo prueba</b><span id="simTxt"></span></span><button class="btn" id="simSalir">Volver a maestro</button></div>
-    <div class="mods" id="mods" role="group" aria-label="Módulo"><button type="button" data-mod="tar" aria-pressed="false" hidden>Tareas<span class="dot" id="tarDot" hidden></span></button><button type="button" data-mod="req" aria-pressed="true">Requisiciones</button><button type="button" data-mod="rep" aria-pressed="false">Reportes<span class="dot" id="repDot" hidden></span></button><button type="button" data-mod="est" aria-pressed="false" hidden>Estadísticas</button><button type="button" data-mod="via" aria-pressed="false" hidden>Viáticos</button><button type="button" data-mod="pro" aria-pressed="false" hidden>Procura<span class="dot" id="proDot" hidden></span></button></div>
+    <div class="mods" id="mods" role="group" aria-label="Módulo"><button type="button" data-mod="tar" aria-pressed="false" hidden>Tareas<span class="dot" id="tarDot" hidden></span></button><button type="button" data-mod="req" aria-pressed="true">Requisiciones</button><button type="button" data-mod="rep" aria-pressed="false">Reportes<span class="dot" id="repDot" hidden></span></button><button type="button" data-mod="est" aria-pressed="false" hidden>Estadísticas</button><button type="button" data-mod="via" aria-pressed="false" hidden>Viáticos</button><button type="button" data-mod="pro" aria-pressed="false" hidden>Procura<span class="dot" id="proDot" hidden></span></button><button type="button" data-mod="val" aria-pressed="false" hidden>Valuaciones</button></div>
     <nav class="tabs" role="tablist" id="mainTabs">
       <button role="tab" aria-selected="false" data-tab="nueva" data-mod="req" hidden>Nueva</button>
       <button role="tab" aria-selected="false" data-tab="verif" data-mod="req" hidden>Por verificar<span class="cnt" id="cVerif" hidden></span></button>
@@ -782,6 +799,7 @@ nav.tabs button{flex:0 0 auto}
       <button role="tab" aria-selected="false" data-tab="vmis" data-mod="via" hidden>Mis reportes</button>
       <button role="tab" aria-selected="false" data-tab="vtodos" data-mod="via" hidden>Todos</button>
       <button role="tab" aria-selected="false" data-tab="proc" data-mod="pro" hidden>Control<span class="cnt" id="cProc" hidden></span></button>
+      <button role="tab" aria-selected="false" data-tab="val" data-mod="val" hidden>Valuaciones</button>
       <button role="tab" aria-selected="false" data-tab="ajustes" data-mod="both" class="gear" aria-label="Ajustes y cuenta" title="Ajustes y cuenta"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.7h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span class="cnt" id="cUsers" hidden></span></button>
     </nav>
   </header>
@@ -813,6 +831,56 @@ nav.tabs button{flex:0 0 auto}
   <section class="panel" id="p-pedit">
     <div class="memtop repTop"><button class="btn ghost" id="peVolver" style="padding-left:0">← Control de procura</button><b id="peTitulo"></b></div>
     <div id="peBody"></div>
+  </section>
+
+  <!-- VALUACIONES (v4.40.0) -->
+  <section class="panel" id="p-val">
+    <div class="block">
+      <div class="memtop"><h2 style="margin:0">Valuaciones de obra</h2><button class="btn ghost" id="valRefresh">Actualizar</button></div>
+      <p class="hint">Cada base lleva su volumetría (las partidas del contrato) y sus valuaciones por período: una pestaña por partida con su avance y las fotos de los reportes. Se exportan en Excel y PDF; Costos las valida.</p>
+      <label class="f"><span>Base</span><select class="in" id="valBase"></select></label>
+      <div class="valvol" id="valVol"></div>
+      <div class="row2" style="margin-top:10px"><button class="btn" id="valCargar">Cargar volumetría (Excel)</button><button class="btn primary" id="valNueva">+ Nueva valuación</button></div>
+      <input type="file" id="valFile" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+      <ul class="hist vlist" id="valList" style="margin-top:12px"></ul>
+      <div class="empty" id="valEmpty" hidden>Esta base todavía no tiene valuaciones.</div>
+    </div>
+    <div class="block">
+      <h2>Las 13 bases</h2>
+      <table class="valtab"><thead><tr><th>Base</th><th>Volumetría</th><th>Última valuación</th></tr></thead><tbody id="valTodas"></tbody></table>
+    </div>
+  </section>
+  <section class="panel" id="p-valed">
+    <div class="memtop repTop"><button class="btn ghost" id="vaVolver" style="padding-left:0">← Valuaciones</button><b id="vaTitulo">Valuación</b></div>
+    <div class="drvwarn" id="vaLock" hidden></div>
+    <div class="block">
+      <h2>Período <span class="tag" id="vaEstado"></span></h2>
+      <div class="row2"><label class="f"><span>Desde</span><input class="in vain" type="date" id="vaDesde"></label><label class="f"><span>Hasta</span><input class="in vain" type="date" id="vaHasta"></label></div>
+      <div class="row3"><label class="f"><span>Peso materiales %</span><input class="in vain" id="vaPeso" inputmode="decimal"></label><label class="f"><span>Comprado %</span><input class="in vain" id="vaComp" inputmode="decimal"></label><label class="f"><span>IVA %</span><input class="in vain" id="vaIva" inputmode="decimal"></label></div>
+      <details class="vafirm"><summary>Firmantes</summary>
+        <div class="row2"><label class="f"><span>Elaborado por (Rafmor)</span><input class="in vain" id="vaF1" placeholder="ING. Nombre Apellido"></label><label class="f"><span>Revisado por (Rafmor)</span><input class="in vain" id="vaF2" placeholder="ING. Nombre Apellido"></label></div>
+        <div class="row2"><label class="f"><span>Inspector (ZODI)</span><input class="in vain" id="vaF3"></label><label class="f"><span>Aprobado por (ZODI)</span><input class="in vain" id="vaF4"></label></div>
+      </details>
+      <div class="vatot" id="vaTot"></div>
+      <p class="hint" id="vaSaved" style="margin:8px 0 0"></p>
+    </div>
+    <div class="block">
+      <h2>Partidas</h2>
+      <p class="hint">Toca una partida para cargar su precio unitario, la cantidad física ejecutada a la fecha y hasta 3 fotos de los reportes.</p>
+      <input class="in" id="vaBuscar" placeholder="Buscar partida por número o descripción" style="margin-bottom:8px">
+      <label class="chk" style="margin-bottom:10px"><input type="checkbox" id="vaSolo"> Solo partidas con ejecución física o fotos</label>
+      <ul class="valps" id="vaPartidas"></ul>
+    </div>
+    <div class="block">
+      <h2>Exportar y enviar</h2>
+      <div class="row2"><button class="btn dark" id="vaXlsx">Exportar Excel</button><button class="btn dark" id="vaPdf">Exportar PDF</button></div>
+      <label class="chk" style="margin-top:10px"><input type="checkbox" id="vaPdfSolo"> PDF solo con las partidas con ejecución física o fotos</label>
+      <p class="hint" id="vaProg" style="margin:8px 0 0"></p>
+      <button class="btn primary block100" id="vaEnviar" style="margin-top:10px">Enviar a Costos para validación</button>
+      <button class="btn primary block100" id="vaRevisar" style="margin-top:10px" hidden>Validar u observar</button>
+      <button class="btn block100" id="vaReabrir" style="margin-top:10px" hidden>Reabrir para corregir</button>
+      <button class="btn danger block100" id="vaBorrar" style="margin-top:10px" hidden>Borrar borrador</button>
+    </div>
   </section>
 
   <!-- VIÁTICOS (v4.27.0) -->
@@ -1451,6 +1519,25 @@ nav.tabs button{flex:0 0 auto}
 </dialog>
 
 <!-- Visor de fotos -->
+<!-- Valuaciones: elegir fotos y revisión de Costos -->
+<dialog id="valFotosDlg">
+  <div class="sheet"><div class="grab"></div>
+    <h3><span id="vfTit">Fotos</span><button class="btn ghost" id="vfCancel" style="min-height:40px">Cerrar</button></h3>
+    <p class="hint" id="vfDesc"></p>
+    <label class="chk" style="margin-bottom:10px"><input type="checkbox" id="vfTodo"> Ver reportes de toda la obra (no solo el período)</label>
+    <div id="vfList"></div>
+    <div class="acts" style="position:sticky;bottom:0;background:var(--surface);padding-top:8px"><span class="hint" id="vfCount" style="margin:0;align-self:center"></span><button class="btn primary" id="vfOk">Usar estas fotos</button></div>
+  </div>
+</dialog>
+<dialog id="valRevDlg">
+  <div class="sheet"><div class="grab"></div>
+    <h3><span id="vrTit">Revisión</span><button class="btn ghost" id="vrCerrar" style="min-height:40px">Cerrar</button></h3>
+    <p class="hint">Revisa el Excel o el PDF antes de decidir. Si la observas, la valuación vuelve a las Gerencias con tu nota.</p>
+    <label class="f"><span>Nota (obligatoria para observar)</span><textarea class="in" id="vrNota" maxlength="1500" placeholder="Qué hay que corregir, o un comentario de la validación"></textarea></label>
+    <p class="err" id="vrErr" hidden></p>
+    <div class="acts" style="position:static"><button class="btn danger" id="vrObservar">Observar</button><button class="btn primary" id="vrValidar">Validar</button></div>
+  </div>
+</dialog>
 <dialog id="lbDlg" class="lb">
   <div class="lbwrap">
     <img id="lbImg" alt="">
@@ -2875,6 +2962,7 @@ $('#avList').addEventListener('click', e => {
   if (c.startsWith('tarea:')) { setMod('tar', 'tar'); abrirTarea(null, c.slice(6)); return; }
   if (c.startsWith('viatico:')) { abrirViatico(c.slice(8)); return; }
   if (c.startsWith('procura:')) { abrirProcura(c.slice(8)); return; }
+  if (c.startsWith('valuacion:')) { abrirValuacion(c.slice(10)); return; }
   if (c === 'accion:push') { abrirAjuste('pushBlock'); return; }
   if (!c) return;
   openDetail(c);
@@ -4380,6 +4468,7 @@ function setMod(m, tab){
   if (m === 'tar' && !canTareas()) m = 'req';
   if (m === 'via' && !(canViaticos() || veViaticos())) m = 'req';
   if (m === 'pro' && !veProcura()) m = 'req';
+  if (m === 'val' && !veValuaciones()) m = 'req';
   if (soloSemanal() && m === 'req') { m = 'rep'; tab = 'rsem'; }
   if (soloSemanal() && m === 'rep') tab = 'rsem';
   $('#mods').hidden = soloSemanal() && !canStats();
@@ -4388,10 +4477,11 @@ function setMod(m, tab){
   $('#mods [data-mod="tar"]').hidden = !canTareas();
   $('#mods [data-mod="via"]').hidden = !(canViaticos() || veViaticos());
   $('#mods [data-mod="pro"]').hidden = !veProcura();
+  $('#mods [data-mod="val"]').hidden = !veValuaciones();
   curMod = m; LS.set('mod', m);
   $$('#mods button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mod === m));
   applyTabVisibility();
-  const first = tab || (m === 'pro' ? 'proc' : m === 'via' ? (canViaticos() ? 'vmis' : 'vtodos') : m === 'tar' ? 'tar' : m === 'est' ? 'est' : m === 'rep' ? (soloSemanal() ? 'rsem' : esLogistica() ? 'rlog' : 'rarch') : defaultReqTab());
+  const first = tab || (m === 'val' ? 'val' : m === 'pro' ? 'proc' : m === 'via' ? (canViaticos() ? 'vmis' : 'vtodos') : m === 'tar' ? 'tar' : m === 'est' ? 'est' : m === 'rep' ? (soloSemanal() ? 'rsem' : esLogistica() ? 'rlog' : 'rarch') : defaultReqTab());
   showTab(first);
 }
 $('#mods').addEventListener('click', e => { const b = e.target.closest('[data-mod]'); if (b) setMod(b.dataset.mod); });
@@ -4685,6 +4775,605 @@ $('#vtXlsx').onclick = () => { const d1 = $('#vtDesde').value, d2 = $('#vtHasta'
   vXlsx(vtFiltrados(), f, $('#vtXlsx')); };
 $('#vmXlsx').onclick = () => vXlsx(vtLista.filter(v => (v.datos.gastos || []).length), `Reportes de ${me.nombre}`, $('#vmXlsx'));
 function abrirViatico(numero){ setMod('via', veViaticos() ? 'vtodos' : 'vmis'); setTimeout(() => { const v = vtTodos.concat(vtLista).find(x => x.numero === numero); if (v) vAbrir(v, veViaticos() ? 'vtodos' : 'vmis'); }, 900); }
+
+
+/* ---------- Valuaciones de obra por B.P.F (v4.40.0) ----------
+   Volumetría de cada base (Excel del formato de presentación de oferta económica) → valuación por período,
+   una partida por pestaña, con fotos de los reportes diarios. Exporta Excel (con fórmulas) y PDF.
+   % de la partida = peso materiales × % comprado + (1 − peso) × % de ejecución física. */
+const canValuar = () => me && (me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol));
+const veValuaciones = () => me && (me.es_master || ['gerente_operaciones','gerente_general','costos'].includes(me.rol));
+const validaValuaciones = () => me && (me.es_master || me.rol === 'costos');
+const cargaVolumetria = () => canValuar() || (me && me.rol === 'costos');
+const VAL_EST = { borrador: ['Borrador', ''], enviada: ['Enviada a Costos', 'pend'], observada: ['Observada', 'bad'], validada: ['Validada', 'ok'] };
+const VAL_OBRA = 'REMODELACIÓN, ACONDICIONAMIENTO Y EQUIPAMIENTO DE 13 BASES MILITARES FRONTERIZAS UBICADAS EN EL EDO. ZULIA';
+const VAL_CONTRATISTA = 'RAFMOR OBRAS CIVILES Y MATERIALES, C.A.   RIF: J-316308413';
+const VAL_ENTE = 'ZONA OPERATIVA DE DEFENSA INTEGRAL ZULIA  /  RIF: G-200114843';
+const vEur = n => '€ ' + (+n || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const vQty = n => (+n || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const vPct = (n, d) => ((+n || 0) * 100).toLocaleString('es-VE', { minimumFractionDigits: d == null ? 2 : d, maximumFractionDigits: d == null ? 2 : d }) + '%';
+const vR2 = n => Math.round((+n || 0) * 100) / 100;
+const valBaseTxt = n => baseName(n).replace(/^B\.P\.F\s*/i, '');
+let valPuesto = +LS.get('valPuesto', 8) || 8, valVols = [], valLista = [], va = null, vaTimer = null, vaRepCache = new Map();
+
+/* ---- Lectura del Excel de volumetría ---- */
+const vNormTxt = s => String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
+function vCellVal(c){
+  const v = c && c.value; if (v == null) return null;
+  if (typeof v === 'object') {
+    if (v.richText) return v.richText.map(t => t.text).join('');
+    if ('formula' in v || 'sharedFormula' in v) return { formula: v.formula || v.sharedFormula, result: v.result };
+    if (v instanceof Date) return v;
+    if ('text' in v) return v.text;
+    if ('result' in v) return v.result;
+  }
+  return v;
+}
+function vNumber(x){ if (x == null || x === '') return null; if (typeof x === 'number') return x; if (typeof x === 'object' && x.formula !== undefined) return typeof x.result === 'number' ? x.result : null;
+  const t = String(x).trim(); if (!t) return null; const n = /,\d{1,3}$/.test(t) ? parseFloat(t.replace(/\./g, '').replace(',', '.')) : parseFloat(t.replace(/,/g, '')); return isNaN(n) ? null : n; }
+// Devuelve {base, fecha, capitulos:{k:nombre}, partidas:[{cod, cap, desc, und, cant, pu}]}
+function parseVolumetria(wb){
+  let best = null;
+  wb.eachSheet(ws => {
+    let hdr = null, cols = {};
+    ws.eachRow((row, r) => { if (hdr) return; const m = {};
+      row.eachCell((c, ci) => { const t = vNormTxt(vCellVal(c)); if (!t) return;
+        if (t.includes('DESCRIP')) m.desc = ci; else if (t.includes('PARTIDA')) m.cod = ci; else if (t === 'UNIDAD' || t.startsWith('UNIDAD') || t === 'UND') m.und = ci; else if (t.startsWith('CANTIDAD')) m.cant = ci; else if (t.startsWith('PRECIO')) m.pu = ci; });
+      if (m.desc && m.und && m.cant) { hdr = r; cols = m; } });
+    if (!hdr) return;
+    let base = '', fecha = null;
+    for (let r = 1; r < hdr; r++) ws.getRow(r).eachCell((c, ci) => { const raw = vCellVal(c), t = vNormTxt(raw);
+      if (t.startsWith('BASE MILITAR')) base = String(raw).split(':').slice(1).join(':').trim();
+      if (t.startsWith('FECHA')) { const nx = vCellVal(ws.getRow(r).getCell(ci + 1)); if (nx instanceof Date) fecha = nx.toISOString().slice(0, 10); } });
+    const capitulos = {}, partidas = [], usados = new Set(); let cap = '', nCap = 0, prev = 0;
+    for (let r = hdr + 1; r <= ws.rowCount; r++) {
+      const row = ws.getRow(r), d = vCellVal(row.getCell(cols.desc)), u = vCellVal(row.getCell(cols.und)), q = vNumber(vCellVal(row.getCell(cols.cant)));
+      const line = []; row.eachCell(c => line.push(vNormTxt(vCellVal(c)))); if (line.some(t => t.startsWith('TOTAL DEL PRESUPUESTO'))) break;
+      const desc = typeof d === 'object' && d ? String(d.result || '') : String(d == null ? '' : d).trim(); if (!desc) continue;
+      const und = typeof u === 'object' && u ? String(u.result || '') : String(u == null ? '' : u).trim();
+      let cv = cols.cod ? vCellVal(row.getCell(cols.cod)) : null;
+      if (!und && (q == null || q === 0)) { nCap++; const k = typeof cv === 'number' || (typeof cv === 'string' && cv.trim()) ? String(cv).trim() : String(nCap); cap = k; capitulos[k] = desc.replace(/\s+/g, ' '); continue; }
+      let cod;
+      if (cv && typeof cv === 'object') cod = typeof cv.result === 'number' ? String(cv.result) : String(prev + 1);
+      else if (typeof cv === 'number') cod = Number.isInteger(cv) ? String(cv) : String(cv);
+      else if (cv != null && String(cv).trim()) cod = String(cv).trim();
+      else cod = String(prev + 1);
+      if (/^\d+$/.test(cod)) prev = +cod;
+      let c2 = cod, k2 = 2; while (usados.has(c2)) c2 = cod + '-' + k2++; usados.add(c2);
+      if (!cap) { nCap++; cap = String(nCap); capitulos[cap] = 'PARTIDAS'; }
+      partidas.push({ cod: c2, cap, desc: desc.replace(/\s+/g, ' '), und: und.toUpperCase(), cant: q || 0, pu: cols.pu ? vNumber(vCellVal(row.getCell(cols.pu))) : null });
+    }
+    if (partidas.length && (!best || partidas.length > best.partidas.length)) best = { base, fecha, capitulos, partidas };
+  });
+  if (!best) throw new Error('No encontré la tabla de partidas (columnas Nº Partida, Descripción, Unidad y Cantidad).');
+  return best;
+}
+function valAdivinarPuesto(base){ const b = vNormTxt(base).replace(/^BPF\s*|^B\.P\.F\.?\s*/, '').replace(/,.*$/, '').replace(/\s*ESTADO.*$/, '').replace(/S$/, '');
+  const c = CECOS.bases.find(x => { const n = vNormTxt(x.nombre).replace(/^B\.P\.F\.?\s*/, '').replace(/S$/, ''); return n && (n === b || b.includes(n) || n.includes(b)); }); return c ? c.n : null; }
+
+/* ---- Cálculo ---- */
+function valCalc(v){
+  const D = v.datos || {}, P = D.partidas || [], I = D.items || {}, peso = +D.peso || 0, comp = D.comprado == null ? 1 : +D.comprado;
+  const rows = P.map(p => { const it = I[p.cod] || {}, cant = +p.cant || 0, w = it.sinMat ? 0 : peso, pu = it.pu == null || it.pu === '' ? null : +it.pu;
+    const fis = Math.min(+it.fis || 0, cant), pf = cant > 0 ? fis / cant : 0, pt = w * comp + (1 - w) * pf, acum = vR2(pt * cant), ant = +it.ant || 0, per = Math.max(0, vR2(acum - ant));
+    return { p, it, cant, w, pu, fis, pf, pt, acum, ant, per, mt: (pu || 0) * cant, mper: (pu || 0) * per, macum: (pu || 0) * Math.max(acum, ant) }; });
+  const S = rows.reduce((a, r) => { a.mt += r.mt; a.mper += r.mper; a.macum += r.macum; if (r.pu == null) a.sinPu++; if (r.fis > 0) a.conFis++; if ((r.it.fotos || []).length) a.conFot++; return a; }, { mt: 0, mper: 0, macum: 0, sinPu: 0, conFis: 0, conFot: 0 });
+  S.avance = S.mt > 0 ? S.macum / S.mt : (rows.length ? rows.reduce((a, r) => a + Math.max(r.acum, r.ant) / (r.cant || 1), 0) / rows.length : 0);
+  return { rows, S };
+}
+const valEditable = () => va && canValuar() && ['borrador','observada'].includes(va.estado);
+
+/* ---- Lista por base ---- */
+async function loadVal(){
+  const sel = $('#valBase'); if (!sel.options.length) sel.innerHTML = CECOS.bases.map(b => `<option value="${b.n}">${esc(b.nombre)}</option>`).join('');
+  sel.value = String(valPuesto);
+  $('#valNueva').hidden = !canValuar(); $('#valCargar').hidden = !cargaVolumetria();
+  try { [valVols, valLista] = await Promise.all([rpc('rq_volumetrias_listar'), rpc('rq_valuaciones_listar', { p_puesto: null })]); valVols = valVols || []; valLista = valLista || []; }
+  catch (e) { toast(e.message); valVols = []; valLista = []; }
+  pintarVal();
+}
+function pintarVal(){
+  const vol = valVols.find(x => x.puesto === valPuesto), L = valLista.filter(x => x.puesto === valPuesto);
+  $('#valVol').innerHTML = vol ? `<span class="tag ok">Volumetría cargada</span> <b>${vol.partidas}</b> partidas · ${esc(vol.archivo || '')}<br><span class="hint" style="margin:0">Actualizada ${fmt(String(vol.actualizado).slice(0, 10))} por ${esc(vol.por || '')}</span>`
+    : `<span class="tag bad">Sin volumetría</span> <span class="hint" style="margin:0">Carga el Excel de volumetría de la base para poder armar valuaciones.</span>`;
+  $('#valNueva').disabled = !vol;
+  $('#valList').innerHTML = L.map(v => { const c = valCalc(v), e = VAL_EST[v.estado] || [v.estado, ''];
+    return `<li data-vaid="${v.id}" role="button" tabindex="0" class="vli"><div class="ctlb"><b>Valuación N° ${v.numero}</b><span class="when">${v.desde ? fmt(v.desde) + ' al ' + fmt(v.hasta) : 'Sin período'}</span></div>
+      <div class="tags" style="margin:4px 0 2px"><span class="tag ${e[1]}">${e[0]}</span>${c.S.sinPu ? `<span class="tag">${c.S.sinPu} sin P.U.</span>` : ''}<span class="tag">${c.S.conFot} con fotos</span></div>
+      <div class="vnums"><span>Avance ${vPct(c.S.avance, 1)}</span><b>${c.S.mt ? vEur(c.S.mper) : '—'}</b><span>${esc(v.creado_nombre || '')}</span></div></li>`; }).join('');
+  $('#valEmpty').hidden = L.length > 0;
+  $('#valTodas').innerHTML = CECOS.bases.map(b => { const vo = valVols.find(x => x.puesto === b.n), u = valLista.filter(x => x.puesto === b.n)[0];
+    return `<tr data-vb="${b.n}"><td>${esc(valBaseTxt(b.n))}</td><td>${vo ? '✓ ' + vo.partidas : '—'}</td><td>${u ? 'N° ' + u.numero + ' · ' + (VAL_EST[u.estado] || [u.estado])[0] : '—'}</td></tr>`; }).join('');
+}
+$('#valBase').addEventListener('change', e => { valPuesto = +e.target.value; LS.set('valPuesto', valPuesto); pintarVal(); });
+$('#valTodas').addEventListener('click', e => { const tr = e.target.closest('[data-vb]'); if (!tr) return; valPuesto = +tr.dataset.vb; LS.set('valPuesto', valPuesto); $('#valBase').value = String(valPuesto); pintarVal(); window.scrollTo(0, 0); });
+$('#valRefresh').onclick = () => loadVal();
+$('#valList').addEventListener('click', e => { const li = e.target.closest('[data-vaid]'); if (li) valAbrir(valLista.find(x => x.id === li.dataset.vaid)); });
+$('#valList').addEventListener('keydown', e => { if (e.key === 'Enter') { const li = e.target.closest('[data-vaid]'); if (li) valAbrir(valLista.find(x => x.id === li.dataset.vaid)); } });
+
+// Cargar volumetría (Excel)
+$('#valCargar').onclick = () => $('#valFile').click();
+$('#valFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    if (!window.ExcelJS) throw new Error('No se pudo cargar el lector de Excel. Revisa la conexión.');
+    const wb = new ExcelJS.Workbook(); await wb.xlsx.load(await f.arrayBuffer());
+    const V = parseVolumetria(wb), g = valAdivinarPuesto(V.base) || valPuesto;
+    const nom = baseName(g);
+    if (!confirm(`${f.name}\n\nBase en el archivo: ${V.base || '(no indica)'}\n${V.partidas.length} partidas en ${Object.keys(V.capitulos).length} capítulo(s).\n\n¿Guardar como volumetría de ${nom}?${valVols.some(x => x.puesto === g) ? '\n\nReemplaza la volumetría que ya tiene esa base (las valuaciones hechas conservan sus partidas).' : ''}`)) return;
+    await rpc('rq_volumetria_guardar', { p_puesto: g, p_archivo: f.name, p_datos: V });
+    toast('Volumetría guardada'); valPuesto = g; LS.set('valPuesto', g); loadVal();
+  } catch (er) { toast(er.message || 'No se pudo leer el archivo'); console.error(er); }
+});
+
+// Nueva valuación: toma las partidas de la volumetría, los P.U. y lo acumulado de la valuación anterior.
+$('#valNueva').onclick = async () => {
+  const b = $('#valNueva'); b.disabled = true;
+  try {
+    const vol = await rpc('rq_volumetria_obtener', { p_puesto: valPuesto }); if (!vol) throw new Error('La base no tiene volumetría.');
+    const prev = valLista.filter(x => x.puesto === valPuesto).sort((a, c) => c.numero - a.numero)[0];
+    const items = {}; let desde = '2026-07-31';
+    if (prev) { const c = valCalc(prev); c.rows.forEach(r => { items[r.p.cod] = { pu: r.pu, ant: Math.max(r.acum, r.ant), fis: r.fis, sinMat: !!r.it.sinMat, ev: '', fotos: [] }; });
+      if (prev.hasta) desde = addDays(prev.hasta, 1); }
+    (vol.datos.partidas || []).forEach(p => { items[p.cod] = items[p.cod] || { pu: p.pu == null ? null : p.pu, ant: 0, fis: 0, ev: '', fotos: [] }; });
+    const pd = prev ? prev.datos : {};
+    const datos = { peso: pd.peso == null ? 0.4 : pd.peso, comprado: pd.comprado == null ? 1 : pd.comprado, iva: pd.iva == null ? 0.16 : pd.iva, firmantes: pd.firmantes || {},
+      contrato: pd.contrato || '001/2026', base: vol.datos.base || baseName(valPuesto), fechaVol: vol.datos.fecha || null, archivoVol: vol.archivo,
+      capitulos: vol.datos.capitulos || {}, partidas: vol.datos.partidas || [], items };
+    const r = await rpc('rq_valuacion_guardar', { p_id: uuid(), p_puesto: valPuesto, p_desde: desde, p_hasta: today(), p_datos: datos });
+    valLista.unshift(r); valAbrir(r);
+  } catch (e) { toast(e.message); } finally { b.disabled = false; }
+};
+
+/* ---- Editor ---- */
+function valAbrir(v){ if (!v) return; va = JSON.parse(JSON.stringify(v)); va.datos.items = va.datos.items || {}; showTab('valed'); }
+function pintarValEd(){
+  if (!va) { showTab('val'); return; }
+  const D = va.datos, ed = valEditable(), e = VAL_EST[va.estado] || [va.estado, ''];
+  $('#vaTitulo').textContent = `Valuación N° ${va.numero} · ${valBaseTxt(va.puesto)}`;
+  const rv = va.revision;
+  $('#vaLock').hidden = ed && !(rv && va.estado === 'observada');
+  $('#vaLock').innerHTML = va.estado === 'observada' && rv ? `<b>Observada por ${esc(rv.por)}:</b> ${esc(rv.nota || '')}<br>Corrige y vuelve a enviarla.`
+    : va.estado === 'validada' ? `<b>Validada</b>${rv ? ' por ' + esc(rv.por) + ' el ' + fmt(String(rv.cuando).slice(0, 10)) : ''}.${rv && rv.nota ? ' ' + esc(rv.nota) : ''}`
+    : va.estado === 'enviada' ? 'Enviada a Costos para validación. Para cambiarla, reábrela.' : 'Solo lectura.';
+  $('#vaEstado').className = 'tag ' + e[1]; $('#vaEstado').textContent = e[0];
+  $('#vaDesde').value = va.desde || ''; $('#vaHasta').value = va.hasta || '';
+  $('#vaPeso').value = String(vR2((+D.peso || 0) * 100)); $('#vaComp').value = String(vR2((D.comprado == null ? 1 : +D.comprado) * 100)); $('#vaIva').value = String(vR2((D.iva == null ? 0.16 : +D.iva) * 100));
+  const F = D.firmantes || {}; $('#vaF1').value = F.elab || ''; $('#vaF2').value = F.rev || ''; $('#vaF3').value = F.insp || ''; $('#vaF4').value = F.aprob || '';
+  $$('#p-valed .vain').forEach(x => x.disabled = !ed);
+  $('#vaEnviar').hidden = !ed; $('#vaReabrir').hidden = !(canValuar() && (va.estado === 'enviada' || (va.estado === 'validada' && me.es_master)));
+  $('#vaBorrar').hidden = !(canValuar() && va.estado === 'borrador'); $('#vaRevisar').hidden = !(validaValuaciones() && va.estado === 'enviada');
+  $('#vaSaved').textContent = '';
+  pintarVaTot(); pintarVaPartidas();
+}
+function pintarVaTot(){
+  const c = valCalc(va), S = c.S, iva = va.datos.iva == null ? 0.16 : +va.datos.iva;
+  $('#vaTot').innerHTML = `<div><span>Contrato</span><b>${S.mt ? vEur(S.mt) : '—'}</b></div><div><span>Esta valuación</span><b>${S.mt ? vEur(S.mper) : '—'}</b></div>
+    <div><span>Con IVA</span><b>${S.mt ? vEur(S.mper * (1 + iva)) : '—'}</b></div><div><span>Avance a la fecha</span><b>${vPct(S.avance, 1)}</b></div>
+    <div><span>Con ejecución física</span><b>${S.conFis} de ${c.rows.length}</b></div><div><span>Con fotos</span><b>${S.conFot}</b></div>`
+    + (S.sinPu ? `<p class="hint" style="grid-column:1/-1;margin:6px 0 0">${S.sinPu} partida${S.sinPu === 1 ? '' : 's'} sin precio unitario: sus montos salen en cero hasta cargarlos.</p>` : '');
+}
+let vaFiltro = '';
+function pintarVaPartidas(){
+  const c = valCalc(va), ed = valEditable(), q = vNormTxt(vaFiltro), solo = $('#vaSolo').checked, caps = va.datos.capitulos || {};
+  let cap = null, h = '';
+  c.rows.forEach(r => { const p = r.p;
+    if (q && !vNormTxt(p.cod + ' ' + p.desc).includes(q)) return; if (solo && !(r.fis > 0 || (r.it.fotos || []).length)) return;
+    if (p.cap !== cap) { cap = p.cap; h += `<li class="vacap">${esc(caps[cap] ? (/^\d+$/.test(cap) && Object.keys(caps).length > 1 ? cap + '. ' : '') + caps[cap] : '')}</li>`; }
+    const fotos = r.it.fotos || [];
+    h += `<li class="vap" data-cod="${esc(p.cod)}"><details${va._abierta === p.cod ? ' open' : ''}><summary>
+        <div class="vah"><b>${esc(p.cod)}</b><span class="vad">${esc(p.desc)}</span></div>
+        <div class="van"><span>${vQty(p.cant)} ${esc(p.und)}</span><span class="tag ${r.pf >= 1 ? 'ok' : r.pf > 0 ? 'com' : ''}">${vPct(r.pt, 1)}</span><span>Período ${vQty(r.per)}</span>${fotos.length ? `<span>📷 ${fotos.length}</span>` : ''}</div></summary>
+      <div class="vaform">
+        <div class="row2"><label class="f"><span>Precio unitario (€)</span><input class="in vai" data-k="pu" inputmode="decimal" value="${r.pu == null ? '' : r.pu}" ${ed ? '' : 'disabled'}></label>
+          <label class="f"><span>Ejecutado anterior (${esc(p.und)})</span><input class="in vai" data-k="ant" inputmode="decimal" value="${r.ant || ''}" ${ed ? '' : 'disabled'}></label></div>
+        <label class="f"><span>Cantidad física ejecutada a la fecha (${esc(p.und)}, de ${vQty(p.cant)})</span><input class="in vai" data-k="fis" inputmode="decimal" value="${r.fis || ''}" ${ed ? '' : 'disabled'}></label>
+        <label class="chk"><input type="checkbox" class="vai" data-k="sinMat" ${r.it.sinMat ? 'checked' : ''} ${ed ? '' : 'disabled'}> Partida sin materiales (no suma el ${vPct(va.datos.peso, 0)} de procura)</label>
+        <div class="vacalc">Materiales ${vPct(r.w * (va.datos.comprado == null ? 1 : va.datos.comprado))} + físico ${vPct((1 - r.w) * r.pf)} = <b>${vPct(r.pt)}</b> · acumulado ${vQty(r.acum)} · a relacionar <b>${vQty(r.per)} ${esc(p.und)}</b>${r.pu != null ? ' · ' + vEur(r.mper) : ''}</div>
+        <label class="f"><span>Soporte / observación de la partida</span><textarea class="in vai" data-k="ev" maxlength="600" placeholder="Qué se ejecutó y cuándo, según los reportes" ${ed ? '' : 'disabled'}>${esc(r.it.ev || '')}</textarea></label>
+        <div class="vafotos">${fotos.map((f, k) => `<figure><img alt="" data-vaimg="${esc(f.path)}"><figcaption>${fmt(f.fecha)}</figcaption>${ed ? `<button type="button" class="vaquitar" data-qk="${k}" aria-label="Quitar foto">×</button>` : ''}</figure>`).join('')}</div>
+        ${ed ? `<button type="button" class="btn block100 vaelegir"${fotos.length >= 3 ? ' disabled' : ''}>${fotos.length >= 3 ? 'Máximo 3 fotos' : '+ Elegir fotos de los reportes'}</button>` : ''}
+      </div></details></li>`; });
+  $('#vaPartidas').innerHTML = h || '<li class="empty">No hay partidas con ese filtro.</li>';
+  valThumbs();
+}
+async function valThumbs(){
+  const imgs = $$('#vaPartidas img[data-vaimg]'); if (!imgs.length) return;
+  const u = await signed(imgs.map(i => i.dataset.vaimg)); imgs.forEach(i => { i.src = u(i.dataset.vaimg); });
+}
+function vaItem(cod){ return va.datos.items[cod] = va.datos.items[cod] || { pu: null, ant: 0, fis: 0, ev: '', fotos: [] }; }
+$('#vaPartidas').addEventListener('input', e => { const x = e.target.closest('.vai'); if (!x || !valEditable()) return;
+  const cod = x.closest('[data-cod]').dataset.cod, it = vaItem(cod), k = x.dataset.k;
+  if (k === 'ev') it.ev = x.value; else if (k === 'sinMat') it.sinMat = x.checked; else { const n = vNum(x.value); it[k] = k === 'pu' ? n : (n || 0); }
+  vaProgramar(); pintarVaTot();
+  if (k !== 'ev') { const det = x.closest('details'), r = valCalc(va).rows.find(y => y.p.cod === cod);
+    det.querySelector('.vacalc').innerHTML = `Materiales ${vPct(r.w * (va.datos.comprado == null ? 1 : va.datos.comprado))} + físico ${vPct((1 - r.w) * r.pf)} = <b>${vPct(r.pt)}</b> · acumulado ${vQty(r.acum)} · a relacionar <b>${vQty(r.per)} ${esc(r.p.und)}</b>${r.pu != null ? ' · ' + vEur(r.mper) : ''}`;
+    const n = det.querySelector('.van'); n.children[1].textContent = vPct(r.pt, 1); n.children[1].className = 'tag ' + (r.pf >= 1 ? 'ok' : r.pf > 0 ? 'com' : ''); n.children[2].textContent = 'Período ' + vQty(r.per); } });
+$('#vaPartidas').addEventListener('change', e => { if (e.target.matches('input[type=checkbox].vai')) e.target.dispatchEvent(new Event('input', { bubbles: true })); });
+$('#vaPartidas').addEventListener('toggle', e => { const li = e.target.closest('[data-cod]'); if (li && e.target.open) va._abierta = li.dataset.cod; }, true);
+$('#vaPartidas').addEventListener('click', e => {
+  const q = e.target.closest('.vaquitar'); if (q && valEditable()) { const cod = q.closest('[data-cod]').dataset.cod; vaItem(cod).fotos.splice(+q.dataset.qk, 1); va._abierta = cod; vaProgramar(); pintarVaPartidas(); return; }
+  const b = e.target.closest('.vaelegir'); if (b && valEditable()) { abrirVaFotos(b.closest('[data-cod]').dataset.cod); }
+});
+$('#vaBuscar').addEventListener('input', e => { vaFiltro = e.target.value; pintarVaPartidas(); });
+$('#vaSolo').addEventListener('change', () => pintarVaPartidas());
+function vaLeerForm(){
+  const D = va.datos; va.desde = $('#vaDesde').value || null; va.hasta = $('#vaHasta').value || null;
+  const pc = (id, def) => { const n = vNum($(id).value); return n == null ? def : Math.max(0, Math.min(100, n)) / 100; };
+  D.peso = pc('#vaPeso', 0.4); D.comprado = pc('#vaComp', 1); D.iva = pc('#vaIva', 0.16);
+  D.firmantes = { elab: $('#vaF1').value.trim(), rev: $('#vaF2').value.trim(), insp: $('#vaF3').value.trim(), aprob: $('#vaF4').value.trim() };
+}
+$$('#p-valed .vain').forEach(x => x.addEventListener('input', () => { if (!valEditable()) return; vaLeerForm(); pintarVaTot(); vaProgramar(); if (x.id === 'vaPeso' || x.id === 'vaComp') pintarVaPartidas(); }));
+const vaProgramar = () => { clearTimeout(vaTimer); $('#vaSaved').textContent = 'Guardando…'; vaTimer = setTimeout(vaGuardar, 1000); };
+async function vaGuardar(){
+  clearTimeout(vaTimer); if (!valEditable()) return true;
+  try { const d = Object.assign({}, va.datos); const r = await rpc('rq_valuacion_guardar', { p_id: va.id, p_puesto: va.puesto, p_desde: va.desde, p_hasta: va.hasta, p_datos: d });
+    va.estado = r.estado; va.actualizado = r.actualizado; const i = valLista.findIndex(x => x.id === r.id); if (i >= 0) valLista[i] = r;
+    $('#vaSaved').textContent = 'Guardado ' + new Date().toLocaleTimeString('es-VE', { hour: 'numeric', minute: '2-digit' }); return true; }
+  catch (e) { $('#vaSaved').textContent = 'No se pudo guardar: ' + e.message; return false; }
+}
+$('#vaVolver').onclick = async () => { if (valEditable()) await vaGuardar(); va = null; showTab('val'); };
+$('#vaEnviar').onclick = async () => { vaLeerForm(); if (!va.desde || !va.hasta) return toast('Indica el período (desde y hasta)');
+  const c = valCalc(va); if (!confirm(`¿Enviar la valuación N° ${va.numero} de ${valBaseTxt(va.puesto)} a Costos para validación?${c.S.sinPu ? `\n\nOjo: ${c.S.sinPu} partidas no tienen precio unitario.` : ''}`)) return;
+  if (!await vaGuardar()) return; try { const r = await rpc('rq_valuacion_enviar', { p_id: va.id }); toast('Enviada a Costos'); valSync(r); } catch (e) { toast(e.message); } };
+$('#vaReabrir').onclick = async () => { if (!confirm('¿Reabrir la valuación para corregirla? Vuelve a borrador y habrá que enviarla de nuevo.')) return;
+  try { valSync(await rpc('rq_valuacion_reabrir', { p_id: va.id })); toast('Reabierta'); } catch (e) { toast(e.message); } };
+$('#vaBorrar').onclick = async () => { if (!confirm(`¿Borrar el borrador de la valuación N° ${va.numero}? No se puede deshacer.`)) return;
+  try { await rpc('rq_valuacion_borrar', { p_id: va.id }); valLista = valLista.filter(x => x.id !== va.id); va = null; toast('Borrada'); showTab('val'); } catch (e) { toast(e.message); } };
+$('#vaRevisar').onclick = () => { $('#vrNota').value = ''; $('#vrErr').hidden = true; $('#vrTit').textContent = `Valuación N° ${va.numero} · ${valBaseTxt(va.puesto)}`; $('#valRevDlg').showModal(); };
+$('#vrCerrar').onclick = () => $('#valRevDlg').close();
+async function vaRevisar(estado){ const nota = $('#vrNota').value.trim();
+  if (estado === 'observada' && !nota) { $('#vrErr').textContent = 'Escribe qué hay que corregir.'; $('#vrErr').hidden = false; return; }
+  try { const r = await rpc('rq_valuacion_revisar', { p_id: va.id, p_estado: estado, p_nota: nota || null }); $('#valRevDlg').close(); toast(estado === 'validada' ? 'Valuación validada' : 'Valuación observada'); valSync(r); }
+  catch (e) { $('#vrErr').textContent = e.message; $('#vrErr').hidden = false; } }
+$('#vrValidar').onclick = () => vaRevisar('validada');
+$('#vrObservar').onclick = () => vaRevisar('observada');
+function valSync(r){ const i = valLista.findIndex(x => x.id === r.id); if (i >= 0) valLista[i] = r; else valLista.unshift(r); va = JSON.parse(JSON.stringify(r)); va.datos.items = va.datos.items || {}; pintarValEd(); }
+
+/* ---- Elegir fotos de los reportes ---- */
+let vaFotosCod = null, vaFotosSel = [];
+async function valReportes(puesto, desde, hasta){
+  const k = puesto + '|' + desde + '|' + hasta; if (vaRepCache.has(k)) return vaRepCache.get(k);
+  const L = await rpc('rq_reportes_listar', { p_puesto: puesto, p_desde: desde, p_hasta: hasta, p_limite: 300 }) || [];
+  vaRepCache.set(k, L); return L;
+}
+async function abrirVaFotos(cod){
+  vaFotosCod = cod; vaFotosSel = (vaItem(cod).fotos || []).slice();
+  const p = va.datos.partidas.find(x => x.cod === cod);
+  $('#vfTit').textContent = `Partida ${cod}`; $('#vfDesc').textContent = p ? p.desc : '';
+  $('#vfTodo').checked = false; $('#valFotosDlg').showModal(); pintarVaFotos();
+}
+async function pintarVaFotos(){
+  const todo = $('#vfTodo').checked, d1 = todo ? '2026-07-01' : (va.desde || '2026-07-01'), d2 = todo ? today() : (va.hasta || today());
+  $('#vfList').innerHTML = '<p class="hint">Cargando reportes…</p>';
+  try {
+    const L = (await valReportes(va.puesto, d1, d2)).filter(r => (r.archivos || []).some(a => a.tipo === 'foto')).sort((a, b) => a.fecha < b.fecha ? -1 : 1);
+    if (!L.length) { $('#vfList').innerHTML = '<div class="empty">No hay reportes con fotos de esta base en el período.</div>'; return; }
+    $('#vfList').innerHTML = L.map(r => `<div class="vfrep"><div class="vfh"><b>${fmt(r.fecha)}</b> · ${esc(r.autor_nombre || '')}</div><p class="hint" style="margin:2px 0 6px">${esc((r.frente ? r.frente.trim() + ': ' : '') + (r.descripcion || ''))}</p>
+      <div class="vfgrid">${r.archivos.map((a, i) => a.tipo === 'foto' ? `<button type="button" class="vfimg" data-p="${esc(a.path)}" data-r="${r.id}" aria-pressed="${vaFotosSel.some(f => f.path === a.path)}"><img alt="" data-vfimg="${esc(a.path)}"></button>` : '').join('')}</div></div>`).join('');
+    const imgs = $$('#vfList img[data-vfimg]'), u = await signed(imgs.map(i => i.dataset.vfimg)); imgs.forEach(i => i.src = u(i.dataset.vfimg));
+    vaRepActual = L;
+  } catch (e) { $('#vfList').innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+  $('#vfCount').textContent = vaFotosSel.length + ' de 3';
+}
+let vaRepActual = [];
+$('#vfTodo').addEventListener('change', () => pintarVaFotos());
+$('#vfList').addEventListener('click', e => { const b = e.target.closest('.vfimg'); if (!b) return; const i = vaFotosSel.findIndex(f => f.path === b.dataset.p);
+  if (i >= 0) { vaFotosSel.splice(i, 1); b.setAttribute('aria-pressed', 'false'); }
+  else { if (vaFotosSel.length >= 3) return toast('Máximo 3 fotos por partida'); const r = vaRepActual.find(x => x.id === b.dataset.r) || {};
+    vaFotosSel.push({ path: b.dataset.p, rep: r.id, fecha: r.fecha, autor: r.autor_nombre || '', frente: (r.frente || '').trim(), desc: (r.descripcion || '').replace(/\s+/g, ' ').slice(0, 400) }); b.setAttribute('aria-pressed', 'true'); }
+  $('#vfCount').textContent = vaFotosSel.length + ' de 3'; });
+$('#vfCancel').onclick = () => $('#valFotosDlg').close();
+$('#vfOk').onclick = () => { vaItem(vaFotosCod).fotos = vaFotosSel.slice(); va._abierta = vaFotosCod; $('#valFotosDlg').close(); vaProgramar(); pintarVaPartidas(); pintarVaTot(); };
+
+/* ---- Exportar ---- */
+async function valFotosData(v, prog, maxPx){
+  const paths = [...new Set(Object.values(v.datos.items || {}).flatMap(it => (it.fotos || []).map(f => f.path)))], M = new Map();
+  if (!paths.length) return M; const u = await signed(paths); let k = 0;
+  for (const p of paths) { if (prog) prog(`Fotos ${++k} de ${paths.length}…`); try { M.set(p, await loadPdfImage(u(p), maxPx || 1100)); } catch (e) {} }
+  return M;
+}
+const valNombre = (v, ext) => `Valuacion_${String(v.numero).padStart(2, '0')}_${valBaseTxt(v.puesto).replace(/[^\wÁÉÍÓÚÑáéíóúñ]+/g, '_')}.${ext}`;
+const valEv = (r) => { const ev = (r.it.ev || '').trim(); return ev || (r.fis > 0 ? 'Ejecución física según los reportes diarios del período.' : 'Sin ejecución física reportada en el período; se relaciona la procura de materiales.'); };
+function valReps(r){ const m = new Map(); (r.it.fotos || []).forEach(f => { if (f.rep && !m.has(f.rep)) m.set(f.rep, f); }); return [...m.values()].sort((a, b) => a.fecha < b.fecha ? -1 : 1).slice(0, 4); }
+const valFirm = (F, k) => (F && F[k]) || (k === 'elab' || k === 'rev' ? 'ING. ____________________' : '____________________');
+
+async function valExcel(v, prog){
+  if (!window.ExcelJS) throw new Error('No se pudo cargar el generador de Excel. Revisa la conexión.');
+  const D = v.datos, C = valCalc(v), FOT = await valFotosData(v, prog, 1000);
+  if (prog) prog('Armando el Excel…');
+  const wb = new ExcelJS.Workbook(); wb.creator = 'Rafmor · Valuaciones'; wb.calcProperties = { fullCalcOnLoad: true };
+  const NAVY = 'FF1F3B57', OLIVE = 'FF4B5B2A', LIGHT = 'FFE9EEF3', YEL = 'FFFFF2A8';
+  const EUR = '€ #,##0.00;(€ #,##0.00);"-"', QTY = '#,##0.00;(#,##0.00);"-"', PCT = '0.00%;(0.00%);"-"', DMY = 'dd/mm/yyyy';
+  const thin = { style: 'thin', color: { argb: 'FF7F8C99' } }, BOX = { top: thin, left: thin, bottom: thin, right: thin };
+  const fnt = (sz, b, col, it) => ({ name: 'Arial', size: sz || 9, bold: !!b, italic: !!it, color: { argb: col || 'FF000000' } });
+  const fl = c => c ? { type: 'pattern', pattern: 'solid', fgColor: { argb: c } } : undefined;
+  const CEN = { horizontal: 'center', vertical: 'middle', wrapText: true }, LEFT = { horizontal: 'left', vertical: 'middle', wrapText: true }, RIGHT = { horizontal: 'right', vertical: 'middle' };
+  const BLUE = 'FF0000FF', GREEN = 'FF008000';
+  const put = (ws, ref, val, o) => { o = o || {}; if (o.merge) ws.mergeCells(ref + ':' + o.merge); const c = ws.getCell(ref); c.value = val;
+    if (o.f) c.font = o.f; if (o.fill) c.fill = fl(o.fill); if (o.al) c.alignment = o.al; if (o.nf) c.numFmt = o.nf;
+    if (o.border !== false) { const [a, b] = [ref, o.merge || ref]; const ca = ws.getCell(a), cb = ws.getCell(b);
+      for (let r = ca.row; r <= cb.row; r++) for (let k = ca.col; k <= cb.col; k++) ws.getCell(r, k).border = BOX; }
+    return c; };
+  const F = (formula, result) => ({ formula: formula.replace(/^=/, ''), result });
+  const lg = logoNow(); let logoId = null;
+  try { logoId = wb.addImage({ base64: lg.data.split(',')[1], extension: lg.ext === 'png' || /image\/png/.test(lg.data) ? 'png' : 'jpeg' }); } catch (e) {}
+  const logo = (ws, col, row, h) => { if (logoId == null) return; const w = Math.round((lg.w || 520) * h / (lg.h || 160)); ws.addImage(logoId, { tl: { col, row }, ext: { width: w, height: h }, editAs: 'oneCell' }); };
+  const FD = x => `TEXT(DAY(${x}),"00")&"/"&TEXT(MONTH(${x}),"00")&"/"&YEAR(${x})`;
+  const dt = s => s ? new Date(s + 'T12:00:00') : null;
+  const peso = +D.peso || 0, comp = D.comprado == null ? 1 : +D.comprado, iva = D.iva == null ? 0.16 : +D.iva, Fm = D.firmantes || {};
+
+  // DATOS
+  const DS = wb.addWorksheet('DATOS', { views: [{ showGridLines: false }] });
+  DS.getColumn(1).width = 3; DS.getColumn(2).width = 42; DS.getColumn(3).width = 70; logo(DS, 1, 0.2, 40);
+  put(DS, 'B4', 'DATOS GENERALES DE LA VALUACIÓN', { f: fnt(12, true, 'FFFFFFFF'), fill: NAVY, al: LEFT, merge: 'C4' });
+  const datos = [['Contratista', VAL_CONTRATISTA], ['Contrato N°', D.contrato || '001/2026'], ['Obra', VAL_OBRA], ['Ente contratante', VAL_ENTE],
+    ['Base militar', (D.base || baseName(v.puesto)).toUpperCase().replace(/,?\s*ESTADO ZULIA$/, '') + ', ESTADO ZULIA'], ['Valuación N°', v.numero], ['Período desde', dt(v.desde), DMY], ['Período hasta', dt(v.hasta), DMY],
+    ['Peso de los materiales en el precio de cada partida', peso, '0.0%'], ['% de materiales comprados', comp, '0.0%'], ['IVA', iva, '0.0%'], ['Moneda', 'EURO (€)'],
+    ['Elaborado por (contratista)', valFirm(Fm, 'elab')], ['Revisado por (contratista)', valFirm(Fm, 'rev')], ['Inspector (ente contratante)', valFirm(Fm, 'insp')], ['Aprobado por (ente contratante)', valFirm(Fm, 'aprob')]];
+  const N = {};
+  datos.forEach(([lab, val, nf], k) => { const r = 5 + k; put(DS, 'B' + r, lab, { f: fnt(10, true), fill: LIGHT, al: LEFT }); put(DS, 'C' + r, val, { f: fnt(10, false, BLUE), fill: YEL, al: LEFT, nf }); N[lab] = `DATOS!$C$${r}`; DS.getRow(r).height = 18; });
+  DS.getRow(7).height = 30;
+  [`Leyenda: celdas amarillas con texto azul = datos para llenar o ajustar. Todo lo demás se calcula solo.`,
+   `Precios unitarios: se cargan en la hoja RESUMEN, columna P.U. (€).`,
+   `% de avance de cada partida = peso materiales × % comprado + (1 − peso materiales) × % de ejecución física. Las partidas marcadas "sin materiales" llevan peso 0 %.`,
+   `La cantidad física ejecutada de cada partida (celda amarilla en su pestaña) sale de los reportes diarios de la plataforma Puestos Fronterizos; ajústela con la medición en sitio.`,
+   `Fuente de cantidades contratadas: volumetría ${D.archivoVol || ''}${D.fechaVol ? ' (' + fmt(D.fechaVol) + ')' : ''}. Generado en Puestos Fronterizos el ${fmt(today())} · Estado: ${(VAL_EST[v.estado] || [v.estado])[0]}.`]
+    .forEach((t, k) => { const r = 22 + k; put(DS, 'B' + r, t, { f: fnt(9, false, 'FF000000', true), al: LEFT, border: false, merge: 'C' + r }); DS.getRow(r).height = 26; });
+  DS.pageSetup = { orientation: 'portrait', paperSize: 1, fitToPage: true, fitToWidth: 1, fitToHeight: 1 };
+  const PESO = N['Peso de los materiales en el precio de cada partida'], COMP = N['% de materiales comprados'], IVA = N['IVA'], VALN = N['Valuación N°'], DES = N['Período desde'], HAS = N['Período hasta'];
+
+  // RESUMEN
+  const R = wb.addWorksheet('RESUMEN', { views: [{ showGridLines: false, state: 'frozen', xSplit: 2, ySplit: 9 }] });
+  [8, 55, 7, 11, 12, 14, 10, 13, 10, 13, 10, 13, 10, 13, 9].forEach((w, i) => R.getColumn(i + 1).width = w);
+  logo(R, 0, 0.1, 44);
+  put(R, 'C1', 'INFORME DE EJECUCIÓN DE OBRA', { f: fnt(13, true, NAVY), al: CEN, border: false, merge: 'L1' });
+  put(R, 'C2', F(`="VALUACIÓN N° "&${VALN}&"  —  "&${N['Base militar']}`, `VALUACIÓN N° ${v.numero}`), { f: fnt(12, true), al: CEN, border: false, merge: 'L2' });
+  put(R, 'A4', 'Obra:', { f: fnt(9, true), fill: LIGHT, al: LEFT }); put(R, 'B4', F(`=${N['Obra']}`, VAL_OBRA), { f: fnt(9, true), fill: LIGHT, al: LEFT, merge: 'J4' });
+  put(R, 'K4', 'COMPONENTE EN EUROS (€)', { f: fnt(9, true, 'FFFFFFFF'), fill: NAVY, al: CEN, merge: 'O4' });
+  put(R, 'A5', 'Contrato:', { f: fnt(9, true), fill: LIGHT, al: LEFT }); put(R, 'B5', F(`=${N['Contrato N°']}&"   ·   Contratista: "&${N['Contratista']}`, ''), { f: fnt(9), fill: LIGHT, al: LEFT, merge: 'J5' });
+  put(R, 'K5', 'PERÍODO', { f: fnt(9, true), fill: LIGHT, al: CEN });
+  put(R, 'L5', F(`="DESDE: "&${FD(DES)}`, 'DESDE: ' + fmt(v.desde)), { f: fnt(9, true, 'FFC00000'), fill: LIGHT, al: CEN, merge: 'M5' });
+  put(R, 'N5', F(`="HASTA: "&${FD(HAS)}`, 'HASTA: ' + fmt(v.hasta)), { f: fnt(9, true, 'FFC00000'), fill: LIGHT, al: CEN, merge: 'O5' });
+  put(R, 'A6', 'Ente:', { f: fnt(9, true), fill: LIGHT, al: LEFT }); put(R, 'B6', F(`=${N['Ente contratante']}`, VAL_ENTE), { f: fnt(9), fill: LIGHT, al: LEFT, merge: 'O6' });
+  R.getRow(4).height = 26;
+  const H1 = { f: fnt(9, true, 'FFFFFFFF'), fill: NAVY, al: CEN };
+  put(R, 'A8', 'PARTIDA N°', Object.assign({ merge: 'A9' }, H1)); put(R, 'B8', 'DESCRIPCIÓN', Object.assign({ merge: 'B9' }, H1));
+  [['C8', 'F8', 'CONTRATO ORIGINAL'], ['G8', 'H8', 'EJECUTADO ANTERIORMENTE'], ['I8', 'J8', 'EJECUTADO EN EL PERÍODO'], ['K8', 'L8', 'TOTAL EJECUTADO A LA FECHA'], ['M8', 'N8', 'POR EJECUTAR']]
+    .forEach(([a, b, t]) => put(R, a, t, Object.assign({ merge: b }, H1)));
+  put(R, 'O8', '% AVANCE', Object.assign({ merge: 'O9' }, H1));
+  ['UNIDAD', 'CANTIDAD APROBADA', 'P.U. (€)', 'TOTAL (€)', 'CANT.', 'MONTO (€)', 'CANT.', 'MONTO (€)', 'CANT.', 'MONTO (€)', 'CANT.', 'MONTO (€)']
+    .forEach((t, i) => put(R, String.fromCharCode(67 + i) + '9', t, { f: fnt(8, true, 'FFFFFFFF'), fill: OLIVE, al: CEN }));
+  R.getRow(8).height = 26; R.getRow(9).height = 26;
+  let row = 10; const ROW = {}, first = row, caps = D.capitulos || {}; let cap = null;
+  C.rows.forEach(x => { const p = x.p;
+    if (p.cap !== cap) { cap = p.cap; put(R, 'A' + row, /^\d+$/.test(cap) && Object.keys(caps).length > 1 ? cap : '', { f: fnt(9, true), fill: LIGHT, al: CEN }); put(R, 'B' + row, caps[cap] || '', { f: fnt(9, true), fill: LIGHT, al: LEFT, merge: 'O' + row }); row++; }
+    ROW[p.cod] = row; const sh = `'PART. ${p.cod}'`, s = (c, val, o) => put(R, c + row, val, Object.assign({ f: fnt(8), al: RIGHT }, o || {}));
+    s('A', p.cod, { al: CEN }); s('B', p.desc, { al: LEFT }); s('C', p.und, { al: CEN }); s('D', p.cant, { f: fnt(8, false, BLUE), nf: QTY });
+    s('E', x.pu, { f: fnt(8, false, BLUE), fill: YEL, nf: EUR }); s('F', F(`=D${row}*E${row}`, x.mt), { nf: EUR });
+    s('G', x.ant, { f: fnt(8, false, BLUE), fill: YEL, nf: QTY }); s('H', F(`=G${row}*E${row}`, x.ant * (x.pu || 0)), { nf: EUR });
+    s('I', F(`=${sh}!$K$28`, x.per), { f: fnt(8, false, GREEN), nf: QTY }); s('J', F(`=I${row}*E${row}`, x.mper), { nf: EUR });
+    s('K', F(`=G${row}+I${row}`, x.ant + x.per), { nf: QTY }); s('L', F(`=K${row}*E${row}`, (x.ant + x.per) * (x.pu || 0)), { nf: EUR });
+    s('M', F(`=D${row}-K${row}`, x.cant - x.ant - x.per), { nf: QTY }); s('N', F(`=M${row}*E${row}`, (x.cant - x.ant - x.per) * (x.pu || 0)), { nf: EUR });
+    s('O', F(`=IF(D${row}=0,0,K${row}/D${row})`, x.cant ? (x.ant + x.per) / x.cant : 0), { nf: PCT });
+    R.getRow(row).height = p.desc.length > 115 ? 36 : p.desc.length > 58 ? 25 : 14; row++; });
+  const last = row - 1, tot = row, sum = c => C.rows.reduce((a, x) => a + ({ F: x.mt, H: x.ant * (x.pu || 0), J: x.mper, L: (x.ant + x.per) * (x.pu || 0), N: (x.cant - x.ant - x.per) * (x.pu || 0) })[c], 0);
+  put(R, 'A' + tot, 'SUB-TOTAL (€)', { f: fnt(9, true), fill: LIGHT, al: RIGHT, merge: 'E' + tot });
+  'FHJLN'.split('').forEach(c => { put(R, c + tot, F(`=SUM(${c}${first}:${c}${last})`, sum(c)), { f: fnt(9, true), fill: LIGHT, al: RIGHT, nf: EUR });
+    put(R, c + (tot + 1), F(`=${c}${tot}*${IVA}`, sum(c) * iva), { f: fnt(9), fill: LIGHT, al: RIGHT, nf: EUR });
+    put(R, c + (tot + 2), F(`=${c}${tot}+${c}${tot + 1}`, sum(c) * (1 + iva)), { f: fnt(9, true), fill: LIGHT, al: RIGHT, nf: EUR });
+    put(R, c + (tot + 3), F(`=IF($F$${tot}=0,0,${c}${tot}/$F$${tot})`, sum('F') ? sum(c) / sum('F') : 0), { f: fnt(9, true), al: RIGHT, nf: PCT }); });
+  'GIKM'.split('').forEach(c => put(R, c + tot, null, { fill: LIGHT }));
+  put(R, 'O' + tot, F(`=IF(F${tot}=0,0,L${tot}/F${tot})`, sum('F') ? sum('L') / sum('F') : 0), { f: fnt(9, true), fill: LIGHT, al: RIGHT, nf: PCT });
+  put(R, 'A' + (tot + 1), F(`="IVA ("&FIXED(${IVA}*100,0)&"%)"`, `IVA (${Math.round(iva * 100)}%)`), { f: fnt(9, true), fill: LIGHT, al: RIGHT, merge: 'E' + (tot + 1) });
+  put(R, 'A' + (tot + 2), 'TOTAL CON IVA (€)', { f: fnt(9, true), fill: LIGHT, al: RIGHT, merge: 'E' + (tot + 2) });
+  put(R, 'A' + (tot + 3), 'PORCENTAJES', { f: fnt(9, true), al: RIGHT, border: false, merge: 'E' + (tot + 3) });
+  put(R, 'A' + (tot + 4), F(`="Nota: el % de cada partida combina la procura de materiales ("&FIXED(${COMP}*100,0)&"% comprado, peso "&FIXED(${PESO}*100,0)&"%) y la ejecución física en obra (peso "&FIXED((1-${PESO})*100,0)&"%). Los montos se calculan al cargar los P.U. en la columna E."`, ''),
+    { f: fnt(8, false, 'FF000000', true), al: LEFT, border: false, merge: 'O' + (tot + 4) }); R.getRow(tot + 4).height = 24;
+  const fr = tot + 7, thinB = { bottom: thin };
+  [['A', 'B', 'ELABORADO POR:', 'Elaborado por (contratista)', 'RAFMOR OBRAS CIVILES Y MATERIALES, C.A.'], ['C', 'F', 'REVISADO POR:', 'Revisado por (contratista)', 'RAFMOR OBRAS CIVILES Y MATERIALES, C.A.'],
+   ['G', 'J', 'INSPECTOR:', 'Inspector (ente contratante)', 'ZODI ZULIA'], ['K', 'O', 'APROBADO POR:', 'Aprobado por (ente contratante)', 'ZODI ZULIA']].forEach(([a, b, t, k, org]) => {
+    put(R, a + fr, t, { f: fnt(9, true), al: LEFT, border: false, merge: b + fr });
+    for (let c = a.charCodeAt(0); c <= b.charCodeAt(0); c++) R.getCell(String.fromCharCode(c) + (fr + 3)).border = thinB;
+    put(R, a + (fr + 4), F(`=${N[k]}`, ''), { f: fnt(9, true), al: LEFT, border: false, merge: b + (fr + 4) });
+    put(R, a + (fr + 5), org, { f: fnt(8), al: LEFT, border: false, merge: b + (fr + 5) }); });
+  R.pageSetup = { orientation: 'landscape', paperSize: 1, fitToPage: true, fitToWidth: 1, fitToHeight: 0, printArea: `A1:O${fr + 5}`, printTitlesRow: '8:9' };
+
+  // Una pestaña por partida
+  for (const x of C.rows) {
+    const p = x.p, rr = ROW[p.cod], RS = 'RESUMEN';
+    const ws = wb.addWorksheet(`PART. ${p.cod}`.slice(0, 31), { views: [{ showGridLines: false }], properties: (x.fis > 0 || (x.it.fotos || []).length) ? { tabColor: { argb: 'FF4B5B2A' } } : undefined });
+    ws.getColumn(1).width = 2; for (let c = 2; c <= 13; c++) ws.getColumn(c).width = 9.5;
+    logo(ws, 1, 0.1, 40);
+    const capN = (D.capitulos || {})[p.cap] || '';
+    put(ws, 'F1', 'INFORME DE EJECUCIÓN DE OBRA', { f: fnt(12, true, NAVY), al: CEN, border: false, merge: 'M1' });
+    put(ws, 'F2', F(`="VALUACIÓN N° "&${VALN}`, `VALUACIÓN N° ${v.numero}`), { f: fnt(11, true), al: CEN, border: false, merge: 'M2' });
+    put(ws, 'B4', F(`=${N['Obra']}`, VAL_OBRA), { f: fnt(8, true), fill: LIGHT, al: LEFT, merge: 'I5' });
+    put(ws, 'J4', F(`="Contrato N° "&${N['Contrato N°']}`, ''), { f: fnt(8, true), fill: LIGHT, al: CEN, merge: 'M4' });
+    put(ws, 'J5', 'PERÍODO', { f: fnt(8, true, 'FFFFFFFF'), fill: NAVY, al: CEN, merge: 'M5' });
+    put(ws, 'B6', F(`="CONTRATISTA: "&${N['Contratista']}`, ''), { f: fnt(8), fill: LIGHT, al: LEFT, merge: 'I6' });
+    put(ws, 'J6', F(`=${DES}`, dt(v.desde)), { f: fnt(9, true, 'FFC00000'), al: CEN, nf: DMY, merge: 'K6' });
+    put(ws, 'L6', F(`=${HAS}`, dt(v.hasta)), { f: fnt(9, true, 'FFC00000'), al: CEN, nf: DMY, merge: 'M6' });
+    put(ws, 'B7', F(`="BASE MILITAR: "&${N['Base militar']}`, ''), { f: fnt(8, true), fill: LIGHT, al: LEFT, merge: 'I7' });
+    put(ws, 'J7', 'DESDE', { f: fnt(7, true), fill: LIGHT, al: CEN, merge: 'K7' }); put(ws, 'L7', 'HASTA', { f: fnt(7, true), fill: LIGHT, al: CEN, merge: 'M7' });
+    put(ws, 'B8', Object.keys(D.capitulos || {}).length > 1 ? `CAPÍTULO ${p.cap}:` : 'CAPÍTULO:', { f: fnt(8, true, 'FFFFFFFF'), fill: NAVY, al: LEFT, merge: 'C8' });
+    put(ws, 'D8', capN, { f: fnt(8, true, 'FFFFFFFF'), fill: NAVY, al: LEFT, merge: 'I8' });
+    put(ws, 'J8', 'UNIDAD', { f: fnt(8, true, 'FFFFFFFF'), fill: OLIVE, al: CEN, merge: 'K8' }); put(ws, 'L8', 'CANT. CONTRATADA', { f: fnt(8, true, 'FFFFFFFF'), fill: OLIVE, al: CEN, merge: 'M8' });
+    put(ws, 'B9', 'PARTIDA N°:', { f: fnt(9, true), fill: LIGHT, al: LEFT, merge: 'C9' });
+    put(ws, 'D9', F(`=${RS}!A${rr}`, p.cod), { f: fnt(10, true, NAVY), fill: LIGHT, al: LEFT, merge: 'I9' });
+    put(ws, 'J9', F(`=${RS}!C${rr}`, p.und), { f: fnt(9, true), al: CEN, merge: 'K9' }); put(ws, 'L9', F(`=${RS}!D${rr}`, p.cant), { f: fnt(9, true), al: CEN, nf: QTY, merge: 'M9' });
+    put(ws, 'B10', F(`=${RS}!B${rr}`, p.desc), { f: fnt(9, true), al: LEFT, merge: 'I12' });
+    put(ws, 'J10', 'PRECIO UNITARIO (€)', { f: fnt(8, true, 'FFFFFFFF'), fill: OLIVE, al: CEN, merge: 'K10' }); put(ws, 'L10', 'MONTO TOTAL (€)', { f: fnt(8, true, 'FFFFFFFF'), fill: OLIVE, al: CEN, merge: 'M10' });
+    put(ws, 'J11', F(`=${RS}!E${rr}`, x.pu || 0), { f: fnt(9, true), al: CEN, nf: EUR, merge: 'K12' }); put(ws, 'L11', F(`=${RS}!F${rr}`, x.mt), { f: fnt(9, true), al: CEN, nf: EUR, merge: 'M12' });
+    [10, 11, 12].forEach(r => ws.getRow(r).height = 16);
+    put(ws, 'B14', 'RESUMEN DE LA PARTIDA', { f: fnt(9, true), al: LEFT, border: false, merge: 'E14' });
+    const tc = x.ant + x.per, pu = x.pu || 0;
+    [['B', 'C', 'CONTRATO ORIGINAL', '=L9', '=L11', x.cant, x.mt], ['D', 'E', 'EJECUTADO ANTERIORMENTE', `=${RS}!G${rr}`, `=${RS}!H${rr}`, x.ant, x.ant * pu],
+     ['F', 'G', 'EJECUTADO EN EL PERÍODO', '=K28', '=L28', x.per, x.mper], ['H', 'I', 'TOTAL EJECUTADO A LA FECHA', '=D17+F17', '=E17+G17', tc, tc * pu],
+     ['J', 'K', 'RESTA POR EJECUTAR', '=B17-H17', '=C17-I17', x.cant - tc, (x.cant - tc) * pu]].forEach(([c1, c2, t, fq, fm, vq, vm]) => {
+      put(ws, c1 + '15', t, { f: fnt(7, true, 'FFFFFFFF'), fill: NAVY, al: CEN, merge: c2 + '15' });
+      put(ws, c1 + '16', 'CANTIDAD', { f: fnt(7, true), fill: LIGHT, al: CEN }); put(ws, c2 + '16', 'MONTO (€)', { f: fnt(7, true), fill: LIGHT, al: CEN });
+      put(ws, c1 + '17', F(fq, vq), { f: fnt(8), al: RIGHT, nf: QTY }); put(ws, c2 + '17', F(fm, vm), { f: fnt(8), al: RIGHT, nf: EUR });
+      put(ws, c1 + '18', F(`=IF($B$17=0,0,${c1}17/$B$17)`, x.cant ? vq / x.cant : 0), { f: fnt(7, false, 'FF000000', true), al: RIGHT, nf: PCT });
+      put(ws, c2 + '18', F(`=IF($C$17=0,0,${c2}17/$C$17)`, x.mt ? vm / x.mt : 0), { f: fnt(7, false, 'FF000000', true), al: RIGHT, nf: PCT }); });
+    put(ws, 'L15', '% AVANCE A LA FECHA', { f: fnt(7, true, 'FFFFFFFF'), fill: NAVY, al: CEN, merge: 'M15' }); put(ws, 'L16', '%', { f: fnt(7, true), fill: LIGHT, al: CEN, merge: 'M16' });
+    put(ws, 'L17', F('=IF(B17=0,0,H17/B17)', x.cant ? tc / x.cant : 0), { f: fnt(10, true, NAVY), al: CEN, nf: PCT, merge: 'M18' }); ws.getRow(15).height = 24;
+    put(ws, 'B20', 'HITOS DE PAGO — COMPOSICIÓN DEL AVANCE', { f: fnt(9, true), al: LEFT, border: false, merge: 'H20' });
+    [['B', 'E', 'CONCEPTO'], ['F', 'G', 'PESO EN EL PRECIO'], ['H', 'I', '% LOGRADO'], ['J', 'K', 'APORTE AL AVANCE'], ['L', 'M', 'MONTO (€)']].forEach(([a, b, t]) => put(ws, a + '21', t, { f: fnt(7, true, 'FFFFFFFF'), fill: NAVY, al: CEN, merge: b + '21' }));
+    put(ws, 'B22', 'Procura de materiales (comprados y en obra)', { f: fnt(8), al: LEFT, merge: 'E22' });
+    put(ws, 'F22', x.it.sinMat ? 0 : F(`=${PESO}`, x.w), { f: fnt(8, false, x.it.sinMat ? BLUE : GREEN), al: CEN, nf: PCT, merge: 'G22' });
+    if (x.it.sinMat) ws.getCell('F22').note = 'Partida sin materiales: peso 0 %.';
+    put(ws, 'H22', F(`=${COMP}`, comp), { f: fnt(8, false, GREEN), al: CEN, nf: PCT, merge: 'I22' });
+    put(ws, 'B23', 'Ejecución física en obra', { f: fnt(8), al: LEFT, merge: 'E23' });
+    put(ws, 'F23', F('=1-F22', 1 - x.w), { f: fnt(8), al: CEN, nf: PCT, merge: 'G23' });
+    put(ws, 'H23', F('=IF($L$9=0,0,MIN(1,$F$26/$L$9))', x.pf), { f: fnt(8), al: CEN, nf: PCT, merge: 'I23' });
+    [[22, x.w * comp], [23, (1 - x.w) * x.pf]].forEach(([r, vv]) => { put(ws, 'J' + r, F(`=F${r}*H${r}`, vv), { f: fnt(8), al: CEN, nf: PCT, merge: 'K' + r }); put(ws, 'L' + r, F(`=J${r}*$L$11`, vv * x.mt), { f: fnt(8), al: RIGHT, nf: EUR, merge: 'M' + r }); });
+    put(ws, 'B24', 'TOTAL', { f: fnt(8, true), fill: LIGHT, al: RIGHT, merge: 'E24' }); put(ws, 'F24', F('=F22+F23', 1), { f: fnt(8, true), fill: LIGHT, al: CEN, nf: PCT, merge: 'G24' });
+    put(ws, 'H24', null, { fill: LIGHT, merge: 'I24' }); put(ws, 'J24', F('=J22+J23', x.pt), { f: fnt(9, true, NAVY), fill: LIGHT, al: CEN, nf: PCT, merge: 'K24' });
+    put(ws, 'L24', F('=L22+L23', x.pt * x.mt), { f: fnt(8, true), fill: LIGHT, al: RIGHT, nf: EUR, merge: 'M24' });
+    put(ws, 'B26', 'CANTIDAD FÍSICA EJECUTADA EN OBRA (medición / reportes):', { f: fnt(8, true), al: LEFT, border: false, merge: 'E26' });
+    put(ws, 'F26', x.fis, { f: fnt(9, true, BLUE), fill: YEL, al: CEN, nf: QTY, merge: 'G26' }); ws.getCell('F26').note = 'Cantidad física acumulada a la fecha según los reportes diarios. Ajustar con la medición en sitio.';
+    put(ws, 'H26', F('=J9', p.und), { f: fnt(8), al: CEN, border: false, merge: 'I26' });
+    put(ws, 'B27', 'CANTIDAD TOTAL ACUMULADA (avance × cantidad contratada):', { f: fnt(8, true), al: LEFT, border: false, merge: 'J27' });
+    put(ws, 'K27', F('=ROUND(J24*L9,2)', x.acum), { f: fnt(8, true), al: RIGHT, nf: QTY });
+    put(ws, 'B28', 'CANTIDAD Y MONTO A RELACIONAR EN LA PRESENTE VALUACIÓN:', { f: fnt(9, true, 'FFFFFFFF'), fill: NAVY, al: LEFT, merge: 'J28' });
+    put(ws, 'K28', F('=MAX(0,K27-D17)', x.per), { f: fnt(10, true, NAVY), fill: YEL, al: RIGHT, nf: QTY }); put(ws, 'L28', F('=K28*J11', x.mper), { f: fnt(10, true, NAVY), fill: YEL, al: RIGHT, nf: EUR, merge: 'M28' });
+    ws.getRow(28).height = 20;
+    put(ws, 'B30', 'SOPORTE: REPORTES DIARIOS (PLATAFORMA PUESTOS FRONTERIZOS)', { f: fnt(9, true), al: LEFT, border: false, merge: 'M30' });
+    [['B', 'C', 'FECHA'], ['D', 'F', 'FRENTE'], ['G', 'K', 'DESCRIPCIÓN DEL REPORTE'], ['L', 'M', 'AUTOR']].forEach(([a, b, t]) => put(ws, a + '31', t, { f: fnt(7, true, 'FFFFFFFF'), fill: NAVY, al: CEN, merge: b + '31' }));
+    const reps = valReps(x);
+    for (let k = 0; k < 4; k++) { const r = 32 + k, rp = reps[k];
+      put(ws, 'B' + r, rp ? dt(rp.fecha) : null, { f: fnt(7), al: CEN, nf: DMY, merge: 'C' + r }); put(ws, 'D' + r, rp ? rp.frente || '' : null, { f: fnt(7), al: LEFT, merge: 'F' + r });
+      put(ws, 'G' + r, rp ? (rp.desc || '').slice(0, 260) : null, { f: fnt(7), al: LEFT, merge: 'K' + r }); put(ws, 'L' + r, rp ? rp.autor || '' : null, { f: fnt(7), al: CEN, merge: 'M' + r });
+      ws.getRow(r).height = rp && (rp.desc || '').length > 90 ? 30 : 22; }
+    put(ws, 'B37', 'REPORTE FOTOGRÁFICO', { f: fnt(9, true, 'FFFFFFFF'), fill: NAVY, al: CEN, merge: 'M37' });
+    for (let r = 38; r <= 50; r++) ws.getRow(r).height = 15; ws.getRow(38).height = 8;
+    [['B', 'E', 1], ['F', 'I', 5], ['J', 'M', 9]].forEach(([a, b, col0], k) => {
+      put(ws, a + '38', null, { merge: b + '50' }); const f = (x.it.fotos || [])[k], im = f && FOT.get(f.path);
+      if (im) { const id = wb.addImage({ base64: im.data.split(',')[1], extension: 'jpeg' }), s = Math.min(330 / im.w, 245 / im.h);
+        ws.addImage(id, { tl: { col: col0 + 0.05, row: 38.1 }, ext: { width: Math.round(im.w * s), height: Math.round(im.h * s) }, editAs: 'oneCell' });
+        put(ws, a + '51', `Foto ${k + 1}: reporte del ${fmt(f.fecha)}${f.autor ? ' · ' + f.autor : ''}`, { f: fnt(7, false, 'FF000000', true), al: CEN, merge: b + '51' }); }
+      else { const c = ws.getCell(a + '38'); c.value = 'COLOCAR FOTOGRAFÍA'; c.alignment = CEN; c.font = fnt(9, true, 'FF999999'); put(ws, a + '51', '', { merge: b + '51' }); } });
+    const ev = valEv(x).replace(/"/g, '""');
+    const obsTxt = `OBSERVACIONES: Se relaciona en esta valuación la cantidad de ${vQty(x.per)} ${p.und} (equivalente al ${vPct(x.cant ? x.per / x.cant : 0)} de la cantidad contratada): ${vPct(x.w * comp)} por procura de materiales (${vPct(comp, 0)} comprados) y ${vPct((1 - x.w) * x.pf)} por ejecución física (${vQty(x.fis)} ${p.und} ejecutados). ${valEv(x)}`;
+    put(ws, 'B53', F(`="OBSERVACIONES: Se relaciona en esta valuación la cantidad de "&FIXED(K28,2)&" "&J9&" (equivalente al "&FIXED(IF(L9=0,0,K28/L9)*100,2)&"% de la cantidad contratada): "&FIXED(J22*100,2)&"% por procura de materiales ("&FIXED(H22*100,0)&"% comprados) y "&FIXED(J23*100,2)&"% por ejecución física ("&FIXED(F26,2)&" "&J9&" ejecutados). ${ev}"`, obsTxt),
+      { f: fnt(8), al: { horizontal: 'left', vertical: 'top', wrapText: true }, merge: 'M56' });
+    for (let r = 53; r <= 56; r++) ws.getRow(r).height = 16;
+    put(ws, 'B58', 'POR LA CONTRATISTA', { f: fnt(8, true), al: CEN, border: false, merge: 'G58' }); put(ws, 'H58', 'POR EL ENTE CONTRATANTE', { f: fnt(8, true), al: CEN, border: false, merge: 'M58' });
+    [['B', 'D', 'Elaborado por (contratista)', 'RAFMOR, C.A.'], ['E', 'G', 'Revisado por (contratista)', 'RAFMOR, C.A.'], ['H', 'J', 'Inspector (ente contratante)', 'ZODI ZULIA'], ['K', 'M', 'Aprobado por (ente contratante)', 'ZODI ZULIA']].forEach(([a, b, k, org]) => {
+      put(ws, a + '59', null, { merge: b + '61' }); put(ws, a + '62', F(`=${N[k]}`, ''), { f: fnt(7, true), al: CEN, merge: b + '62' });
+      put(ws, a + '63', org, { f: fnt(7), al: CEN, merge: b + '63' }); put(ws, a + '64', F(`="FECHA: "&${FD(HAS)}`, 'FECHA: ' + fmt(v.hasta)), { f: fnt(7), al: CEN, merge: b + '64' }); });
+    ws.pageSetup = { orientation: 'portrait', paperSize: 1, fitToPage: true, fitToWidth: 1, fitToHeight: 1, printArea: 'A1:M64', margins: { left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } };
+  }
+  wb.views = [{ activeTab: 1 }];
+  return new Blob([await wb.xlsx.writeBuffer()], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+
+async function valPdf(v, prog, soloAvance){
+  if (!window.jspdf) throw new Error('No se pudo cargar el generador de PDF. Revisa la conexión.');
+  const D = v.datos, C = valCalc(v), FOT = await valFotosData(v, prog, 1100), Fm = D.firmantes || {};
+  if (prog) prog('Armando el PDF…');
+  const { jsPDF } = window.jspdf; const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape', compress: true });
+  const NAVY = [31, 59, 87], OLIVE = [75, 91, 42], LIGHT = [233, 238, 243], YEL = [255, 242, 168], DK = [20, 24, 28], GR = [110, 110, 100];
+  const T = s => pdfTxt(s == null ? '' : String(s)), f = (sz, st) => { doc.setFont('helvetica', st || 'normal'); doc.setFontSize(sz); };
+  const col = c => doc.setTextColor(c[0], c[1], c[2]), fil = c => doc.setFillColor(c[0], c[1], c[2]), drw = c => doc.setDrawColor(c[0], c[1], c[2]);
+  const peso = +D.peso || 0, comp = D.comprado == null ? 1 : +D.comprado, iva = D.iva == null ? 0.16 : +D.iva, base = baseName(v.puesto);
+  const lg = logoNow(), logo = (x, y, h) => { try { const w = Math.min(60, (lg.w || 520) * h / (lg.h || 160)); doc.addImage(lg.data, /png/.test(lg.data.slice(0, 30)) ? 'PNG' : 'JPEG', x, y, w, h); } catch (e) {} };
+  const per = `${fmt(v.desde)} al ${fmt(v.hasta)}`;
+  const cell = (x, y, w, h, txt, o) => { o = o || {}; if (o.fill) { fil(o.fill); doc.rect(x, y, w, h, 'F'); } drw([127, 140, 153]); doc.setLineWidth(0.15); if (o.border !== false) doc.rect(x, y, w, h);
+    if (txt == null || txt === '') return; f(o.sz || 7, o.b ? 'bold' : (o.i ? 'italic' : 'normal')); col(o.c || DK);
+    const L = doc.splitTextToSize(T(txt), w - 2).slice(0, o.max || 3), lh = (o.sz || 7) * 0.42, ty = y + h / 2 - (L.length - 1) * lh / 2 + lh * 0.35;
+    const al = o.al || 'left', tx = al === 'center' ? x + w / 2 : al === 'right' ? x + w - 1 : x + 1; doc.text(L, tx, ty, { align: al }); };
+  // Hoja resumen (horizontal)
+  const W = 297, H = 210, M = 10; let pg = 0;
+  const enc = () => { pg++; logo(M, 7, 11); f(12, 'bold'); col(NAVY); doc.text('INFORME DE EJECUCIÓN DE OBRA', W / 2, 11, { align: 'center' });
+    f(10.5, 'bold'); col(DK); doc.text(T(`VALUACIÓN N° ${v.numero} — ${base.toUpperCase()}, ESTADO ZULIA`), W / 2, 16.5, { align: 'center' });
+    f(7); col(GR); doc.text(T('Obra: ' + VAL_OBRA), M, 23); doc.text(T(`Contrato N° ${D.contrato || '001/2026'} · Contratista: ${VAL_CONTRATISTA} · Ente: ${VAL_ENTE}`), M, 26.5);
+    f(8, 'bold'); col([192, 0, 0]); doc.text(T('PERÍODO: ' + per), W - M, 23, { align: 'right' }); f(7); col(GR); doc.text(T('Componente en euros (€) · ' + (VAL_EST[v.estado] || [v.estado])[0]), W - M, 26.5, { align: 'right' }); };
+  const cw = [13, 83, 11, 17, 18, 22, 15, 15, 20, 15, 20, 13, 15], cx = []; cw.reduce((a, w, i) => (cx[i] = a, a + w), M);
+  const hdr = y => { const h1 = ['PARTIDA', 'DESCRIPCIÓN', 'UND', 'CANT.', 'P.U. (€)', 'TOTAL (€)', 'ANT. CANT.', 'PER. CANT.', 'PER. MONTO (€)', 'ACUM. CANT.', 'ACUM. MONTO (€)', '% AVANCE', 'RESTA CANT.'];
+    h1.forEach((t, i) => cell(cx[i], y, cw[i], 8, t, { fill: i < 2 ? NAVY : i < 6 ? OLIVE : NAVY, c: [255, 255, 255], b: true, sz: 6, al: 'center', max: 2 })); return y + 8; };
+  enc(); let y = hdr(30), cap = null; const caps = D.capitulos || {};
+  const fila = (vals, o) => { const h = o.h || 6; if (y + h > H - 14) { doc.addPage('a4', 'landscape'); enc(); y = hdr(30); } vals.forEach((t, i) => cell(cx[i], y, cw[i], h, t, Object.assign({ al: i === 1 ? 'left' : i === 0 || i === 2 ? 'center' : 'right', sz: 6.3 }, o, (o.per || [])[i] || {}))); y += h; };
+  C.rows.forEach(x => { const p = x.p;
+    if (p.cap !== cap) { cap = p.cap; if (y + 6 > H - 14) { doc.addPage('a4', 'landscape'); enc(); y = hdr(30); } cell(M, y, cw.reduce((a, b) => a + b, 0), 5.5, ((/^\d+$/.test(cap) && Object.keys(caps).length > 1) ? cap + '  ' : '') + (caps[cap] || ''), { fill: LIGHT, b: true, sz: 6.8 }); y += 5.5; }
+    const tc = x.ant + x.per, pu = x.pu || 0;
+    fila([p.cod, p.desc, p.und, vQty(p.cant), x.pu == null ? '—' : vQty(x.pu), x.pu == null ? '—' : vQty(x.mt), vQty(x.ant), vQty(x.per), x.pu == null ? '—' : vQty(x.mper), vQty(tc), x.pu == null ? '—' : vQty(tc * pu), vPct(x.cant ? tc / x.cant : 0, 1), vQty(x.cant - tc)],
+      { h: p.desc.length > 70 ? 8.4 : 6, max: 2, per: { 7: { b: true }, 8: { b: true } } }); });
+  const S = C.S, tAcum = C.rows.reduce((a, x) => a + (x.ant + x.per) * (x.pu || 0), 0);
+  [['SUB-TOTAL (€)', S.mt, S.mper, tAcum], [`IVA (${Math.round(iva * 100)}%)`, S.mt * iva, S.mper * iva, tAcum * iva], ['TOTAL CON IVA (€)', S.mt * (1 + iva), S.mper * (1 + iva), tAcum * (1 + iva)]].forEach(([t, a, b, c]) => {
+    if (y + 6 > H - 14) { doc.addPage('a4', 'landscape'); enc(); y = hdr(30); }
+    cell(cx[0], y, cw[0] + cw[1] + cw[2] + cw[3] + cw[4], 6, t, { fill: LIGHT, b: true, al: 'right', sz: 7 }); cell(cx[5], y, cw[5], 6, vQty(a), { fill: LIGHT, b: true, al: 'right', sz: 6.5 });
+    cell(cx[6], y, cw[6] + cw[7], 6, '', { fill: LIGHT }); cell(cx[8], y, cw[8], 6, vQty(b), { fill: LIGHT, b: true, al: 'right', sz: 6.5 }); cell(cx[9], y, cw[9], 6, '', { fill: LIGHT });
+    cell(cx[10], y, cw[10], 6, vQty(c), { fill: LIGHT, b: true, al: 'right', sz: 6.5 }); cell(cx[11], y, cw[11] + cw[12], 6, t === 'SUB-TOTAL (€)' ? vPct(S.mt ? tAcum / S.mt : S.avance, 1) : '', { fill: LIGHT, b: true, al: 'center', sz: 6.5 }); y += 6; });
+  y += 3; f(6.8, 'italic'); col(GR); const nota = `Nota: el % de cada partida combina la procura de materiales (${vPct(comp, 0)} comprado, peso ${vPct(peso, 0)}) y la ejecución física en obra (peso ${vPct(1 - peso, 0)}).${S.sinPu ? ` ${S.sinPu} partidas sin precio unitario (—).` : ''}`;
+  doc.text(T(nota), M, y + 2); y += 6;
+  const firmas = (yy, x0, ww) => { const w4 = ww / 4; [['ELABORADO POR', 'elab', 'RAFMOR, C.A.'], ['REVISADO POR', 'rev', 'RAFMOR, C.A.'], ['INSPECTOR', 'insp', 'ZODI ZULIA'], ['APROBADO POR', 'aprob', 'ZODI ZULIA']].forEach(([t, k, org], i) => {
+    const x = x0 + i * w4; f(7, 'bold'); col(DK); doc.text(T(t + ':'), x + 2, yy + 3); drw([120, 120, 120]); doc.line(x + 2, yy + 15, x + w4 - 4, yy + 15);
+    f(7, 'bold'); doc.text(T(valFirm(Fm, k)), x + 2, yy + 19); f(6.5); col(GR); doc.text(T(org), x + 2, yy + 22.5); }); };
+  if (y + 26 > H - 8) { doc.addPage('a4', 'landscape'); enc(); y = 32; } firmas(y, M, W - 2 * M);
+  // Una página por partida (vertical)
+  const L = C.rows.filter(x => !soloAvance || x.fis > 0 || (x.it.fotos || []).length);
+  const PW = 210, PM = 12, CW = PW - 2 * PM, c12 = CW / 12, X = i => PM + i * c12;
+  for (const [n, x] of L.entries()) { const p = x.p, pu = x.pu || 0, tc = x.ant + x.per;
+    if (prog && n % 5 === 0) prog(`Partidas ${n + 1} de ${L.length}…`);
+    doc.addPage('a4', 'portrait'); let yy = 8;
+    logo(PM, yy, 10); f(11.5, 'bold'); col(NAVY); doc.text('INFORME DE EJECUCIÓN DE OBRA', X(8), yy + 4, { align: 'center' }); f(10, 'bold'); col(DK); doc.text(T(`VALUACIÓN N° ${v.numero}`), X(8), yy + 9, { align: 'center' }); yy = 21;
+    cell(X(0), yy, c12 * 8, 9, VAL_OBRA, { fill: LIGHT, b: true, sz: 6.5, max: 2 }); cell(X(8), yy, c12 * 4, 4.5, `Contrato N° ${D.contrato || '001/2026'}`, { fill: LIGHT, b: true, sz: 6.5, al: 'center' });
+    cell(X(8), yy + 4.5, c12 * 4, 4.5, 'PERÍODO', { fill: NAVY, c: [255, 255, 255], b: true, sz: 6.5, al: 'center' }); yy += 9;
+    cell(X(0), yy, c12 * 8, 5, 'CONTRATISTA: ' + VAL_CONTRATISTA, { fill: LIGHT, sz: 6.5 }); cell(X(8), yy, c12 * 2, 5, fmt(v.desde), { b: true, c: [192, 0, 0], al: 'center', sz: 7.5 }); cell(X(10), yy, c12 * 2, 5, fmt(v.hasta), { b: true, c: [192, 0, 0], al: 'center', sz: 7.5 }); yy += 5;
+    cell(X(0), yy, c12 * 8, 5, 'BASE MILITAR: ' + base.toUpperCase() + ', ESTADO ZULIA', { fill: LIGHT, b: true, sz: 6.5 }); cell(X(8), yy, c12 * 2, 5, 'DESDE', { fill: LIGHT, b: true, sz: 6, al: 'center' }); cell(X(10), yy, c12 * 2, 5, 'HASTA', { fill: LIGHT, b: true, sz: 6, al: 'center' }); yy += 5;
+    cell(X(0), yy, c12 * 8, 5, 'CAPÍTULO: ' + ((D.capitulos || {})[p.cap] || ''), { fill: NAVY, c: [255, 255, 255], b: true, sz: 6.5 }); cell(X(8), yy, c12 * 2, 5, 'UNIDAD', { fill: OLIVE, c: [255, 255, 255], b: true, sz: 6.5, al: 'center' }); cell(X(10), yy, c12 * 2, 5, 'CANT. CONTRATADA', { fill: OLIVE, c: [255, 255, 255], b: true, sz: 6.5, al: 'center' }); yy += 5;
+    cell(X(0), yy, c12 * 2, 6, 'PARTIDA N°:', { fill: LIGHT, b: true, sz: 7.5 }); cell(X(2), yy, c12 * 6, 6, p.cod, { fill: LIGHT, b: true, sz: 9, c: NAVY }); cell(X(8), yy, c12 * 2, 6, p.und, { b: true, sz: 8, al: 'center' }); cell(X(10), yy, c12 * 2, 6, vQty(p.cant), { b: true, sz: 8, al: 'center' }); yy += 6;
+    cell(X(0), yy, c12 * 8, 14, p.desc, { b: true, sz: 7.5, max: 4 }); cell(X(8), yy, c12 * 2, 5, 'PRECIO UNITARIO (€)', { fill: OLIVE, c: [255, 255, 255], b: true, sz: 5.8, al: 'center' }); cell(X(10), yy, c12 * 2, 5, 'MONTO TOTAL (€)', { fill: OLIVE, c: [255, 255, 255], b: true, sz: 5.8, al: 'center' });
+    cell(X(8), yy + 5, c12 * 2, 9, x.pu == null ? '—' : vEur(x.pu), { b: true, sz: 8, al: 'center' }); cell(X(10), yy + 5, c12 * 2, 9, x.pu == null ? '—' : vEur(x.mt), { b: true, sz: 8, al: 'center' }); yy += 17;
+    f(8, 'bold'); col(DK); doc.text('RESUMEN DE LA PARTIDA', X(0), yy); yy += 2;
+    const bl = [['CONTRATO ORIGINAL', x.cant, x.mt], ['EJECUTADO ANTERIORMENTE', x.ant, x.ant * pu], ['EJECUTADO EN EL PERÍODO', x.per, x.mper], ['TOTAL EJECUTADO A LA FECHA', tc, tc * pu], ['RESTA POR EJECUTAR', x.cant - tc, (x.cant - tc) * pu]];
+    bl.forEach(([t, q, m], i) => { cell(X(i * 2), yy, c12 * 2, 7, t, { fill: NAVY, c: [255, 255, 255], b: true, sz: 5.8, al: 'center', max: 2 }); cell(X(i * 2), yy + 7, c12, 4.5, 'CANTIDAD', { fill: LIGHT, b: true, sz: 5.5, al: 'center' }); cell(X(i * 2 + 1), yy + 7, c12, 4.5, 'MONTO (€)', { fill: LIGHT, b: true, sz: 5.5, al: 'center' });
+      cell(X(i * 2), yy + 11.5, c12, 5, vQty(q), { sz: 6.5, al: 'right' }); cell(X(i * 2 + 1), yy + 11.5, c12, 5, x.pu == null ? '—' : vQty(m), { sz: 6.5, al: 'right' });
+      cell(X(i * 2), yy + 16.5, c12, 4, vPct(x.cant ? q / x.cant : 0), { sz: 5.5, al: 'right', i: true }); cell(X(i * 2 + 1), yy + 16.5, c12, 4, vPct(x.mt ? m / x.mt : 0), { sz: 5.5, al: 'right', i: true }); });
+    cell(X(10), yy, c12 * 2, 7, '% AVANCE A LA FECHA', { fill: NAVY, c: [255, 255, 255], b: true, sz: 5.8, al: 'center', max: 2 }); cell(X(10), yy + 7, c12 * 2, 4.5, '%', { fill: LIGHT, b: true, sz: 5.5, al: 'center' }); cell(X(10), yy + 11.5, c12 * 2, 9, vPct(x.cant ? tc / x.cant : 0), { b: true, sz: 10, al: 'center', c: NAVY }); yy += 25;
+    f(8, 'bold'); col(DK); doc.text('HITOS DE PAGO — COMPOSICIÓN DEL AVANCE', X(0), yy); yy += 2;
+    [['CONCEPTO', 4], ['PESO EN EL PRECIO', 2], ['% LOGRADO', 2], ['APORTE AL AVANCE', 2], ['MONTO (€)', 2]].reduce((a, [t, w]) => { cell(X(a), yy, c12 * w, 5.5, t, { fill: NAVY, c: [255, 255, 255], b: true, sz: 5.8, al: 'center' }); return a + w; }, 0); yy += 5.5;
+    [['Procura de materiales (comprados y en obra)', x.w, comp, x.w * comp], ['Ejecución física en obra', 1 - x.w, x.pf, (1 - x.w) * x.pf]].forEach(([t, w, l, a]) => {
+      cell(X(0), yy, c12 * 4, 5.5, t, { sz: 6.5 }); cell(X(4), yy, c12 * 2, 5.5, vPct(w), { sz: 6.5, al: 'center' }); cell(X(6), yy, c12 * 2, 5.5, vPct(l), { sz: 6.5, al: 'center' }); cell(X(8), yy, c12 * 2, 5.5, vPct(a), { sz: 6.5, al: 'center' }); cell(X(10), yy, c12 * 2, 5.5, x.pu == null ? '—' : vQty(a * x.mt), { sz: 6.5, al: 'right' }); yy += 5.5; });
+    cell(X(0), yy, c12 * 4, 5.5, 'TOTAL', { fill: LIGHT, b: true, sz: 6.5, al: 'right' }); cell(X(4), yy, c12 * 2, 5.5, '100,00%', { fill: LIGHT, b: true, sz: 6.5, al: 'center' }); cell(X(6), yy, c12 * 2, 5.5, '', { fill: LIGHT });
+    cell(X(8), yy, c12 * 2, 5.5, vPct(x.pt), { fill: LIGHT, b: true, sz: 7.5, al: 'center', c: NAVY }); cell(X(10), yy, c12 * 2, 5.5, x.pu == null ? '—' : vQty(x.pt * x.mt), { fill: LIGHT, b: true, sz: 6.5, al: 'right' }); yy += 8;
+    f(6.8, 'bold'); col(DK); doc.text(T('CANTIDAD FÍSICA EJECUTADA EN OBRA (medición / reportes):'), X(0), yy + 3.6); cell(X(5), yy, c12 * 2, 5.5, vQty(x.fis) + ' ' + p.und, { fill: YEL, b: true, sz: 7, al: 'center', c: [0, 0, 255] });
+    f(6.8, 'bold'); col(DK); doc.text(T('ACUMULADA (avance × contratada):'), X(7.3), yy + 3.6); cell(X(10), yy, c12 * 2, 5.5, vQty(x.acum), { b: true, sz: 7, al: 'right' }); yy += 7;
+    cell(X(0), yy, c12 * 8, 7, 'CANTIDAD Y MONTO A RELACIONAR EN LA PRESENTE VALUACIÓN:', { fill: NAVY, c: [255, 255, 255], b: true, sz: 7.5 }); cell(X(8), yy, c12 * 2, 7, vQty(x.per) + ' ' + p.und, { fill: YEL, b: true, sz: 8, al: 'right', c: NAVY }); cell(X(10), yy, c12 * 2, 7, x.pu == null ? '—' : vEur(x.mper), { fill: YEL, b: true, sz: 8, al: 'right', c: NAVY }); yy += 10;
+    f(8, 'bold'); col(DK); doc.text('SOPORTE: REPORTES DIARIOS (PLATAFORMA PUESTOS FRONTERIZOS)', X(0), yy); yy += 2;
+    [['FECHA', 2], ['FRENTE', 3], ['DESCRIPCIÓN DEL REPORTE', 5], ['AUTOR', 2]].reduce((a, [t, w]) => { cell(X(a), yy, c12 * w, 5, t, { fill: NAVY, c: [255, 255, 255], b: true, sz: 5.8, al: 'center' }); return a + w; }, 0); yy += 5;
+    const reps = valReps(x);
+    for (let k = 0; k < Math.max(2, reps.length); k++) { const rp = reps[k] || {}, h = (rp.desc || '').length > 110 ? 9 : 6.5;
+      cell(X(0), yy, c12 * 2, h, rp.fecha ? fmt(rp.fecha) : '', { sz: 6, al: 'center' }); cell(X(2), yy, c12 * 3, h, rp.frente || '', { sz: 6, max: 3 }); cell(X(5), yy, c12 * 5, h, rp.desc || '', { sz: 6, max: 3 }); cell(X(10), yy, c12 * 2, h, rp.autor || '', { sz: 6, al: 'center', max: 2 }); yy += h; }
+    yy += 3; cell(X(0), yy, CW, 5.5, 'REPORTE FOTOGRÁFICO', { fill: NAVY, c: [255, 255, 255], b: true, sz: 7, al: 'center' }); yy += 6.5;
+    const gw = (CW - 4) / 3, gh = 50;
+    for (let k = 0; k < 3; k++) { const fo = (x.it.fotos || [])[k], im = fo && FOT.get(fo.path), gx = PM + k * (gw + 2);
+      fil([240, 240, 236]); doc.rect(gx, yy, gw, gh, 'F'); drw([200, 200, 195]); doc.rect(gx, yy, gw, gh);
+      if (im) { const s = Math.min(gw / im.w, gh / im.h), iw = im.w * s, ih = im.h * s; doc.addImage(im.data, 'JPEG', gx + (gw - iw) / 2, yy + (gh - ih) / 2, iw, ih, undefined, 'FAST');
+        f(6, 'italic'); col(GR); doc.text(T(`Foto ${k + 1}: reporte del ${fmt(fo.fecha)}${fo.autor ? ' · ' + fo.autor : ''}`), gx + gw / 2, yy + gh + 3.5, { align: 'center', maxWidth: gw }); }
+      else { f(7, 'bold'); col([160, 160, 155]); doc.text('SIN FOTOGRAFÍA', gx + gw / 2, yy + gh / 2, { align: 'center' }); } }
+    yy += gh + 7;
+    const obs = `OBSERVACIONES: Se relaciona en esta valuación la cantidad de ${vQty(x.per)} ${p.und} (equivalente al ${vPct(x.cant ? x.per / x.cant : 0)} de la cantidad contratada): ${vPct(x.w * comp)} por procura de materiales (${vPct(comp, 0)} comprados) y ${vPct((1 - x.w) * x.pf)} por ejecución física (${vQty(x.fis)} ${p.und} ejecutados). ${valEv(x)}`;
+    f(7); const OL = doc.splitTextToSize(T(obs), CW - 4).slice(0, 7), oh = Math.max(14, OL.length * 3.2 + 4); drw([127, 140, 153]); doc.rect(PM, yy, CW, oh); col(DK); doc.text(OL, PM + 2, yy + 4); yy += oh + 4;
+    f(7, 'bold'); col(DK); doc.text('POR LA CONTRATISTA', PM + CW / 4, yy, { align: 'center' }); doc.text('POR EL ENTE CONTRATANTE', PM + 3 * CW / 4, yy, { align: 'center' }); yy += 2;
+    [['elab', 'RAFMOR, C.A.'], ['rev', 'RAFMOR, C.A.'], ['insp', 'ZODI ZULIA'], ['aprob', 'ZODI ZULIA']].forEach(([k, org], i) => { const fx = PM + i * CW / 4, fw = CW / 4;
+      drw([127, 140, 153]); doc.rect(fx, yy, fw, 13); cell(fx, yy + 13, fw, 4.5, valFirm(Fm, k), { b: true, sz: 6, al: 'center' }); cell(fx, yy + 17.5, fw, 4, org, { sz: 6, al: 'center' }); cell(fx, yy + 21.5, fw, 4, 'FECHA: ' + fmt(v.hasta), { sz: 6, al: 'center' }); });
+    f(6); col(GR); doc.text(T(`${base} · Valuación N° ${v.numero} · Partida ${p.cod}`), PM, 291); doc.text(T('Generado en Puestos Fronterizos · ' + fmt(today())), PW - PM, 291, { align: 'right' });
+  }
+  return doc.output('blob');
+}
+async function valExportar(tipo){
+  if (valEditable()) { vaLeerForm(); await vaGuardar(); }
+  const b = tipo === 'xlsx' ? $('#vaXlsx') : $('#vaPdf'), pr = $('#vaProg'); b.disabled = true;
+  try { const blob = tipo === 'xlsx' ? await valExcel(va, t => pr.textContent = t) : await valPdf(va, t => pr.textContent = t, $('#vaPdfSolo').checked);
+    pr.textContent = 'Listo (' + fileSize(blob.size) + ')'; const r = await deliver({ name: valNombre(va, tipo), blob }); if (r === 'declined') toast('Descarga cancelada'); }
+  catch (e) { pr.textContent = ''; toast(e.message || 'No se pudo generar el archivo'); console.error(e); } finally { b.disabled = false; }
+}
+$('#vaXlsx').onclick = () => valExportar('xlsx');
+$('#vaPdf').onclick = () => valExportar('pdf');
+function abrirValuacion(id){ setMod('val', 'val'); setTimeout(() => { const v = valLista.find(x => x.id === id); if (v) { valPuesto = v.puesto; valAbrir(v); } }, 900); }
 
 /* ---------- Procura de requisiciones (v4.29.0) ----------
    Después del recibido de Compras: cuadro comparativo de cotizaciones, proveedor ganador, aviso a Gerencia General
@@ -5162,8 +5851,13 @@ $('#prXlsx').onclick = async () => {
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.39.0';
+const APP_VERSION = '4.40.0';
 const NOVEDADES = [
+  { v: '4.40.0', fecha: '2026-11-04', titulo: 'Valuaciones de obra', items: [
+    { r: ['gerente_operaciones','gerente_general','master'], t: 'Nuevo módulo Valuaciones: elige la base, carga su volumetría (el Excel del formato de presentación de oferta económica) y arma la valuación del período. En cada partida cargas el precio unitario, la cantidad física ejecutada y hasta 3 fotos de los reportes diarios; el avance suma el peso de los materiales comprados (40 % por defecto) más la ejecución física. Exporta el Excel (resumen + una pestaña por partida, con fórmulas y fotos) y el PDF, y envíala a Costos para validación.' },
+    { r: ['costos'], t: 'Nuevo módulo Valuaciones: recibes un aviso cuando las Gerencias envían una valuación. Ábrela, exporta el Excel o el PDF para revisarla y toca "Validar u observar": si la observas, vuelve a las Gerencias con tu nota. También puedes cargar la volumetría de una base.' }
+  ] },
+
   { v: '4.39.0', fecha: '2026-10-23', titulo: 'Avance ponderado en el Archivo y el semanal', items: [
     { r: ['gerente_operaciones','gerente_general','compras','costos','master','reporte_general','comandante_base','contratista'], t: 'El PDF semanal y el reporte de avance general del Archivo ahora destacan el avance ponderado (ejecución física + compra de materiales) como cifra principal, con el avance físico y el % de compra de materiales debajo, en la portada y en cada base. Las carpetas del Archivo también muestran la compra de materiales y el avance ponderado de cada base.' }
   ] },
@@ -5458,6 +6152,7 @@ function abrirDestino(d){
   if (d.startsWith('tarea:')) { if (canTareas()) { setMod('tar', 'tar'); abrirTarea(null, d.slice(6)); } return; }
   if (d.startsWith('viatico:')) { if (canViaticos() || veViaticos()) abrirViatico(d.slice(8)); return; }
   if (d.startsWith('procura:')) { abrirProcura(d.slice(8)); return; }
+  if (d.startsWith('valuacion:')) { if (veValuaciones()) abrirValuacion(d.slice(10)); return; }
   if (d.startsWith('rep:')) { setMod('rep', soloSemanal() ? 'rsem' : 'rarch'); openReport(d.slice(4)); return; }
   openDetail(d);
 }
@@ -5922,6 +6617,7 @@ $('#lglXls').onclick = async () => {
 
 /* ---------- Memorias descriptivas ---------- */
 const canMemorias = () => me && (me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol));
+Object.assign(ERRS, { falta_volumetria:'La base no tiene volumetría cargada.', valuacion_cerrada:'La valuación ya fue enviada o validada: reábrela para cambiarla.', valuacion_sin_fechas:'Indica el período de la valuación (desde y hasta).', valuacion_no_enviada:'La valuación no está enviada a Costos.', valuacion_no_ultima:'Solo se puede borrar la última valuación de la base.', volumetria_invalida:'El archivo no trae partidas válidas.', fechas_invalidas:'La fecha final no puede ser anterior a la inicial.', valuacion_grande:'La valuación es demasiado grande para guardarse.' });
 Object.assign(ERRS, { falta_proyecto:'Elige la base o escribe el nombre del proyecto.', datos_grandes:'La memoria es demasiado grande para guardarse.' });
 const ESTADOS_BRM = ['Bueno','Regular','Malo'];
 const INTERV = ['Recuperar','Reparar','Reemplazar','Acondicionar','Equipar'];
@@ -6555,7 +7251,8 @@ function showTab(t){
   if (t !== 'rpf' && !$('#memEd').hidden && mem) { memGuardar(); cerrarMemEd(); }
   if (t !== 'vedit' && vt && vEditable()) { vLeerForm(); vGuardar(); vt = null; }
   if (t !== 'pedit' && prRow && prEditable()) { prGuardar(); prRow = null; }
-  const sel = t === 'rnuevo' ? repDesde : t === 'vedit' ? vtDesdeTab : t === 'pedit' ? 'proc' : t;
+  if (t !== 'valed' && va) { if (valEditable()) { vaLeerForm(); vaGuardar(); } va = null; }
+  const sel = t === 'rnuevo' ? repDesde : t === 'vedit' ? vtDesdeTab : t === 'pedit' ? 'proc' : t === 'valed' ? 'val' : t;
   $$('#mainTabs button').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === sel));
   $$('#mainView section.panel').forEach(p => p.classList.toggle('on', p.id === 'p-'+t));
   $('#dock').hidden = t !== 'nueva'; $('#dockRep').hidden = t !== 'rnuevo'; $('#dockLog').hidden = t !== 'rlog';
@@ -6573,6 +7270,8 @@ function showTab(t){
   if (t === 'vedit') pintarVEdit();
   if (t === 'proc') loadProc();
   if (t === 'pedit') pintarPEdit();
+  if (t === 'val') loadVal();
+  if (t === 'valed') pintarValEd();
   if (t === 'rsem') loadWeek();
   if (t === 'verif') loadVerif();
   if (t === 'aprob') loadAprob();
@@ -6595,6 +7294,7 @@ function tabAllowed(t){
   if (t === 'vmis' || t === 'vedit') return canViaticos() || (t === 'vedit' && veViaticos());
   if (t === 'vtodos') return veViaticos();
   if (t === 'proc' || t === 'pedit') return veProcura();
+  if (t === 'val' || t === 'valed') return veValuaciones();
   return true;
 }
 function applyTabVisibility(){ $$('#mainTabs button').forEach(b => { b.hidden = !((b.dataset.mod === curMod || b.dataset.mod === 'both') && tabAllowed(b.dataset.tab)); }); const rl = $('#mainTabs [data-tab="rlog"]'); if (rl) rl.textContent = esLogistica() ? 'Nuevo registro' : 'Registrar logística'; }
