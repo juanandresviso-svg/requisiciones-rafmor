@@ -688,6 +688,20 @@ nav.tabs button{flex:0 0 auto}
 .vfrep{border-top:1px solid var(--rule);padding:10px 0}.vfgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .vfimg{padding:0;border:3px solid transparent;border-radius:9px;background:none;cursor:pointer}.vfimg img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;background:var(--sunk)}
 .vfimg[aria-pressed="true"]{border-color:var(--amber)}
+.vrfsheet{max-width:860px}
+.vrfprog{display:flex;align-items:center;gap:10px;margin:4px 0 8px;font-size:13px;color:var(--muted)}.vrfbar{flex:1;height:8px;border-radius:4px;background:var(--sunk);overflow:hidden}.vrfbar i{display:block;height:100%;width:0;background:var(--green)}
+.vrflist{list-style:none;margin:0;padding:0}.vrflist>li{border:1px solid var(--rule);border-radius:12px;padding:12px;margin-bottom:12px;background:var(--surface)}
+.vrflist>li.ok{border-color:var(--green);box-shadow:inset 4px 0 0 var(--green)}.vrflist>li.warn{box-shadow:inset 4px 0 0 var(--red)}
+.vrfh{display:flex;gap:8px;align-items:baseline}.vrfh b{font:700 18px/1 "Barlow Condensed",sans-serif;flex:0 0 auto}.vrfh span{font-size:14px}
+.vrfm{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted);margin:6px 0 8px}
+.vrfg{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media (min-width:700px){.vrfg{grid-template-columns:1fr 1fr 1fr}}
+.vrfg figure{margin:0;border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:var(--sunk)}
+.vrfg img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;cursor:zoom-in;background:#ddd}
+.vrfg figcaption{font-size:12px;padding:6px 8px;line-height:1.35}.vrfg figcaption b{display:block}
+.vrfg .vrfbt{display:flex;gap:4px;padding:0 6px 6px}.vrfg .vrfbt button{flex:1;min-height:36px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);font-weight:600;cursor:pointer}
+.vrfnone{padding:14px;border:2px dashed var(--rule);border-radius:10px;text-align:center;color:var(--muted);font-size:14px}
+.vrfact{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.vrfact .btn{min-height:42px;flex:1}
+.vrfacts{position:sticky;bottom:0;background:var(--surface);padding-top:10px}
 </style>
 </head>
 <body>
@@ -873,10 +887,13 @@ nav.tabs button{flex:0 0 auto}
     </div>
     <div class="block">
       <h2>Exportar y enviar</h2>
+      <button class="btn primary block100" id="vaRevFotos">Revisar fotos por partida</button>
+      <p class="hint" id="vaRevInfo" style="margin:6px 0 10px"></p>
       <div class="row2"><button class="btn dark" id="vaXlsx">Exportar Excel</button><button class="btn dark" id="vaPdf">Exportar PDF</button></div>
+      <p class="hint" style="margin:6px 0 0">Exportar PDF abre primero la revisión de fotos.</p>
       <label class="chk" style="margin-top:10px"><input type="checkbox" id="vaPdfSolo"> PDF solo con las partidas con ejecución física o fotos</label>
       <p class="hint" id="vaProg" style="margin:8px 0 0"></p>
-      <button class="btn primary block100" id="vaEnviar" style="margin-top:10px">Enviar a Costos para validación</button>
+      <button class="btn primary block100" id="vaEnviar" style="margin-top:14px">Enviar a Costos para validación</button>
       <button class="btn primary block100" id="vaRevisar" style="margin-top:10px" hidden>Validar u observar</button>
       <button class="btn block100" id="vaReabrir" style="margin-top:10px" hidden>Reabrir para corregir</button>
       <button class="btn danger block100" id="vaBorrar" style="margin-top:10px" hidden>Borrar borrador</button>
@@ -1536,6 +1553,17 @@ nav.tabs button{flex:0 0 auto}
     <label class="f"><span>Nota (obligatoria para observar)</span><textarea class="in" id="vrNota" maxlength="1500" placeholder="Qué hay que corregir, o un comentario de la validación"></textarea></label>
     <p class="err" id="vrErr" hidden></p>
     <div class="acts" style="position:static"><button class="btn danger" id="vrObservar">Observar</button><button class="btn primary" id="vrValidar">Validar</button></div>
+  </div>
+</dialog>
+<dialog id="valFotRevDlg">
+  <div class="sheet vrfsheet"><div class="grab"></div>
+    <h3><span id="vrfTit">Revisar fotos</span><button class="btn ghost" id="vrfCerrar" style="min-height:40px">Cerrar</button></h3>
+    <p class="hint">Revisa partida por partida las fotos que van en el PDF. Toca una foto para verla grande; cámbiala, quítala u ordénala si hace falta, y marca la partida como revisada.</p>
+    <div class="vrfprog"><div class="vrfbar"><i id="vrfBar"></i></div><span id="vrfCount"></span></div>
+    <div class="pfil" id="vrfFil" role="group" aria-label="Filtrar partidas"></div>
+    <ul class="vrflist" id="vrfList"></ul>
+    <div class="acts vrfacts"><button class="btn" id="vrfXlsx">Exportar Excel</button><button class="btn primary" id="vrfPdf">Exportar PDF</button></div>
+    <p class="hint" id="vrfProgTxt" style="margin:6px 0 0;text-align:center"></p>
   </div>
 </dialog>
 <dialog id="lbDlg" class="lb">
@@ -4789,6 +4817,8 @@ const VAL_EST = { borrador: ['Borrador', ''], enviada: ['Enviada a Costos', 'pen
 const VAL_OBRA = 'REMODELACIÓN, ACONDICIONAMIENTO Y EQUIPAMIENTO DE 13 BASES MILITARES FRONTERIZAS UBICADAS EN EL EDO. ZULIA';
 const VAL_CONTRATISTA = 'RAFMOR OBRAS CIVILES Y MATERIALES, C.A.   RIF: J-316308413';
 const VAL_ENTE = 'ZONA OPERATIVA DE DEFENSA INTEGRAL ZULIA  /  RIF: G-200114843';
+const valEnte = D => (D && D.ente) || VAL_ENTE;
+const valEnteCorto = D => (D && D.enteCorto) || (D && D.ente && !/ZONA OPERATIVA/i.test(D.ente) ? 'ENTE CONTRATANTE' : 'ZODI ZULIA');
 const vEur = n => '€ ' + (+n || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const vQty = n => (+n || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const vPct = (n, d) => ((+n || 0) * 100).toLocaleString('es-VE', { minimumFractionDigits: d == null ? 2 : d, maximumFractionDigits: d == null ? 2 : d }) + '%';
@@ -4821,9 +4851,11 @@ function parseVolumetria(wb){
         if (t.includes('DESCRIP')) m.desc = ci; else if (t.includes('PARTIDA')) m.cod = ci; else if (t === 'UNIDAD' || t.startsWith('UNIDAD') || t === 'UND') m.und = ci; else if (t.startsWith('CANTIDAD')) m.cant = ci; else if (t.startsWith('PRECIO')) m.pu = ci; });
       if (m.desc && m.und && m.cant) { hdr = r; cols = m; } });
     if (!hdr) return;
-    let base = '', fecha = null;
+    let base = '', fecha = null, ente = '';
     for (let r = 1; r < hdr; r++) ws.getRow(r).eachCell((c, ci) => { const raw = vCellVal(c), t = vNormTxt(raw);
       if (t.startsWith('BASE MILITAR')) base = String(raw).split(':').slice(1).join(':').trim();
+      if (t.includes('CONTRATANTE') && t.includes(':')) ente = String(raw).split(':').slice(1).join(':').replace(/\s+/g, ' ').trim();
+      if (t.startsWith('OBRA:') && !base) { const m = t.match(/(BPF [A-Z ]+?),/); if (m) base = m[1] + ', ESTADO ZULIA'; }
       if (t.startsWith('FECHA')) { const nx = vCellVal(ws.getRow(r).getCell(ci + 1)); if (nx instanceof Date) fecha = nx.toISOString().slice(0, 10); } });
     const capitulos = {}, partidas = [], usados = new Set(); let cap = '', nCap = 0, prev = 0;
     for (let r = hdr + 1; r <= ws.rowCount; r++) {
@@ -4843,7 +4875,7 @@ function parseVolumetria(wb){
       if (!cap) { nCap++; cap = String(nCap); capitulos[cap] = 'PARTIDAS'; }
       partidas.push({ cod: c2, cap, desc: desc.replace(/\s+/g, ' '), und: und.toUpperCase(), cant: q || 0, pu: cols.pu ? vNumber(vCellVal(row.getCell(cols.pu))) : null });
     }
-    if (partidas.length && (!best || partidas.length > best.partidas.length)) best = { base, fecha, capitulos, partidas };
+    if (partidas.length && (!best || partidas.length > best.partidas.length)) best = { base, fecha, ente, capitulos, partidas };
   });
   if (!best) throw new Error('No encontré la tabla de partidas (columnas Nº Partida, Descripción, Unidad y Cantidad).');
   return best;
@@ -4918,7 +4950,7 @@ $('#valNueva').onclick = async () => {
     (vol.datos.partidas || []).forEach(p => { items[p.cod] = items[p.cod] || { pu: p.pu == null ? null : p.pu, ant: 0, fis: 0, ev: '', fotos: [] }; });
     const pd = prev ? prev.datos : {};
     const datos = { peso: pd.peso == null ? 0.4 : pd.peso, comprado: pd.comprado == null ? 1 : pd.comprado, iva: pd.iva == null ? 0.16 : pd.iva, firmantes: pd.firmantes || {},
-      contrato: pd.contrato || '001/2026', base: vol.datos.base || baseName(valPuesto), fechaVol: vol.datos.fecha || null, archivoVol: vol.archivo,
+      contrato: pd.contrato || '001/2026', base: vol.datos.base || baseName(valPuesto), ente: vol.datos.ente || pd.ente || null, fechaVol: vol.datos.fecha || null, archivoVol: vol.archivo,
       capitulos: vol.datos.capitulos || {}, partidas: vol.datos.partidas || [], items };
     const r = await rpc('rq_valuacion_guardar', { p_id: uuid(), p_puesto: valPuesto, p_desde: desde, p_hasta: today(), p_datos: datos });
     valLista.unshift(r); valAbrir(r);
@@ -4947,6 +4979,7 @@ function pintarValEd(){
   pintarVaTot(); pintarVaPartidas();
 }
 function pintarVaTot(){
+  { const R = vrfResumen(); $('#vaRevInfo').textContent = R.con ? `Fotos revisadas: ${R.ok} de ${R.con} partidas${R.sin ? ` · ${R.sin} con avance sin fotos` : ''}` : 'Ninguna partida tiene fotos todavía.'; }
   const c = valCalc(va), S = c.S, iva = va.datos.iva == null ? 0.16 : +va.datos.iva;
   $('#vaTot').innerHTML = `<div><span>Contrato</span><b>${S.mt ? vEur(S.mt) : '—'}</b></div><div><span>Esta valuación</span><b>${S.mt ? vEur(S.mper) : '—'}</b></div>
     <div><span>Con IVA</span><b>${S.mt ? vEur(S.mper * (1 + iva)) : '—'}</b></div><div><span>Avance a la fecha</span><b>${vPct(S.avance, 1)}</b></div>
@@ -4992,7 +5025,7 @@ $('#vaPartidas').addEventListener('input', e => { const x = e.target.closest('.v
 $('#vaPartidas').addEventListener('change', e => { if (e.target.matches('input[type=checkbox].vai')) e.target.dispatchEvent(new Event('input', { bubbles: true })); });
 $('#vaPartidas').addEventListener('toggle', e => { const li = e.target.closest('[data-cod]'); if (li && e.target.open) va._abierta = li.dataset.cod; }, true);
 $('#vaPartidas').addEventListener('click', e => {
-  const q = e.target.closest('.vaquitar'); if (q && valEditable()) { const cod = q.closest('[data-cod]').dataset.cod; vaItem(cod).fotos.splice(+q.dataset.qk, 1); va._abierta = cod; vaProgramar(); pintarVaPartidas(); return; }
+  const q = e.target.closest('.vaquitar'); if (q && valEditable()) { const cod = q.closest('[data-cod]').dataset.cod; vaItem(cod).fotos.splice(+q.dataset.qk, 1); vaItem(cod).fotosOk = false; va._abierta = cod; vaProgramar(); pintarVaPartidas(); return; }
   const b = e.target.closest('.vaelegir'); if (b && valEditable()) { abrirVaFotos(b.closest('[data-cod]').dataset.cod); }
 });
 $('#vaBuscar').addEventListener('input', e => { vaFiltro = e.target.value; pintarVaPartidas(); });
@@ -5064,7 +5097,7 @@ $('#vfList').addEventListener('click', e => { const b = e.target.closest('.vfimg
     vaFotosSel.push({ path: b.dataset.p, rep: r.id, fecha: r.fecha, autor: r.autor_nombre || '', frente: (r.frente || '').trim(), desc: (r.descripcion || '').replace(/\s+/g, ' ').slice(0, 400) }); b.setAttribute('aria-pressed', 'true'); }
   $('#vfCount').textContent = vaFotosSel.length + ' de 3'; });
 $('#vfCancel').onclick = () => $('#valFotosDlg').close();
-$('#vfOk').onclick = () => { vaItem(vaFotosCod).fotos = vaFotosSel.slice(); va._abierta = vaFotosCod; $('#valFotosDlg').close(); vaProgramar(); pintarVaPartidas(); pintarVaTot(); };
+$('#vfOk').onclick = () => { const it0 = vaItem(vaFotosCod); if (JSON.stringify((it0.fotos || []).map(f => f.path)) !== JSON.stringify(vaFotosSel.map(f => f.path))) it0.fotosOk = false; it0.fotos = vaFotosSel.slice(); va._abierta = vaFotosCod; $('#valFotosDlg').close(); vaProgramar(); pintarVaPartidas(); pintarVaTot(); };
 
 /* ---- Exportar ---- */
 async function valFotosData(v, prog, maxPx){
@@ -5107,7 +5140,7 @@ async function valExcel(v, prog){
   const DS = wb.addWorksheet('DATOS', { views: [{ showGridLines: false }] });
   DS.getColumn(1).width = 3; DS.getColumn(2).width = 42; DS.getColumn(3).width = 70; logo(DS, 1, 0.2, 40);
   put(DS, 'B4', 'DATOS GENERALES DE LA VALUACIÓN', { f: fnt(12, true, 'FFFFFFFF'), fill: NAVY, al: LEFT, merge: 'C4' });
-  const datos = [['Contratista', VAL_CONTRATISTA], ['Contrato N°', D.contrato || '001/2026'], ['Obra', VAL_OBRA], ['Ente contratante', VAL_ENTE],
+  const datos = [['Contratista', VAL_CONTRATISTA], ['Contrato N°', D.contrato || '001/2026'], ['Obra', VAL_OBRA], ['Ente contratante', valEnte(D)],
     ['Base militar', (D.base || baseName(v.puesto)).toUpperCase().replace(/,?\s*ESTADO ZULIA$/, '') + ', ESTADO ZULIA'], ['Valuación N°', v.numero], ['Período desde', dt(v.desde), DMY], ['Período hasta', dt(v.hasta), DMY],
     ['Peso de los materiales en el precio de cada partida', peso, '0.0%'], ['% de materiales comprados', comp, '0.0%'], ['IVA', iva, '0.0%'], ['Moneda', 'EURO (€)'],
     ['Elaborado por (contratista)', valFirm(Fm, 'elab')], ['Revisado por (contratista)', valFirm(Fm, 'rev')], ['Inspector (ente contratante)', valFirm(Fm, 'insp')], ['Aprobado por (ente contratante)', valFirm(Fm, 'aprob')]];
@@ -5135,7 +5168,7 @@ async function valExcel(v, prog){
   put(R, 'K5', 'PERÍODO', { f: fnt(9, true), fill: LIGHT, al: CEN });
   put(R, 'L5', F(`="DESDE: "&${FD(DES)}`, 'DESDE: ' + fmt(v.desde)), { f: fnt(9, true, 'FFC00000'), fill: LIGHT, al: CEN, merge: 'M5' });
   put(R, 'N5', F(`="HASTA: "&${FD(HAS)}`, 'HASTA: ' + fmt(v.hasta)), { f: fnt(9, true, 'FFC00000'), fill: LIGHT, al: CEN, merge: 'O5' });
-  put(R, 'A6', 'Ente:', { f: fnt(9, true), fill: LIGHT, al: LEFT }); put(R, 'B6', F(`=${N['Ente contratante']}`, VAL_ENTE), { f: fnt(9), fill: LIGHT, al: LEFT, merge: 'O6' });
+  put(R, 'A6', 'Ente:', { f: fnt(9, true), fill: LIGHT, al: LEFT }); put(R, 'B6', F(`=${N['Ente contratante']}`, valEnte(D)), { f: fnt(9), fill: LIGHT, al: LEFT, merge: 'O6' });
   R.getRow(4).height = 26;
   const H1 = { f: fnt(9, true, 'FFFFFFFF'), fill: NAVY, al: CEN };
   put(R, 'A8', 'PARTIDA N°', Object.assign({ merge: 'A9' }, H1)); put(R, 'B8', 'DESCRIPCIÓN', Object.assign({ merge: 'B9' }, H1));
@@ -5172,7 +5205,7 @@ async function valExcel(v, prog){
     { f: fnt(8, false, 'FF000000', true), al: LEFT, border: false, merge: 'O' + (tot + 4) }); R.getRow(tot + 4).height = 24;
   const fr = tot + 7, thinB = { bottom: thin };
   [['A', 'B', 'ELABORADO POR:', 'Elaborado por (contratista)', 'RAFMOR OBRAS CIVILES Y MATERIALES, C.A.'], ['C', 'F', 'REVISADO POR:', 'Revisado por (contratista)', 'RAFMOR OBRAS CIVILES Y MATERIALES, C.A.'],
-   ['G', 'J', 'INSPECTOR:', 'Inspector (ente contratante)', 'ZODI ZULIA'], ['K', 'O', 'APROBADO POR:', 'Aprobado por (ente contratante)', 'ZODI ZULIA']].forEach(([a, b, t, k, org]) => {
+   ['G', 'J', 'INSPECTOR:', 'Inspector (ente contratante)', valEnteCorto(D)], ['K', 'O', 'APROBADO POR:', 'Aprobado por (ente contratante)', valEnteCorto(D)]].forEach(([a, b, t, k, org]) => {
     put(R, a + fr, t, { f: fnt(9, true), al: LEFT, border: false, merge: b + fr });
     for (let c = a.charCodeAt(0); c <= b.charCodeAt(0); c++) R.getCell(String.fromCharCode(c) + (fr + 3)).border = thinB;
     put(R, a + (fr + 4), F(`=${N[k]}`, ''), { f: fnt(9, true), al: LEFT, border: false, merge: b + (fr + 4) });
@@ -5260,7 +5293,7 @@ async function valExcel(v, prog){
       { f: fnt(8), al: { horizontal: 'left', vertical: 'top', wrapText: true }, merge: 'M56' });
     for (let r = 53; r <= 56; r++) ws.getRow(r).height = 16;
     put(ws, 'B58', 'POR LA CONTRATISTA', { f: fnt(8, true), al: CEN, border: false, merge: 'G58' }); put(ws, 'H58', 'POR EL ENTE CONTRATANTE', { f: fnt(8, true), al: CEN, border: false, merge: 'M58' });
-    [['B', 'D', 'Elaborado por (contratista)', 'RAFMOR, C.A.'], ['E', 'G', 'Revisado por (contratista)', 'RAFMOR, C.A.'], ['H', 'J', 'Inspector (ente contratante)', 'ZODI ZULIA'], ['K', 'M', 'Aprobado por (ente contratante)', 'ZODI ZULIA']].forEach(([a, b, k, org]) => {
+    [['B', 'D', 'Elaborado por (contratista)', 'RAFMOR, C.A.'], ['E', 'G', 'Revisado por (contratista)', 'RAFMOR, C.A.'], ['H', 'J', 'Inspector (ente contratante)', valEnteCorto(D)], ['K', 'M', 'Aprobado por (ente contratante)', valEnteCorto(D)]].forEach(([a, b, k, org]) => {
       put(ws, a + '59', null, { merge: b + '61' }); put(ws, a + '62', F(`=${N[k]}`, ''), { f: fnt(7, true), al: CEN, merge: b + '62' });
       put(ws, a + '63', org, { f: fnt(7), al: CEN, merge: b + '63' }); put(ws, a + '64', F(`="FECHA: "&${FD(HAS)}`, 'FECHA: ' + fmt(v.hasta)), { f: fnt(7), al: CEN, merge: b + '64' }); });
     ws.pageSetup = { orientation: 'portrait', paperSize: 1, fitToPage: true, fitToWidth: 1, fitToHeight: 1, printArea: 'A1:M64', margins: { left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } };
@@ -5288,7 +5321,7 @@ async function valPdf(v, prog, soloAvance){
   const W = 297, H = 210, M = 10; let pg = 0;
   const enc = () => { pg++; logo(M, 7, 11); f(12, 'bold'); col(NAVY); doc.text('INFORME DE EJECUCIÓN DE OBRA', W / 2, 11, { align: 'center' });
     f(10.5, 'bold'); col(DK); doc.text(T(`VALUACIÓN N° ${v.numero} — ${base.toUpperCase()}, ESTADO ZULIA`), W / 2, 16.5, { align: 'center' });
-    f(7); col(GR); doc.text(T('Obra: ' + VAL_OBRA), M, 23); doc.text(T(`Contrato N° ${D.contrato || '001/2026'} · Contratista: ${VAL_CONTRATISTA} · Ente: ${VAL_ENTE}`), M, 26.5);
+    f(7); col(GR); doc.text(T('Obra: ' + VAL_OBRA), M, 23); doc.text(T(`Contrato N° ${D.contrato || '001/2026'} · Contratista: ${VAL_CONTRATISTA} · Ente: ${valEnte(D)}`), M, 26.5);
     f(8, 'bold'); col([192, 0, 0]); doc.text(T('PERÍODO: ' + per), W - M, 23, { align: 'right' }); f(7); col(GR); doc.text(T('Componente en euros (€) · ' + (VAL_EST[v.estado] || [v.estado])[0]), W - M, 26.5, { align: 'right' }); };
   const cw = [13, 83, 11, 17, 18, 22, 15, 15, 20, 15, 20, 13, 15], cx = []; cw.reduce((a, w, i) => (cx[i] = a, a + w), M);
   const hdr = y => { const h1 = ['PARTIDA', 'DESCRIPCIÓN', 'UND', 'CANT.', 'P.U. (€)', 'TOTAL (€)', 'ANT. CANT.', 'PER. CANT.', 'PER. MONTO (€)', 'ACUM. CANT.', 'ACUM. MONTO (€)', '% AVANCE', 'RESTA CANT.'];
@@ -5308,7 +5341,7 @@ async function valPdf(v, prog, soloAvance){
     cell(cx[10], y, cw[10], 6, vQty(c), { fill: LIGHT, b: true, al: 'right', sz: 6.5 }); cell(cx[11], y, cw[11] + cw[12], 6, t === 'SUB-TOTAL (€)' ? vPct(S.mt ? tAcum / S.mt : S.avance, 1) : '', { fill: LIGHT, b: true, al: 'center', sz: 6.5 }); y += 6; });
   y += 3; f(6.8, 'italic'); col(GR); const nota = `Nota: el % de cada partida combina la procura de materiales (${vPct(comp, 0)} comprado, peso ${vPct(peso, 0)}) y la ejecución física en obra (peso ${vPct(1 - peso, 0)}).${S.sinPu ? ` ${S.sinPu} partidas sin precio unitario (—).` : ''}`;
   doc.text(T(nota), M, y + 2); y += 6;
-  const firmas = (yy, x0, ww) => { const w4 = ww / 4; [['ELABORADO POR', 'elab', 'RAFMOR, C.A.'], ['REVISADO POR', 'rev', 'RAFMOR, C.A.'], ['INSPECTOR', 'insp', 'ZODI ZULIA'], ['APROBADO POR', 'aprob', 'ZODI ZULIA']].forEach(([t, k, org], i) => {
+  const firmas = (yy, x0, ww) => { const w4 = ww / 4; [['ELABORADO POR', 'elab', 'RAFMOR, C.A.'], ['REVISADO POR', 'rev', 'RAFMOR, C.A.'], ['INSPECTOR', 'insp', valEnteCorto(D)], ['APROBADO POR', 'aprob', valEnteCorto(D)]].forEach(([t, k, org], i) => {
     const x = x0 + i * w4; f(7, 'bold'); col(DK); doc.text(T(t + ':'), x + 2, yy + 3); drw([120, 120, 120]); doc.line(x + 2, yy + 15, x + w4 - 4, yy + 15);
     f(7, 'bold'); doc.text(T(valFirm(Fm, k)), x + 2, yy + 19); f(6.5); col(GR); doc.text(T(org), x + 2, yy + 22.5); }); };
   if (y + 26 > H - 8) { doc.addPage('a4', 'landscape'); enc(); y = 32; } firmas(y, M, W - 2 * M);
@@ -5358,7 +5391,7 @@ async function valPdf(v, prog, soloAvance){
     const obs = `OBSERVACIONES: Se relaciona en esta valuación la cantidad de ${vQty(x.per)} ${p.und} (equivalente al ${vPct(x.cant ? x.per / x.cant : 0)} de la cantidad contratada): ${vPct(x.w * comp)} por procura de materiales (${vPct(comp, 0)} comprados) y ${vPct((1 - x.w) * x.pf)} por ejecución física (${vQty(x.fis)} ${p.und} ejecutados). ${valEv(x)}`;
     f(7); const OL = doc.splitTextToSize(T(obs), CW - 4).slice(0, 7), oh = Math.max(14, OL.length * 3.2 + 4); drw([127, 140, 153]); doc.rect(PM, yy, CW, oh); col(DK); doc.text(OL, PM + 2, yy + 4); yy += oh + 4;
     f(7, 'bold'); col(DK); doc.text('POR LA CONTRATISTA', PM + CW / 4, yy, { align: 'center' }); doc.text('POR EL ENTE CONTRATANTE', PM + 3 * CW / 4, yy, { align: 'center' }); yy += 2;
-    [['elab', 'RAFMOR, C.A.'], ['rev', 'RAFMOR, C.A.'], ['insp', 'ZODI ZULIA'], ['aprob', 'ZODI ZULIA']].forEach(([k, org], i) => { const fx = PM + i * CW / 4, fw = CW / 4;
+    [['elab', 'RAFMOR, C.A.'], ['rev', 'RAFMOR, C.A.'], ['insp', valEnteCorto(D)], ['aprob', valEnteCorto(D)]].forEach(([k, org], i) => { const fx = PM + i * CW / 4, fw = CW / 4;
       drw([127, 140, 153]); doc.rect(fx, yy, fw, 13); cell(fx, yy + 13, fw, 4.5, valFirm(Fm, k), { b: true, sz: 6, al: 'center' }); cell(fx, yy + 17.5, fw, 4, org, { sz: 6, al: 'center' }); cell(fx, yy + 21.5, fw, 4, 'FECHA: ' + fmt(v.hasta), { sz: 6, al: 'center' }); });
     f(6); col(GR); doc.text(T(`${base} · Valuación N° ${v.numero} · Partida ${p.cod}`), PM, 291); doc.text(T('Generado en Puestos Fronterizos · ' + fmt(today())), PW - PM, 291, { align: 'right' });
   }
@@ -5372,8 +5405,69 @@ async function valExportar(tipo){
   catch (e) { pr.textContent = ''; toast(e.message || 'No se pudo generar el archivo'); console.error(e); } finally { b.disabled = false; }
 }
 $('#vaXlsx').onclick = () => valExportar('xlsx');
-$('#vaPdf').onclick = () => valExportar('pdf');
+$('#vaPdf').onclick = () => abrirRevFotos();
 function abrirValuacion(id){ setMod('val', 'val'); setTimeout(() => { const v = valLista.find(x => x.id === id); if (v) { valPuesto = v.puesto; valAbrir(v); } }, 900); }
+
+/* ---- Revisión de fotos por partida antes de exportar (v4.40.0) ---- */
+let vrfFiltro = 'fotos';
+const vrfRows = () => valCalc(va).rows.map(r => ({ r, fotos: r.it.fotos || [], ok: !!r.it.fotosOk, sin: r.fis > 0 && !(r.it.fotos || []).length }));
+function vrfResumen(){ const L = vrfRows(), con = L.filter(x => x.fotos.length); return { L, con: con.length, ok: con.filter(x => x.ok).length, sin: L.filter(x => x.sin).length, pend: con.filter(x => !x.ok).length }; }
+function abrirRevFotos(){
+  if (!va) return; const R = vrfResumen();
+  vrfFiltro = R.pend ? 'pend' : 'fotos';
+  $('#vrfTit').textContent = `Revisar fotos · N° ${va.numero} · ${valBaseTxt(va.puesto)}`;
+  $('#vrfProgTxt').textContent = ''; $('#valFotRevDlg').showModal(); pintarRevFotos();
+}
+function pintarRevFotos(){
+  const R = vrfResumen(), ed = valEditable();
+  $('#vrfBar').style.width = (R.con ? 100 * R.ok / R.con : 0) + '%';
+  $('#vrfCount').textContent = `${R.ok} de ${R.con} partidas con fotos revisadas${R.sin ? ` · ${R.sin} con avance sin fotos` : ''}`;
+  const F = [['pend', 'Por revisar', R.pend], ['fotos', 'Con fotos', R.con], ['sin', 'Avance sin fotos', R.sin], ['todas', 'Todas', R.L.length]];
+  $('#vrfFil').innerHTML = F.map(([k, t, n]) => `<button type="button" data-vf="${k}" aria-pressed="${vrfFiltro === k}">${t} <b>${n}</b></button>`).join('');
+  const L = R.L.filter(x => vrfFiltro === 'todas' || (vrfFiltro === 'fotos' && x.fotos.length) || (vrfFiltro === 'pend' && x.fotos.length && !x.ok) || (vrfFiltro === 'sin' && x.sin));
+  $('#vrfList').innerHTML = L.length ? L.map(({ r, fotos, ok, sin }) => { const p = r.p;
+    return `<li data-cod="${esc(p.cod)}" class="${ok ? 'ok' : sin ? 'warn' : ''}">
+      <div class="vrfh"><b>${esc(p.cod)}</b><span>${esc(p.desc)}</span></div>
+      <div class="vrfm"><span class="tag ${r.pf >= 1 ? 'ok' : r.pf > 0 ? 'com' : ''}">${vPct(r.pt, 1)}</span><span>Físico ${vQty(r.fis)} de ${vQty(p.cant)} ${esc(p.und)}</span>
+        ${ok ? '<span class="tag ok">✓ Revisada</span>' : fotos.length ? '<span class="tag pend">Por revisar</span>' : ''}${sin ? '<span class="tag bad">Tiene avance y no tiene fotos</span>' : ''}</div>
+      ${fotos.length ? `<div class="vrfg">${fotos.map((f, k) => `<figure><img alt="Foto ${k + 1} de la partida ${esc(p.cod)}" data-vrfimg="${esc(f.path)}" data-k="${k}">
+        <figcaption><b>Foto ${k + 1} · ${fmt(f.fecha)}${f.autor ? ' · ' + esc(f.autor) : ''}</b>${esc((f.frente ? f.frente + ': ' : '') + (f.desc || '')).slice(0, 140)}</figcaption>
+        ${ed ? `<div class="vrfbt"><button type="button" data-mv="-1" data-k="${k}" ${k === 0 ? 'disabled' : ''} aria-label="Mover antes">◀</button><button type="button" data-mv="1" data-k="${k}" ${k === fotos.length - 1 ? 'disabled' : ''} aria-label="Mover después">▶</button><button type="button" data-q="${k}">Quitar</button></div>` : ''}</figure>`).join('')}</div>`
+        : `<div class="vrfnone">${sin ? 'Esta partida tiene avance físico pero no lleva fotos: en el PDF sale "Sin fotografía".' : 'Sin fotos.'}</div>`}
+      ${r.it.ev ? `<p class="hint" style="margin:8px 0 0">${esc(r.it.ev)}</p>` : ''}
+      ${ed ? `<div class="vrfact"><button type="button" class="btn" data-cambiar>${fotos.length ? 'Cambiar fotos' : '+ Elegir fotos'}</button>${fotos.length ? `<button type="button" class="btn ${ok ? '' : 'dark'}" data-ok>${ok ? 'Quitar revisión' : '✓ Fotos correctas'}</button>` : ''}</div>` : ''}
+    </li>`; }).join('') : `<li class="vrfnone">${vrfFiltro === 'pend' ? 'No quedan partidas por revisar.' : 'No hay partidas en este filtro.'}</li>`;
+  const imgs = $$('#vrfList img[data-vrfimg]');
+  if (imgs.length) signed(imgs.map(i => i.dataset.vrfimg)).then(u => imgs.forEach(i => { i.src = u(i.dataset.vrfimg); }));
+}
+$('#vrfFil').addEventListener('click', e => { const b = e.target.closest('[data-vf]'); if (b) { vrfFiltro = b.dataset.vf; pintarRevFotos(); $('#vrfList').scrollIntoView({ block: 'start' }); } });
+$('#vrfList').addEventListener('click', async e => {
+  const li = e.target.closest('[data-cod]'); if (!li) return; const cod = li.dataset.cod, it = vaItem(cod), F = it.fotos = it.fotos || [];
+  const im = e.target.closest('img[data-vrfimg]');
+  if (im) { const p = va.datos.partidas.find(x => x.cod === cod) || {}, u = await signed(F.map(f => f.path));
+    lbItems = F.map((f, k) => ({ src: u(f.path), path: f.path, name: `Partida_${cod}_foto_${k + 1}.jpg`, cap: `Partida ${cod} · Foto ${k + 1} de ${F.length} · ${fmt(f.fecha)}${f.autor ? ' · ' + f.autor : ''} — ${(f.desc || p.desc || '').slice(0, 160)}` }));
+    lbIdx = +im.dataset.k; showLb(); $('#lbDlg').showModal(); return; }
+  if (!valEditable()) return;
+  const mv = e.target.closest('[data-mv]'); if (mv) { const k = +mv.dataset.k, j = k + +mv.dataset.mv; if (j < 0 || j >= F.length) return; [F[k], F[j]] = [F[j], F[k]]; it.fotosOk = false; vaProgramar(); pintarRevFotos(); return; }
+  const q = e.target.closest('[data-q]'); if (q) { F.splice(+q.dataset.q, 1); it.fotosOk = false; vaProgramar(); pintarRevFotos(); pintarVaPartidas(); pintarVaTot(); return; }
+  if (e.target.closest('[data-ok]')) { it.fotosOk = !it.fotosOk; vaProgramar(); pintarRevFotos(); return; }
+  if (e.target.closest('[data-cambiar]')) { vrfVolver = true; abrirVaFotos(cod); }
+});
+let vrfVolver = false;
+$('#valFotosDlg').addEventListener('close', () => { if (vrfVolver) { vrfVolver = false; if ($('#valFotRevDlg').open) pintarRevFotos(); } });
+$('#vrfCerrar').onclick = () => $('#valFotRevDlg').close();
+$('#vrfXlsx').onclick = () => vrfExportar('xlsx');
+$('#vrfPdf').onclick = () => vrfExportar('pdf');
+async function vrfExportar(tipo){
+  const R = vrfResumen();
+  if (valEditable() && (R.pend || R.sin) && !confirm(`${R.pend ? R.pend + ' partida' + (R.pend === 1 ? '' : 's') + ' con fotos sin revisar' : ''}${R.pend && R.sin ? ' y ' : ''}${R.sin ? R.sin + ' con avance sin fotos' : ''}.\n\n¿Exportar ${tipo === 'pdf' ? 'el PDF' : 'el Excel'} igual?`)) return;
+  const b = tipo === 'xlsx' ? $('#vrfXlsx') : $('#vrfPdf'), pr = $('#vrfProgTxt'); b.disabled = true;
+  if (valEditable()) { vaLeerForm(); await vaGuardar(); }
+  try { const blob = tipo === 'xlsx' ? await valExcel(va, t => pr.textContent = t) : await valPdf(va, t => pr.textContent = t, $('#vaPdfSolo').checked);
+    pr.textContent = 'Listo (' + fileSize(blob.size) + ')'; const r = await deliver({ name: valNombre(va, tipo), blob }); if (r === 'declined') toast('Descarga cancelada'); }
+  catch (e) { pr.textContent = ''; toast(e.message || 'No se pudo generar el archivo'); console.error(e); } finally { b.disabled = false; }
+}
+$('#vaRevFotos').onclick = () => abrirRevFotos();
 
 /* ---------- Procura de requisiciones (v4.29.0) ----------
    Después del recibido de Compras: cuadro comparativo de cotizaciones, proveedor ganador, aviso a Gerencia General
@@ -5854,8 +5948,8 @@ $('#prXlsx').onclick = async () => {
 const APP_VERSION = '4.40.0';
 const NOVEDADES = [
   { v: '4.40.0', fecha: '2026-11-04', titulo: 'Valuaciones de obra', items: [
-    { r: ['gerente_operaciones','gerente_general','master'], t: 'Nuevo módulo Valuaciones: elige la base, carga su volumetría (el Excel del formato de presentación de oferta económica) y arma la valuación del período. En cada partida cargas el precio unitario, la cantidad física ejecutada y hasta 3 fotos de los reportes diarios; el avance suma el peso de los materiales comprados (40 % por defecto) más la ejecución física. Exporta el Excel (resumen + una pestaña por partida, con fórmulas y fotos) y el PDF, y envíala a Costos para validación.' },
-    { r: ['costos'], t: 'Nuevo módulo Valuaciones: recibes un aviso cuando las Gerencias envían una valuación. Ábrela, exporta el Excel o el PDF para revisarla y toca "Validar u observar": si la observas, vuelve a las Gerencias con tu nota. También puedes cargar la volumetría de una base.' }
+    { r: ['gerente_operaciones','gerente_general','master'], t: 'Nuevo módulo Valuaciones: elige la base, carga su volumetría (el Excel del formato de presentación de oferta económica) y arma la valuación del período. En cada partida cargas el precio unitario, la cantidad física ejecutada y hasta 3 fotos de los reportes diarios; el avance suma el peso de los materiales comprados (40 % por defecto) más la ejecución física. Antes del PDF se abre la revisión de fotos: partida por partida ves en grande las fotos que van al documento, las cambias, quitas u ordenas y marcas cada partida como revisada. Exporta el Excel (resumen + una pestaña por partida, con fórmulas y fotos) y el PDF, y envíala a Costos para validación. Ya vienen cargadas las Valuaciones N° 1 de Catatumbo, Encontrados, Socuavo, Palmeras Diana, Tres Bocas, Mata de Coco y Caño del Medio.' },
+    { r: ['costos'], t: 'Nuevo módulo Valuaciones: recibes un aviso cuando las Gerencias envían una valuación. Ábrela, revisa las fotos de cada partida (Revisar fotos por partida), exporta el Excel o el PDF y toca "Validar u observar": si la observas, vuelve a las Gerencias con tu nota. También puedes cargar la volumetría de una base.' }
   ] },
 
   { v: '4.39.0', fecha: '2026-10-23', titulo: 'Avance ponderado en el Archivo y el semanal', items: [
