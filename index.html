@@ -5486,7 +5486,20 @@ async function valPortadaPdf(doc, v, D, per, base){
     const k = PW / 1700, oy = (PH - 2200 * k) / 2, X = px => px * k, Y = py => oy + py * k, pt = px => px * k * 2.835;
     const co = B ? B.co : (VAL_COORD[n] ? VAL_COORD[n].map(c => c.toFixed(6)).join(', ') : '');
     const tx = (t, x, y, sz, st, c, o) => { doc.setFont('helvetica', st); doc.setFontSize(sz); doc.setTextColor(...c); doc.text(pdfTxt(t), x, y, o || {}); };
-    if (B) {
+    if (C && C.formato === 'institucional') {
+      // Formato institucional (Consignación de Documentos): fondo blanco fijo + textos variables.
+      doc.setFillColor(255, 255, 255); doc.rect(0, 0, PW, PH, 'F');
+      doc.addImage(C.bg, 'JPEG', 0, oy, PW, 2200 * k);
+      const P = C.pos, DKc = [58, 58, 58], OL = [88, 96, 76], bl = (py, sz) => Y(py + sz * 1.07);
+      const nm = (C.bases[n] && C.bases[n].nombre) || base.replace(/^B\.P\.F\s*/i, '').toUpperCase();
+      tx(`VALUACIÓN N° ${v.numero}`, PW / 2, bl(P.titulo, 76), pt(76) * 0.92, 'bold', DKc, { align: 'center' });
+      tx(`B.P.F ${String(n).padStart(2, '0')} · ${nm}`, PW / 2, bl(P.base, 54), pt(54) * 0.92, 'bold', DKc, { align: 'center' });
+      tx(co, PW / 2, bl(P.coord, 34), pt(34) * 0.92, 'normal', DKc, { align: 'center' });
+      doc.setFontSize(pt(34) * 0.92); const cwd = doc.getTextWidth(pdfTxt(co)); doc.setDrawColor(196, 140, 30); doc.setLineWidth(4 * k); doc.line(PW / 2 - cwd / 2, Y(P.coord + 52), PW / 2 + cwd / 2, Y(P.coord + 52));
+      tx(`CONTRATO N°: ${D.contrato || '001/2026'}`, PW / 2, bl(P.contrato, 42), pt(42) * 0.92, 'bold', DKc, { align: 'center' });
+      tx(`PERÍODO: ${per}`, PW / 2, bl(P.periodo, 32), pt(32) * 0.92, 'normal', DKc, { align: 'center' });
+      tx(`AÑO ${String(v.hasta || today()).slice(0, 4)}`, PW / 2, bl(P.anio, 52), pt(52) * 0.92, 'bold', OL, { align: 'center' });
+    } else if (B) {
       doc.addImage(C.bg, 'JPEG', 0, oy, PW, 2200 * k);
       doc.setDrawColor(...GOLD); doc.setLineWidth(3 * k); doc.line(X(B.dot[0]), Y(B.dot[1]), X(B.anchor[0]), Y(B.anchor[1]));
       doc.addImage(B.label, 'JPEG', X(B.lbox[0]), Y(B.lbox[1]), B.lbox[2] * k, B.lbox[3] * k);
@@ -5499,19 +5512,17 @@ async function valPortadaPdf(doc, v, D, per, base){
       vals.forEach((t, i) => tx(t, X(90 + i * cw3), Y(1963), pt(25), 'normal', TX));
       tx(valEnte(D), X(90), Y(2167), pt(21), 'normal', TX);
     } else {
-      // portada simple (sin las capas del mapa)
-      const lg = logoNow(); tx('RAFMOR', 14, 24, 26, 'bold', [255, 255, 255]);
-      tx(`VALUACIÓN N° ${v.numero}`, PW - 14, 20, 14, 'bold', GOLD, { align: 'right' }); tx('INFORME DE EJECUCIÓN DE OBRA', PW - 14, 26, 8, 'normal', MUT, { align: 'right' });
-      doc.setDrawColor(52, 64, 54); doc.setLineWidth(0.3); doc.line(14, 33, PW - 14, 33);
-      tx(`B.P.F ${String(n).padStart(2, '0')}`, 14, 46, 13, 'bold', GOLD); tx(base.replace(/^B\.P\.F\s*/i, '').toUpperCase(), 14, 62, 30, 'bold', TX);
-      tx(VAL_OBRA, 14, 70, 7, 'normal', MUT, { maxWidth: PW - 28 });
-      doc.setFillColor(62, 82, 51); doc.roundedRect(14, 84, PW - 28, 150, 3, 3, 'F');
-      doc.setFillColor(...GOLD); doc.circle(PW / 2, 159, 3, 'F'); tx(co, PW / 2, 170, 12, 'bold', TX, { align: 'center' }); doc.setDrawColor(...GOLD); doc.setLineWidth(0.6);
-      const cwid = doc.getTextWidth(pdfTxt(co)); doc.line(PW / 2 - cwid / 2, 172, PW / 2 + cwid / 2, 172);
-      doc.setDrawColor(...GOLD); doc.line(0, 246, PW, 246);
-      [['CONTRATO', `N° ${D.contrato || '001/2026'}`], ['PERÍODO', per], ['COORDENADAS', co]].forEach(([a, b], i) => { tx(a, 14 + i * 62, 256, 8, 'bold', GOLD); tx(b, 14 + i * 62, 262, 9, 'normal', TX); });
-      tx('CONTRATISTA', 14, 272, 8, 'bold', GOLD); tx(VAL_CONTRATISTA, 14, 277, 8, 'normal', TX);
-      tx('ENTE CONTRATANTE', 14, 285, 8, 'bold', GOLD); tx(valEnte(D), 14, 290, 8, 'normal', TX);
+      // portada simple en el formato institucional (sin el archivo de capas: sin cintillo)
+      doc.setFillColor(255, 255, 255); doc.rect(0, 0, PW, PH, 'F'); const DKc = [58, 58, 58];
+      try { const lg = logoNow(); const lw = Math.min(70, (lg.w || 520) * 22 / (lg.h || 160)); doc.addImage(lg.data, /png/.test(lg.data.slice(0, 30)) ? 'PNG' : 'JPEG', (PW - lw) / 2, 30, lw, 22); } catch (e) {}
+      tx(`VALUACIÓN N° ${v.numero}`, PW / 2, 100, 24, 'bold', DKc, { align: 'center' });
+      tx('PROYECTO', PW / 2, 116, 14, 'bold', [164, 62, 56], { align: 'center' });
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...DKc); doc.text(doc.splitTextToSize(pdfTxt('"' + VAL_OBRA + '."'), 160), PW / 2, 125, { align: 'center' });
+      doc.setDrawColor(160, 160, 160); doc.setLineWidth(0.3); doc.line(28, 150, PW - 28, 150);
+      tx(base.toUpperCase(), PW / 2, 168, 17, 'bold', DKc, { align: 'center' }); tx(co, PW / 2, 177, 11, 'normal', DKc, { align: 'center' });
+      tx(`CONTRATO N°: ${D.contrato || '001/2026'}`, PW / 2, 198, 13, 'bold', DKc, { align: 'center' }); tx(`PERÍODO: ${per}`, PW / 2, 206, 10, 'normal', DKc, { align: 'center' });
+      tx(`AÑO ${String(v.hasta || today()).slice(0, 4)}`, PW / 2, 226, 16, 'bold', [88, 96, 76], { align: 'center' });
+      tx(valEnte(D), PW / 2, 270, 9, 'normal', [90, 90, 90], { align: 'center', maxWidth: 170 });
     }
     doc.movePage(doc.getNumberOfPages(), 1);
     return true;
@@ -6065,8 +6076,11 @@ $('#prXlsx').onclick = async () => {
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.41.0';
+const APP_VERSION = '4.41.1';
 const NOVEDADES = [
+  { v: '4.41.1', fecha: '2026-11-04', titulo: 'Nueva portada de las valuaciones', items: [
+    { r: ['gerente_operaciones','gerente_general','costos','master'], t: 'La portada del PDF de las valuaciones ahora tiene el formato institucional (como la Consignación de Documentos): logo de Rafmor, número de valuación, proyecto, la base con su coordenada, contrato, período, año y el membrete del Despacho de la Presidencia – Fondo Negro Primero.' }
+  ] },
   { v: '4.41.0', fecha: '2026-11-04', titulo: 'Fotos desde el teléfono en las valuaciones', items: [
     { r: ['gerente_operaciones','gerente_general','master'], t: 'Al elegir o cambiar las fotos de una partida ahora puedes tocar "📷 Agregar fotos desde el teléfono": tomas la foto o la eliges de la galería, se sube a la valuación y queda marcada para la partida (máximo 3). Las fotos subidas quedan disponibles en "Fotos cargadas desde el teléfono" para usarlas en otras partidas; en el Excel y el PDF salen como "Foto cargada el …".' }
   ] },
