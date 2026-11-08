@@ -742,6 +742,11 @@ nav.tabs button{flex:0 0 auto}
 @media (max-width:420px){.rpq{grid-template-columns:1fr}}
 label.f>span.rpin{display:flex;align-items:center;gap:6px;margin:0;font-size:inherit;color:inherit}
 .block>h2 .st:empty{display:none}
+.rpnueva{border-style:dashed;border-color:#F2A900;background:color-mix(in srgb,#F2A900 7%,var(--surface))}
+.rpnueva .rpcab b{color:#9A6A00}
+.rpnueva .rpcab .tag{flex:none}
+.valnp{border:1px dashed #F2A900;border-radius:12px;padding:10px 12px;margin:0 0 12px;background:color-mix(in srgb,#F2A900 8%,var(--surface))}
+.valnp li{cursor:pointer;margin:6px 0}
 </style>
 </head>
 <body>
@@ -1124,6 +1129,9 @@ label.f>span.rpin{display:flex;align-items:center;gap:6px;margin:0;font-size:inh
       <div class="rpsug" id="r-partSug"></div>
       <div id="r-parts"></div>
       <button type="button" class="btn dark block100" id="r-partAdd" style="margin-top:10px">+ Agregar partida</button>
+      <div id="r-nuevas"></div>
+      <button type="button" class="btn block100" id="r-nuevaAdd" style="margin-top:8px">+ Partida nueva (no está en la volumetría)</button>
+      <datalist id="dl-rpunds"><option>M2</option><option>M3</option><option>ML</option><option>M</option><option>UND</option><option>PTO</option><option>PZA</option><option>KG</option><option>SG</option><option>GLB</option><option>LTS</option><option>HR</option></datalist>
       <label class="chk" id="r-sinPartWrap" style="margin-top:12px"><input type="checkbox" id="r-sinPart"><span>Hoy no se trabajó en partidas de la volumetría (inspección, logística, limpieza general…)</span></label>
     </div>
     <div class="block" id="r-fasesBlock">
@@ -3551,7 +3559,7 @@ let rep = LS.get('repDraft', null);
 let repFiles = [];   // { file, kind, thumb, path, size, mime, status }
 let repId = null;
 const FASES = ['Demolición','Albañilería','Aguas Negras','Aguas Blancas','Electricidad','Acabados','Paisajismo','Equipamiento','Obras Complementarias'];
-const repBlank = () => ({ owner: me ? me.id : null, fecha: today(), puesto: '', frente: '', descripcion: '', personal: '', clima: '', observaciones: '', fases: FASES.map(() => ({ pct:'', obs:'' })), partidas: [], sinPart: false, prev: null, general: false, tema: '', vc: false, vr: false });
+const repBlank = () => ({ owner: me ? me.id : null, fecha: today(), puesto: '', frente: '', descripcion: '', personal: '', clima: '', observaciones: '', fases: FASES.map(() => ({ pct:'', obs:'' })), partidas: [], nuevas: [], sinPart: false, prev: null, general: false, tema: '', vc: false, vr: false });
 const esGerente = () => me && (me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol));
 Object.assign(ERRS, { falta_tema:'Escribe el tema del reporte general.', base_asignada:'Solo puedes reportar la base que tienes asignada. Si es un error, pídele al administrador que la cambie.', base_cerrada:'Esta requisición ya no admite cambios de base.', reporte_general:'Es un reporte general del proyecto: no tiene base.' });
 function syncTipo(){
@@ -3601,7 +3609,7 @@ function saveRep(){ LS.set('repDraft', rep); }
 CECOS.bases.forEach(b => { const o = document.createElement('option'); o.value = b.n; o.textContent = b.n + '. ' + b.nombre.replace('B.P.F ', ''); $('#r-puesto').appendChild(o); });
 const repBind = [['r-fecha','fecha'],['r-puesto','puesto'],['r-frente','frente'],['r-desc','descripcion'],['r-personal','personal'],['r-obs','observaciones']];
 repBind.forEach(([id,k]) => $('#'+id).addEventListener('input', e => { rep[k] = e.target.value; e.target.classList.remove('bad'); $('#r-err').hidden = true; saveRep(); }));
-$('#r-puesto').addEventListener('change', e => { rep.puesto = e.target.value; e.target.classList.remove('bad'); rep.fases = FASES.map(() => ({ pct:'', obs:'' })); rep.partidas = []; rep.sinPart = false; saveRep(); loadPrev(); rpCargarForm(); });
+$('#r-puesto').addEventListener('change', e => { rep.puesto = e.target.value; e.target.classList.remove('bad'); rep.fases = FASES.map(() => ({ pct:'', obs:'' })); rep.partidas = []; rep.nuevas = []; rep.sinPart = false; saveRep(); loadPrev(); rpCargarForm(); });
 $('#r-clima').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; rep.clima = rep.clima === b.textContent ? '' : b.textContent; saveRep(); syncClima(); });
 function syncClima(){ $$('#r-clima button').forEach(b => b.setAttribute('aria-pressed', b.textContent === rep.clima)); }
 // v4.38.0: contratista con base asignada: solo reporta esa base
@@ -4896,7 +4904,7 @@ const vPct = (n, d) => ((+n || 0) * 100).toLocaleString('es-VE', { minimumFracti
 const vR2 = n => Math.round((+n || 0) * 100) / 100;
 const valBaseTxt = n => baseName(n).replace(/^B\.P\.F\s*/i, '');
 let valPuesto = +LS.get('valPuesto', 8) || 8, valVols = [], valLista = [], va = null, vaTimer = null, vaRepCache = new Map();
-let vaRP = null, vaRPKey = '';   // v4.42: lo reportado por partida {cod: {cant, n, sinCant, reps}}
+let vaRP = null, vaRPKey = '', valNuevas = [];   // v4.42: lo reportado por partida {cod: {cant, n, sinCant, reps}}
 
 /* ---- Lectura del Excel de volumetría ---- */
 const vNormTxt = s => String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
@@ -4974,6 +4982,7 @@ async function loadVal(){
   $('#valNueva').hidden = !canValuar(); $('#valCargar').hidden = !cargaVolumetria();
   try { [valVols, valLista] = await Promise.all([rpc('rq_volumetrias_listar'), rpc('rq_valuaciones_listar', { p_puesto: null })]); valVols = valVols || []; valLista = valLista || []; }
   catch (e) { toast(e.message); valVols = []; valLista = []; }
+  try { valNuevas = await rpc('rq_partidas_nuevas', { p_puesto: null, p_solo_pendientes: true }) || []; } catch (e) { valNuevas = []; }
   pintarVal();
 }
 function pintarVal(){
@@ -4986,12 +4995,18 @@ function pintarVal(){
       <div class="tags" style="margin:4px 0 2px"><span class="tag ${e[1]}">${e[0]}</span>${c.S.sinPu ? `<span class="tag">${c.S.sinPu} sin P.U.</span>` : ''}<span class="tag">${c.S.conFot} con fotos</span></div>
       <div class="vnums"><span>Avance ${vPct(c.S.avance, 1)}</span><b>${c.S.mt ? vEur(c.S.mper) : '—'}</b><span>${esc(v.creado_nombre || '')}</span></div></li>`; }).join('');
   $('#valEmpty').hidden = L.length > 0;
+  { const NP = valNuevas.filter(x => x.puesto === valPuesto), tot = valNuevas.length; let box = $('#valNP');
+    if (!box) { $('#valVol').insertAdjacentHTML('afterend', '<div class="valnp" id="valNP" hidden></div>'); box = $('#valNP'); }
+    box.hidden = !tot;
+    box.innerHTML = tot ? `<b>⚠️ Partidas nuevas por aprobar: ${tot}</b>${NP.length ? ` · ${NP.length} en esta base` : ''}<p class="hint" style="margin:4px 0 0">Las reportaron en obra y no están en la volumetría. Toca una para abrir su reporte y aprobarla o rechazarla.</p>
+      <ul style="margin:6px 0 0;padding-left:18px">${valNuevas.slice(0, 12).map(x => `<li data-nprep="${x.rep}">${esc(valBaseTxt(x.puesto))} · ${fmt(x.fecha)} · ${esc(x.desc)} (${vQty(+x.cant)} ${esc(x.und)}) · ${esc(x.autor || '')}</li>`).join('')}</ul>` : ''; }
   $('#valTodas').innerHTML = CECOS.bases.map(b => { const vo = valVols.find(x => x.puesto === b.n), u = valLista.filter(x => x.puesto === b.n)[0];
     return `<tr data-vb="${b.n}"><td>${esc(valBaseTxt(b.n))}</td><td>${vo ? '✓ ' + vo.partidas : '—'}</td><td>${u ? 'N° ' + u.numero + ' · ' + (VAL_EST[u.estado] || [u.estado])[0] : '—'}</td></tr>`; }).join('');
 }
 $('#valBase').addEventListener('change', e => { valPuesto = +e.target.value; LS.set('valPuesto', valPuesto); pintarVal(); });
 $('#valTodas').addEventListener('click', e => { const tr = e.target.closest('[data-vb]'); if (!tr) return; valPuesto = +tr.dataset.vb; LS.set('valPuesto', valPuesto); $('#valBase').value = String(valPuesto); pintarVal(); window.scrollTo(0, 0); });
 $('#valRefresh').onclick = () => loadVal();
+document.addEventListener('click', e => { const li = e.target.closest('#valNP [data-nprep]'); if (li) openReport(li.dataset.nprep); });
 $('#valList').addEventListener('click', e => { const li = e.target.closest('[data-vaid]'); if (li) valAbrir(valLista.find(x => x.id === li.dataset.vaid)); });
 $('#valList').addEventListener('keydown', e => { if (e.key === 'Enter') { const li = e.target.closest('[data-vaid]'); if (li) valAbrir(valLista.find(x => x.id === li.dataset.vaid)); } });
 
@@ -5687,8 +5702,11 @@ async function vaCargarRP(){
   } catch (e) { bar.hidden = false; bar.textContent = 'No se pudo leer lo reportado por partida: ' + e.message; return; }
   if (!va || vaRPKey !== va.id + '|' + va.puesto + '|' + (va.hasta || '')) return;
   const cods = Object.keys(vaRP || {}), conC = cods.filter(c => +vaRP[c].cant > 0);
-  let n = 0, nf = 0;
+  let n = 0, nf = 0, nn = 0;
   if (valEditable()) {
+    try { const vol = await rpc('rq_volumetria_obtener', { p_puesto: va.puesto }); const tiene = new Set((va.datos.partidas || []).map(p => p.cod));
+      ((vol && vol.datos && vol.datos.partidas) || []).forEach(p => { if (!tiene.has(p.cod)) { va.datos.partidas.push({ cod: p.cod, cap: p.cap, desc: p.desc, und: p.und, cant: p.cant, pu: p.pu == null ? null : p.pu }); vaItem(p.cod); nn++; } });
+      if (nn) va.datos.capitulos = Object.assign({}, va.datos.capitulos || {}, (vol.datos && vol.datos.capitulos) || {}); } catch (e) {}
     const P = new Map((va.datos.partidas || []).map(p => [p.cod, p]));
     cods.forEach(cod => { if (!P.has(cod)) return; const it = vaItem(cod), x = vaRP[cod], c = +x.cant || 0;
       if (c > 0 && (!(+it.fis > 0) || it.fisAuto) && vR2(c) !== +it.fis) { it.fis = vR2(c); it.fisAuto = true; n++; }
@@ -5696,7 +5714,7 @@ async function vaCargarRP(){
       if (!(it.fotos || []).length) { const fs = [];
         [...(x.reps || [])].sort((a, b) => ((b.cant != null) - (a.cant != null)) || (a.fecha < b.fecha ? 1 : -1)).forEach(z => (z.fotos || []).forEach(path => { if (fs.length < 3 && !fs.some(f => f.path === path)) fs.push({ path, rep: z.id, fecha: z.fecha, autor: z.autor || '', frente: (z.frente || '').trim(), desc: z.desc || '' }); }));
         if (fs.length) { it.fotos = fs; it.fotosAuto = true; it.fotosOk = false; nf++; } } });
-    if (n || nf) { vaProgramar(); toast(`Desde los reportes: ${n} cantidad${n === 1 ? '' : 'es'} y fotos en ${nf} partida${nf === 1 ? '' : 's'}`); }
+    if (n || nf || nn) { vaProgramar(); toast((nn ? `${nn} partida${nn === 1 ? '' : 's'} nueva${nn === 1 ? '' : 's'} agregada${nn === 1 ? '' : 's'} desde la volumetría. ` : '') + `Desde los reportes: ${n} cantidad${n === 1 ? '' : 'es'} y fotos en ${nf} partida${nf === 1 ? '' : 's'}`); }
   }
   bar.hidden = !cods.length;
   bar.innerHTML = cods.length ? `📋 <b>${cods.length}</b> partida${cods.length === 1 ? '' : 's'} con reportes asociados hasta el ${fmt(va.hasta || today())}, <b>${conC.length}</b> con cantidades reportadas.${valEditable() ? ' Las partidas sin cantidad cargada a mano toman lo reportado solas; donde ya escribiste una cantidad, te muestro lo reportado para comparar.' : ''}` : '';
@@ -5719,7 +5737,10 @@ const RP_STOP = new Set('PARA CON SIN INCLUYE INCLUIDO EXCLUYE DESDE HASTA TIPO 
 const rpToks = s => new Set(rpNorm(s).replace(/[^A-Z0-9 ]/g, ' ').split(' ').filter(w => w.length >= 4 && !RP_STOP.has(w)).map(w => w.slice(0, 6)));
 Object.assign(ERRS, { faltan_partidas: 'Elige al menos una partida trabajada hoy, o marca que hoy no se trabajó en partidas de la volumetría.',
   partida_invalida: 'Una de las partidas no está en la volumetría de esta base. Vuelve a elegirla.', cantidad_invalida: 'Escribe la cantidad ejecutada (mayor que cero) de cada partida.',
-  partida_repetida: 'Elegiste la misma partida dos veces.', max_partidas: 'Máximo 60 partidas por reporte.' });
+  partida_repetida: 'Elegiste la misma partida dos veces.', max_partidas: 'Máximo 60 partidas por reporte.',
+  max_nuevas: 'Máximo 10 partidas nuevas por reporte.', nueva_sin_descripcion: 'Describe la partida nueva (qué se hizo, con materiales y medidas).', nueva_sin_unidad: 'Indica la unidad de la partida nueva (m2, m3, ml, und…).',
+  nueva_resuelta: 'Esta partida nueva ya fue aprobada o rechazada.', falta_codigo: 'Escribe el código de la partida (ej. NP-1).', codigo_existe: 'Ya existe una partida con ese código en la volumetría.', falta_motivo: 'Escribe el motivo del rechazo.' });
+const RP_UNDS = ['M2','M3','ML','M','UND','PTO','PZA','KG','SG','GLB','LTS','HR'];
 
 async function rpVolumetria(puesto, force){
   puesto = +puesto; if (!(puesto >= 1 && puesto <= 13)) return null;
@@ -5791,7 +5812,7 @@ $('#rpkOk').onclick = () => { $('#rpkDlg').close(); if (rpPickCtx && rpPickCtx.o
 $('#rpkDlg').addEventListener('close', () => { if (rpPickCtx && rpPickCtx.onDone) rpPickCtx.onDone(); rpPickCtx = null; });
 
 /* ---- Formulario del reporte ---- */
-let rpBad = null;
+let rpBad = null, rpBadN = null;
 async function rpCargarForm(force){
   if (!rpOk) return;
   const blk = $('#r-partBlock'); const gen = esGerente() && rep.general;
@@ -5804,14 +5825,23 @@ async function rpCargarForm(force){
 function rpPintarForm(){
   const vol = RPVOL.get(+rep.puesto); if (!vol) return;
   rep.partidas = rep.partidas || [];
-  if (!vol.hay) { $('#r-partHint').textContent = 'Esta base todavía no tiene volumetría cargada en la app: el reporte se envía sin partidas.'; $('#r-parts').innerHTML = ''; $('#r-partAdd').hidden = true; $('#r-sinPartWrap').hidden = true; $('#r-partN').textContent = ''; return; }
+  if (!vol.hay) { $('#r-partHint').textContent = 'Esta base todavía no tiene volumetría cargada en la app: el reporte se envía sin partidas.'; $('#r-parts').innerHTML = ''; $('#r-nuevas').innerHTML = ''; $('#r-partAdd').hidden = true; $('#r-nuevaAdd').hidden = true; $('#r-sinPartWrap').hidden = true; $('#r-partN').textContent = ''; return; }
   $('#r-partHint').innerHTML = 'Elige las partidas de la volumetría que se trabajaron hoy y escribe la cantidad <b>ejecutada hoy</b> en la unidad de cada partida. Con esto la valuación se arma sola.';
-  $('#r-partAdd').hidden = false; $('#r-sinPartWrap').hidden = false;
+  $('#r-partAdd').hidden = false; $('#r-nuevaAdd').hidden = false; $('#r-sinPartWrap').hidden = false;
   $('#r-parts').innerHTML = rpFilasHtml(rep.partidas, vol, { bad: rpBad, vacio: 'Todavía no agregas partidas. Toca «Agregar partida».' });
   $('#r-partN').textContent = rep.partidas.length ? rep.partidas.length + ' partida' + (rep.partidas.length === 1 ? '' : 's') : '';
   $('#r-partN').className = 'st' + (rep.partidas.length ? ' ok' : '');
-  $('#r-sinPart').checked = !!rep.sinPart && !rep.partidas.length; $('#r-sinPart').disabled = rep.partidas.length > 0;
-  rpPintarSug();
+  const hayAlgo = rep.partidas.length > 0 || (rep.nuevas || []).length > 0;
+  $('#r-sinPart').checked = !!rep.sinPart && !hayAlgo; $('#r-sinPart').disabled = hayAlgo;
+  rpPintarNuevas(); rpPintarSug();
+}
+function rpPintarNuevas(){
+  rep.nuevas = rep.nuevas || [];
+  $('#r-nuevas').innerHTML = rep.nuevas.map((x, i) => `<div class="rpfila rpnueva" data-i="${i}"><div class="rpcab"><b>Nueva</b><span>Partida que no está en la volumetría · queda pendiente hasta que la Gerencia la apruebe</span><button type="button" class="rpquitar" data-rnrm="${i}" aria-label="Quitar partida nueva">×</button></div>
+    <label class="f" style="margin:8px 0 0"><span>Descripción de la partida</span><textarea class="in${rpBadN === i && !(x.desc || '').trim() ? ' bad' : ''}" rows="2" data-rnd="${i}" maxlength="400" placeholder="Ej. Construcción de rampa de concreto de 1,20 m de ancho con baranda metálica">${esc(x.desc || '')}</textarea></label>
+    <div class="row2" style="margin-top:8px"><label class="f" style="margin:0"><span>Unidad</span><input class="in" list="dl-rpunds" data-rnu="${i}" value="${esc(x.und || '')}" maxlength="15" placeholder="M2, ML, UND…"></label>
+      <label class="f" style="margin:0"><span>Ejecutado hoy</span><input class="in${rpBadN === i ? ' bad' : ''}" inputmode="decimal" data-rnq="${i}" value="${esc(x.cant == null ? '' : x.cant)}" placeholder="0"></label></div>
+    <input class="in rpnota" data-rnn="${i}" maxlength="300" value="${esc(x.nota || '')}" placeholder="Por qué hizo falta o quién lo pidió (opcional)"></div>`).join('');
 }
 function rpPintarSug(){
   const vol = RPVOL.get(+rep.puesto); if (!vol || !vol.hay) { $('#r-partSug').innerHTML = ''; return; }
@@ -5827,27 +5857,75 @@ $('#r-partAdd').onclick = async () => { if (!rep.puesto) { $('#r-puesto').classL
 $('#r-partSug').addEventListener('click', e => { const b = e.target.closest('[data-rpsug]'); if (!b) return; rep.partidas = rep.partidas || [];
   if (!rep.partidas.some(x => x.cod === b.dataset.rpsug)) rep.partidas.push({ cod: b.dataset.rpsug, cant: '', nota: '' }); rep.sinPart = false; saveRep(); rpPintarForm();
   const inp = $(`#r-parts [data-rpq="${rep.partidas.length - 1}"]`); if (inp) inp.focus(); });
+$('#r-nuevaAdd').onclick = () => { if (!rep.puesto) { $('#r-puesto').classList.add('bad'); return toast('Elige primero el puesto fronterizo'); }
+  rep.nuevas = rep.nuevas || []; if (rep.nuevas.length >= 10) return toast(ERRS.max_nuevas);
+  rep.nuevas.push({ desc: '', und: '', cant: '', nota: '' }); rep.sinPart = false; saveRep(); rpPintarForm(); const t = $(`#r-nuevas [data-rnd="${rep.nuevas.length - 1}"]`); if (t) t.focus(); };
+$('#r-nuevas').addEventListener('input', e => { const t = e.target, N = rep.nuevas || [];
+  if (t.dataset.rnd !== undefined) N[+t.dataset.rnd].desc = t.value;
+  if (t.dataset.rnu !== undefined) N[+t.dataset.rnu].und = t.value.toUpperCase();
+  if (t.dataset.rnq !== undefined) { t.value = t.value.replace(/[^\d.,]/g, ''); N[+t.dataset.rnq].cant = t.value; }
+  if (t.dataset.rnn !== undefined) N[+t.dataset.rnn].nota = t.value;
+  t.classList.remove('bad'); $('#r-err').hidden = true; saveRep(); });
+$('#r-nuevas').addEventListener('click', e => { const b = e.target.closest('[data-rnrm]'); if (!b) return; rep.nuevas.splice(+b.dataset.rnrm, 1); saveRep(); rpPintarForm(); });
 $('#r-sinPart').addEventListener('change', e => { rep.sinPart = e.target.checked; $('#r-err').hidden = true; saveRep(); });
 ['r-frente', 'r-desc'].forEach(id => $('#' + id).addEventListener('input', () => { clearTimeout(rpPintarSug.t); rpPintarSug.t = setTimeout(rpPintarSug, 400); }));
 // Validación antes de subir; devuelve false si falta algo (y muestra el error)
 function rpValida(err){
   const vol = RPVOL.get(+rep.puesto); if (!vol || !vol.hay) return true;
   rep.partidas = rep.partidas || [];
-  if (!rep.partidas.length && !rep.sinPart) { $('#r-partBlock').scrollIntoView({ behavior: 'smooth', block: 'center' }); err(ERRS.faltan_partidas); return false; }
+  rep.nuevas = rep.nuevas || [];
+  const bn = rep.nuevas.findIndex(x => (x.desc || '').trim().length < 8 || !(x.und || '').trim() || !(rpNum(x.cant) > 0));
+  if (bn >= 0) { const x = rep.nuevas[bn]; rpBadN = bn; rpPintarNuevas(); err((x.desc || '').trim().length < 8 ? ERRS.nueva_sin_descripcion : !(x.und || '').trim() ? ERRS.nueva_sin_unidad : 'Escribe la cantidad ejecutada hoy de la partida nueva.'); return false; }
+  rpBadN = null;
+  if (!rep.partidas.length && !rep.nuevas.length && !rep.sinPart) { $('#r-partBlock').scrollIntoView({ behavior: 'smooth', block: 'center' }); err(ERRS.faltan_partidas); return false; }
   const i = rep.partidas.findIndex(x => !(rpNum(x.cant) > 0));
   if (i >= 0) { const p = vol.map.get(rep.partidas[i].cod) || {}; rpBad = i; rpPintarForm(); err(`Escribe la cantidad ejecutada hoy de la partida ${rep.partidas[i].cod} (en ${p.und || 'su unidad'}).`); return false; }
   rpBad = null; return true;
 }
-const rpPayload = () => ({ partidas: (rep.partidas || []).map(x => ({ cod: x.cod, cant: rpNum(x.cant), nota: (x.nota || '').trim() || null })), sin_partida: !!rep.sinPart && !(rep.partidas || []).length });
+const rpPayload = () => ({ partidas: (rep.partidas || []).map(x => ({ cod: x.cod, cant: rpNum(x.cant), nota: (x.nota || '').trim() || null })),
+  nuevas: (rep.nuevas || []).map(x => ({ desc: (x.desc || '').trim(), und: (x.und || '').trim().toUpperCase(), cant: rpNum(x.cant), nota: (x.nota || '').trim() || null })),
+  sin_partida: !!rep.sinPart && !(rep.partidas || []).length && !(rep.nuevas || []).length });
 
 /* ---- Detalle del reporte: partidas y corrección ---- */
 function rpDetalleHtml(r){
   const L = r.partidas || [];
-  if (!L.length) return r.sin_partida ? '<div class="sec">Partidas de la volumetría</div><p class="hint" style="margin:0 0 10px">Actividad sin partida de la volumetría.</p>' : '';
-  return `<div class="sec">Partidas de la volumetría (${L.length})</div><table class="ftab rptab">${L.map(x => `<tr><td><b>${esc(x.cod)}</b> ${esc(x.desc || '')}${x.nota ? `<small>${esc(x.nota)}</small>` : ''}</td><td class="p">${x.cant != null ? rpQ(+x.cant) + ' ' + esc(x.und || '') : '<span class="hint" style="margin:0">sin cantidad</span>'}</td></tr>`).join('')}</table>`;
+  if (!L.length) return rpNuevasHtml(r) + (r.sin_partida ? '<div class="sec">Partidas de la volumetría</div><p class="hint" style="margin:0 0 10px">Actividad sin partida de la volumetría.</p>' : '');
+  return `<div class="sec">Partidas de la volumetría (${L.length})</div><table class="ftab rptab">${L.map(x => `<tr><td><b>${esc(x.cod)}</b> ${esc(x.desc || '')}${x.nota ? `<small>${esc(x.nota)}</small>` : ''}</td><td class="p">${x.cant != null ? rpQ(+x.cant) + ' ' + esc(x.und || '') : '<span class="hint" style="margin:0">sin cantidad</span>'}</td></tr>`).join('')}</table>` + rpNuevasHtml(r);
+}
+const RP_NEST = { pendiente: ['Pendiente de aprobación', 'pend'], aprobada: ['Aprobada', 'ok'], rechazada: ['No aprobada', 'bad'] };
+function rpNuevasHtml(r){
+  const N = r.partidas_nuevas || []; if (!N.length) return '';
+  const ger = me && (me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol));
+  return `<div class="sec">Partidas nuevas, no previstas en la volumetría (${N.length})</div>` + N.map(x => { const e = RP_NEST[x.estado] || [x.estado, ''];
+    return `<div class="rpfila rpnueva"><div class="rpcab"><span><b>${esc(x.estado === 'aprobada' ? x.cod : 'Nueva')}</b> ${esc(x.desc_aprobada || x.desc)}</span><span class="tag ${e[1]}">${e[0]}</span></div>
+      <p class="hint" style="margin:6px 0 0">Ejecutado en este reporte: <b>${rpQ(+x.cant)} ${esc(x.und)}</b>${x.nota ? ' · ' + esc(x.nota) : ''}${x.estado === 'aprobada' ? ` · contratada ${rpQ(+x.cant_contratada)} ${esc(x.und)} · aprobada por ${esc(x.por)}` : x.estado === 'rechazada' ? ` · ${esc(x.por)}: ${esc(x.motivo || '')}` : ''}</p>
+      ${x.estado === 'pendiente' && ger ? `<details class="fixfecha rpres" data-nid="${esc(x.id)}"><summary>Aprobar o rechazar</summary>
+        <p class="hint" style="margin:8px 0">Al aprobarla se agrega a la volumetría de la base, en el capítulo «Partidas no previstas», y la cantidad de este reporte cuenta para la valuación.</p>
+        <div class="row2"><label class="f"><span>Código</span><input class="in" data-nk="cod" maxlength="20" value="" placeholder="NP-1"></label><label class="f"><span>Unidad</span><input class="in" data-nk="und" list="dl-rpunds" maxlength="15" value="${esc(x.und)}"></label></div>
+        <label class="f"><span>Descripción para la volumetría</span><textarea class="in" rows="3" data-nk="desc" maxlength="400">${esc(String(x.desc).toUpperCase())}</textarea></label>
+        <label class="f"><span>Cantidad contratada (presupuesto de la partida)</span><input class="in" inputmode="decimal" data-nk="cant" value="${esc(String(+x.cant).replace('.', ','))}"></label>
+        <label class="f"><span>Nota o motivo (obligatorio si la rechazas)</span><input class="in" data-nk="mot" maxlength="300"></label>
+        <p class="err" hidden></p>
+        <div class="acts" style="position:static"><button type="button" class="btn danger" data-nact="no">Rechazar</button><button type="button" class="btn primary" data-nact="si">Aprobar y agregar</button></div></details>` : ''}</div>`; }).join('');
+}
+async function rpNuevasBind(r){
+  const boxes = $$('#rpBody .rpres'); if (!boxes.length) return;
+  let vol = null; try { vol = await rpVolumetria(r.puesto, true); } catch (e) {}
+  let k = vol ? (vol.partidas || []).filter(p => /^NP-\d+$/i.test(p.cod)).reduce((m, p) => Math.max(m, +p.cod.split('-')[1]), 0) : 0;
+  boxes.forEach(d => { const cod = d.querySelector('[data-nk="cod"]'); cod.value = 'NP-' + (++k);
+    d.addEventListener('click', async e => { const b = e.target.closest('[data-nact]'); if (!b) return; const g = n => d.querySelector(`[data-nk="${n}"]`).value.trim(), er = d.querySelector('.err');
+      const si = b.dataset.nact === 'si';
+      if (!si && !g('mot')) { er.textContent = ERRS.falta_motivo; er.hidden = false; return; }
+      if (si && !(rpNum(g('cant')) > 0)) { er.textContent = 'Escribe la cantidad contratada de la partida.'; er.hidden = false; return; }
+      if (si && !confirm(`¿Agregar la partida ${g('cod').toUpperCase()} a la volumetría de ${r.puesto_nombre}?`)) return;
+      b.disabled = true;
+      try { const nr = await rpc('rq_partida_nueva_resolver', { p_rep: r.id, p_nid: d.dataset.nid, p_aprobar: si, p_cod: g('cod'), p_desc: g('desc'), p_und: g('und'), p_cant_contratada: si ? rpNum(g('cant')) : null, p_motivo: g('mot') || null });
+        RPVOL.delete(r.puesto); toast(si ? 'Partida agregada a la volumetría' : 'Partida nueva rechazada'); openReport(nr.id, nr); }
+      catch (x) { er.textContent = x.message; er.hidden = false; } finally { b.disabled = false; } }); });
 }
 function rpPuedeEditar(r){ return r.puesto != null && me && (me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol) || (r.autor_id === me.id && r.fecha >= addDays(today(), -3))); }
 function rpDetalleEditar(r){
+  rpNuevasBind(r);
   if (!rpPuedeEditar(r)) return;
   const ger = me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol);
   const st = { list: (r.partidas || []).map(x => ({ cod: x.cod, cant: x.cant == null ? '' : String(+x.cant).replace('.', ','), nota: x.nota || '' })), sinPart: !!r.sin_partida }, restar = {};
@@ -5874,8 +5952,9 @@ function rpDetalleEditar(r){
       RPVOL.delete(r.puesto); toast('Partidas guardadas'); openReport(nr.id, nr); }
     catch (e) { $('#rpeErr').textContent = e.message; $('#rpeErr').hidden = false; } finally { b.disabled = false; } };
 }
-const rpCardHtml = r => { const L = r.partidas || []; if (!L.length) return r.sin_partida ? '<div class="tags rptags"><span class="tag">Sin partida</span></div>' : '';
-  return `<div class="tags rptags">${L.slice(0, 4).map(x => `<span class="tag rpt" title="${esc(x.desc || '')}">P. ${esc(x.cod)}${x.cant != null ? ' · ' + rpQ(+x.cant) + ' ' + esc(x.und || '') : ''}</span>`).join('')}${L.length > 4 ? `<span class="tag">+${L.length - 4}</span>` : ''}</div>`; };
+const rpCardHtml = r => { const L = r.partidas || [], NP = (r.partidas_nuevas || []).filter(x => x.estado === 'pendiente').length; const npTag = NP ? `<span class="tag pend">⚠️ ${NP} partida${NP === 1 ? '' : 's'} nueva${NP === 1 ? '' : 's'}</span>` : '';
+  if (!L.length) return NP ? `<div class="tags rptags">${npTag}</div>` : r.sin_partida ? '<div class="tags rptags"><span class="tag">Sin partida</span></div>' : '';
+  return `<div class="tags rptags">${L.slice(0, 4).map(x => `<span class="tag rpt" title="${esc(x.desc || '')}">P. ${esc(x.cod)}${x.cant != null ? ' · ' + rpQ(+x.cant) + ' ' + esc(x.und || '') : ''}</span>`).join('')}${L.length > 4 ? `<span class="tag">+${L.length - 4}</span>` : ''}${npTag}</div>`; };
 rpOk = true;
 if (typeof rep !== 'undefined' && rep && rep.puesto && $('#p-rnuevo').classList.contains('on')) rpCargarForm();
 
@@ -6355,8 +6434,13 @@ $('#prXlsx').onclick = async () => {
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.42.0';
+const APP_VERSION = '4.43.0';
 const NOVEDADES = [
+  { v: '4.43.0', fecha: '2026-11-08', titulo: 'Partidas nuevas desde el reporte', items: [
+    { r: ['contratista','gerente_operaciones','gerente_general','master'], t: 'Si en la obra se ejecuta algo que no está en la volumetría, en el reporte toca "+ Partida nueva (no está en la volumetría)": describe la partida, su unidad y lo ejecutado hoy. Al enviar el reporte se avisa a la Gerencia (también por notificación al teléfono).' },
+    { r: ['gerente_operaciones','gerente_general','master'], t: 'La alerta abre el reporte: ahí apruebas la partida (código, descripción, unidad y cantidad contratada) y entra a la volumetría de la base en el capítulo "Partidas no previstas", o la rechazas con un motivo. Se le avisa a quien la reportó.' },
+    { r: ['gerente_operaciones','gerente_general','costos','master'], t: 'En Valuaciones aparece el recuadro "Partidas nuevas por aprobar". Al abrir una valuación en borrador, las partidas aprobadas se agregan solas con la cantidad reportada.' }
+  ] },
   { v: '4.42.0', fecha: '2026-11-08', titulo: 'Partidas de la volumetría en los reportes', items: [
     { r: ['contratista','gerente_operaciones','gerente_general','master'], t: 'Al registrar un reporte de una base, ahora eliges las partidas de la volumetría que se trabajaron ese día y escribes la cantidad ejecutada hoy de cada una (en su unidad: m2, m3, ml, pto, und…). La app te sugiere partidas según lo que escribiste y te muestra cuánto va reportado de lo contratado. Si ese día no se trabajó en partidas (inspección, logística, limpieza general), marca la casilla correspondiente.' },
     { r: ['contratista','gerente_operaciones','gerente_general','master'], t: 'Si te equivocaste de partida o de cantidad, abre el reporte y toca "Corregir las partidas del reporte" (el autor tiene 3 días; las gerencias, siempre).' },
