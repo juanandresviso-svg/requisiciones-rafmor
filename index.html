@@ -706,6 +706,42 @@ nav.tabs button{flex:0 0 auto}
 .vfup{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
 .vfup .hint{margin:0;flex:1 1 200px}
 .vfup label.dis{opacity:.5;pointer-events:none}
+/* v4.42 partidas en reportes */
+.rpfila{border:1px solid var(--rule);border-radius:12px;padding:10px;margin:8px 0;background:var(--surface)}
+.rpcab{display:flex;gap:8px;align-items:flex-start;font-size:14px;line-height:1.3}
+.rpcab b{flex:none;min-width:34px;color:var(--green)}
+.rpcab span{flex:1}
+.rpquitar{flex:none;border:0;background:none;font-size:22px;line-height:1;color:var(--muted);cursor:pointer;padding:0 4px;min-height:32px}
+.rpq{display:grid;grid-template-columns:minmax(130px,170px) 1fr;gap:10px;align-items:end;margin-top:8px}
+.rpq .f{margin:0}
+.rpin{display:flex;align-items:center;gap:6px}
+.rpin .in{flex:1;min-width:0;font-weight:600}
+.rpin em{font-style:normal;font-weight:600;color:var(--muted);font-size:13px}
+.rpacum{display:flex;flex-direction:column;gap:2px;font-size:12.5px;color:var(--muted);padding-bottom:4px}
+.rpacum b{color:var(--ink,inherit)}
+.rpacum .rpexc{color:#B45309}
+.rpnota{margin-top:8px;font-size:14px}
+.rpsug{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 4px}
+.rpsug .hint{margin:0}
+.rpchip{border:1px dashed var(--rule);background:none;border-radius:999px;padding:6px 10px;font-size:12.5px;text-align:left;cursor:pointer;color:inherit}
+.rpchip b{margin-right:3px}
+.rplist{margin-top:10px;max-height:62vh;overflow:auto}
+.rpgrp{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:12px 0 4px}
+.rpcap{font-size:12px;font-weight:700;color:var(--muted);margin:12px 0 4px;padding-top:6px;border-top:1px solid var(--rule)}
+.rpitem{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;width:100%;text-align:left;border:1px solid var(--rule);background:var(--surface);border-radius:10px;padding:9px 10px;margin:5px 0;cursor:pointer;color:inherit;font:inherit}
+.rpitem b{grid-row:span 2;min-width:34px}
+.rpitem .rpd{font-size:13.5px;line-height:1.3}
+.rpitem .rpm{font-size:12px;color:var(--muted)}
+.rpitem[aria-pressed="true"]{border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green);background:var(--green-soft)}
+.rpitem[aria-pressed="true"] b::after{content:" ✓";color:var(--green)}
+.rptags{margin:4px 0 0}
+.rptab td small{display:block}
+.vaRep{font-size:12.5px;margin:6px 0 2px;padding:6px 8px;border-radius:8px;background:var(--green-soft)}
+.vaRep button{margin-left:6px;min-height:30px;padding:0 10px;font-size:12.5px}
+.vfrep.rpde{border-left:3px solid var(--green);padding-left:8px}
+@media (max-width:420px){.rpq{grid-template-columns:1fr}}
+label.f>span.rpin{display:flex;align-items:center;gap:6px;margin:0;font-size:inherit;color:inherit}
+.block>h2 .st:empty{display:none}
 </style>
 </head>
 <body>
@@ -885,6 +921,7 @@ nav.tabs button{flex:0 0 auto}
         <div class="row2"><label class="f"><span>Inspector (ZODI)</span><input class="in vain" id="vaF3"></label><label class="f"><span>Aprobado por (ZODI)</span><input class="in vain" id="vaF4"></label></div>
       </details>
       <div class="vatot" id="vaTot"></div>
+      <div class="vaRep" id="vaRepBar" hidden></div>
       <p class="hint" id="vaSaved" style="margin:8px 0 0"></p>
     </div>
     <div class="block">
@@ -1080,6 +1117,14 @@ nav.tabs button{flex:0 0 auto}
       <label class="f"><span>Descripción del avance</span><textarea class="in" id="r-desc" rows="5" placeholder="Qué se hizo hoy, cantidades ejecutadas, porcentaje de avance…"></textarea></label>
       <div class="f"><span class="lbl">Clima</span><div class="chips" id="r-clima"><button type="button" aria-pressed="false">Soleado</button><button type="button" aria-pressed="false">Nublado</button><button type="button" aria-pressed="false">Lluvia</button></div></div>
       <label class="f" style="margin-bottom:0"><span>Observaciones o incidencias</span><textarea class="in" id="r-obs" placeholder="Retrasos, faltantes, seguridad, visitas…"></textarea></label>
+    </div>
+    <div class="block" id="r-partBlock" hidden>
+      <h2>Partidas trabajadas hoy <span class="st" id="r-partN"></span></h2>
+      <p class="hint" id="r-partHint" style="margin-top:-6px"></p>
+      <div class="rpsug" id="r-partSug"></div>
+      <div id="r-parts"></div>
+      <button type="button" class="btn dark block100" id="r-partAdd" style="margin-top:10px">+ Agregar partida</button>
+      <label class="chk" id="r-sinPartWrap" style="margin-top:12px"><input type="checkbox" id="r-sinPart"><span>Hoy no se trabajó en partidas de la volumetría (inspección, logística, limpieza general…)</span></label>
     </div>
     <div class="block" id="r-fasesBlock">
       <h2>Avance por fase de ejecución <span class="st ok" id="r-avg">—</span></h2>
@@ -1574,6 +1619,15 @@ nav.tabs button{flex:0 0 auto}
     <ul class="vrflist" id="vrfList"></ul>
     <div class="acts vrfacts"><button class="btn" id="vrfXlsx">Exportar Excel</button><button class="btn primary" id="vrfPdf">Exportar PDF</button></div>
     <p class="hint" id="vrfProgTxt" style="margin:6px 0 0;text-align:center"></p>
+  </div>
+</dialog>
+<!-- v4.42: elegir partidas de la volumetría -->
+<dialog id="rpkDlg">
+  <div class="sheet"><div class="grab"></div>
+    <h3><span id="rpkTit">Partidas</span><button class="btn ghost" id="rpkCerrar" style="min-height:40px" onclick="this.closest('dialog').close()">Cerrar</button></h3>
+    <input class="in" id="rpkBuscar" type="search" autocomplete="off" placeholder="Busca por palabra o número: pintura, friso, techo, 34…" aria-label="Buscar partida">
+    <div id="rpkList" class="rplist"></div>
+    <div class="acts" style="position:sticky;bottom:0;background:var(--surface);padding-top:8px"><span class="hint" id="rpkN" style="margin:0;align-self:center"></span><button class="btn primary" id="rpkOk">Listo</button></div>
   </div>
 </dialog>
 <dialog id="lbDlg" class="lb">
@@ -3497,7 +3551,7 @@ let rep = LS.get('repDraft', null);
 let repFiles = [];   // { file, kind, thumb, path, size, mime, status }
 let repId = null;
 const FASES = ['Demolición','Albañilería','Aguas Negras','Aguas Blancas','Electricidad','Acabados','Paisajismo','Equipamiento','Obras Complementarias'];
-const repBlank = () => ({ owner: me ? me.id : null, fecha: today(), puesto: '', frente: '', descripcion: '', personal: '', clima: '', observaciones: '', fases: FASES.map(() => ({ pct:'', obs:'' })), prev: null, general: false, tema: '', vc: false, vr: false });
+const repBlank = () => ({ owner: me ? me.id : null, fecha: today(), puesto: '', frente: '', descripcion: '', personal: '', clima: '', observaciones: '', fases: FASES.map(() => ({ pct:'', obs:'' })), partidas: [], sinPart: false, prev: null, general: false, tema: '', vc: false, vr: false });
 const esGerente = () => me && (me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol));
 Object.assign(ERRS, { falta_tema:'Escribe el tema del reporte general.', base_asignada:'Solo puedes reportar la base que tienes asignada. Si es un error, pídele al administrador que la cambie.', base_cerrada:'Esta requisición ya no admite cambios de base.', reporte_general:'Es un reporte general del proyecto: no tiene base.' });
 function syncTipo(){
@@ -3507,6 +3561,7 @@ function syncTipo(){
   $('#r-temaWrap').hidden = !g; $('#r-puestoWrap').hidden = g; $('#r-fasesBlock').hidden = g;
   $('#r-tema').value = rep.tema || ''; $('#r-vc').checked = !!rep.vc; $('#r-vr').checked = !!rep.vr;
   $('#r-vcLbl').textContent = g ? 'Comandantes de todas las bases' : 'Comandante de la base';
+  rpCargarForm();
 }
 $('#r-tipoSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; rep.general = b.dataset.v === 'general'; saveRep(); syncTipo(); $('#r-err').hidden = true; });
 $('#r-tema').addEventListener('input', e => { rep.tema = e.target.value; e.target.classList.remove('bad'); saveRep(); });
@@ -3546,7 +3601,7 @@ function saveRep(){ LS.set('repDraft', rep); }
 CECOS.bases.forEach(b => { const o = document.createElement('option'); o.value = b.n; o.textContent = b.n + '. ' + b.nombre.replace('B.P.F ', ''); $('#r-puesto').appendChild(o); });
 const repBind = [['r-fecha','fecha'],['r-puesto','puesto'],['r-frente','frente'],['r-desc','descripcion'],['r-personal','personal'],['r-obs','observaciones']];
 repBind.forEach(([id,k]) => $('#'+id).addEventListener('input', e => { rep[k] = e.target.value; e.target.classList.remove('bad'); $('#r-err').hidden = true; saveRep(); }));
-$('#r-puesto').addEventListener('change', e => { rep.puesto = e.target.value; e.target.classList.remove('bad'); rep.fases = FASES.map(() => ({ pct:'', obs:'' })); saveRep(); loadPrev(); });
+$('#r-puesto').addEventListener('change', e => { rep.puesto = e.target.value; e.target.classList.remove('bad'); rep.fases = FASES.map(() => ({ pct:'', obs:'' })); rep.partidas = []; rep.sinPart = false; saveRep(); loadPrev(); rpCargarForm(); });
 $('#r-clima').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; rep.clima = rep.clima === b.textContent ? '' : b.textContent; saveRep(); syncClima(); });
 function syncClima(){ $$('#r-clima button').forEach(b => b.setAttribute('aria-pressed', b.textContent === rep.clima)); }
 // v4.38.0: contratista con base asignada: solo reporta esa base
@@ -3618,6 +3673,7 @@ async function sendReport(){
   if (!gen && !rep.puesto) { $('#r-puesto').classList.add('bad'); return err('Elige el puesto fronterizo.'); }
   if ((rep.descripcion || '').trim().length < 10) { $('#r-desc').classList.add('bad'); return err(gen ? 'Describe el tema del reporte.' : 'Describe el avance del día.'); }
   if (!gen && avgPct(rep.fases) == null) { const f = $('#r-fases input'); if (f) f.classList.add('bad'); return err('Escribe el % de avance de al menos una fase.'); }
+  if (!gen) { try { await rpVolumetria(+rep.puesto); } catch (e) {} if (!rpValida(err)) return; }
   if (!repFiles.length) return err('Agrega al menos una foto o un video.');
   const fecha = rep.fecha || today();
   repId = repId || uuid();
@@ -3640,9 +3696,10 @@ async function sendReport(){
       f.path = path; f.size = blob.size; f.upMime = mime; upRow(i, '✓', 'ok');
     }
     const archivos = repFiles.map(f => ({ path: f.path, tipo: f.kind, mime: f.upMime || f.mime, size: f.size || f.file.size, nombre: f.file.name }));
-    await rpc('rq_reporte_crear', { p_id: repId, p_datos: { fecha, general: gen, tema: rep.tema, visible_comandante: !!rep.vc, visible_reporte_general: !!rep.vr, puesto: gen ? null : +rep.puesto, frente: rep.frente, descripcion: rep.descripcion, personal: rep.personal, clima: rep.clima, observaciones: rep.observaciones, fases: rep.fases.map(f => ({ pct: f.pct === '' ? null : +f.pct, obs: f.obs })) }, p_archivos: archivos });
+    await rpc('rq_reporte_crear', { p_id: repId, p_datos: { fecha, general: gen, tema: rep.tema, visible_comandante: !!rep.vc, visible_reporte_general: !!rep.vr, puesto: gen ? null : +rep.puesto, frente: rep.frente, descripcion: rep.descripcion, personal: rep.personal, clima: rep.clima, observaciones: rep.observaciones, fases: rep.fases.map(f => ({ pct: f.pct === '' ? null : +f.pct, obs: f.obs })), ...(gen ? {} : rpPayload()) }, p_archivos: archivos });
     const n = repFiles.length;
     repFiles.forEach(f => URL.revokeObjectURL(f.thumb)); repFiles = []; repId = null;
+    RPVOL.delete(+rep.puesto);
     rep = Object.assign(repBlank(), { puesto: rep.puesto, frente: rep.frente, general: rep.general, tema: rep.tema, vc: rep.vc, vr: rep.vr }); saveRep(); fillRep(); if (!rep.general) loadPrev();
     $('#upTitle').textContent = 'Reporte registrado'; $('#upHint').textContent = `Se guardaron ${n} archivo${n === 1 ? '' : 's'} en el Diario. Se avisó al Gerente de Operaciones.`;
     $('#upActs').hidden = false; $('#upRetry').hidden = true; $('#upClose').textContent = 'Listo'; repListo = true;
@@ -3700,7 +3757,7 @@ function repCard(r){
     + (pdfs.length ? `<button type="button" class="verimg" data-verpdf="${r.id}">Ver PDF${pdfs.length > 1 ? ` (${pdfs.length})` : ''}</button>` : '');
   el.innerHTML = `<div class="rh"><span>${esc(r.puesto == null ? 'Proyecto general · ' + (r.tema || '') : r.puesto_nombre)}</span>${r.avance != null ? `<span style="color:var(--green)">Avance ${r.avance}%</span>` : ''}</div>
     ${visTags}${r.historico ? '<div class="tags" style="margin:2px 0"><span class="tag hist">Histórico</span></div>' : ''}<div class="rm"><b class="rautor">${esc(r.autor_nombre)}</b>${cargoDe(r) ? ' · <span class="rcargo">' + esc(cargoDe(r)) + '</span>' : ''}${r.empresa ? ' · ' + esc(r.empresa) : ''}${r.frente ? ' · ' + esc(r.frente) : ''}</div>
-    <p class="rd">${esc(r.descripcion)}</p>${link ? `<div class="verrow">${link}</div>` : ''}`;
+    <p class="rd">${esc(r.descripcion)}</p>${rpCardHtml(r)}${link ? `<div class="verrow">${link}</div>` : ''}`;
   return el;
 }
 const cargoDe = r => r.autor_cargo || (r.autor_rol && ROLES[r.autor_rol] ? ROLES[r.autor_rol].label : '');
@@ -4437,12 +4494,16 @@ async function openReport(id, row){
       ${r.historico ? `<p class="lock" style="margin:0 0 10px">Registro histórico cargado desde Google Drive${r.origen ? ' (' + esc(r.origen.replace(/^drive:/, '')) + ')' : ''}.</p>` : ''}
       <div class="sec">Avance del día</div><p style="margin:0 0 10px;white-space:pre-wrap">${esc(r.descripcion)}</p>
       ${(r.fases || []).length ? `<div class="sec">Avance por fase ${r.avance != null ? '· general ' + r.avance + '%' : ''}</div><table class="ftab">${r.fases.map(f => `<tr><td>${esc(f.fase)}${f.obs ? `<small>${esc(f.obs)}</small>` : ''}</td><td class="p">${f.pct != null ? f.pct + '%' : '—'}</td></tr>`).join('')}</table>` : ''}
+      ${rpDetalleHtml(r)}
       ${r.observaciones ? `<div class="sec">Observaciones</div><p style="margin:0 0 10px;white-space:pre-wrap">${esc(r.observaciones)}</p>` : ''}
       ${files.some(a => a.tipo === 'pdf') ? `<div class="sec">Documentos PDF (${files.filter(a => a.tipo === 'pdf').length})</div><ul class="docs">${files.filter(a => a.tipo === 'pdf').map(a => `<li><span class="pdfi">PDF</span><span class="dn">${esc(a.nombre || 'documento.pdf')}<small>${a.size ? fileSize(a.size) : ''}</small></span><button class="btn" data-verpdfp="${esc(a.path)}">Ver</button><a href="#" class="btn" data-dlp="${esc(a.path)}" data-dln="${esc(a.nombre || '')}">Descargar</a></li>`).join('')}</ul>` : ''}
       <div class="sec">Fotos y videos (${files.filter(a => a.tipo !== 'pdf').length})</div>
       <div class="gal">${files.filter(a => a.tipo !== 'pdf').map((a, i) => a.tipo === 'video'
         ? `<div class="g v"><video controls playsinline preload="metadata" src="${url(a.path)}"></video><a href="#" data-dlp="${esc(a.path)}" data-dln="${esc(a.nombre || '')}">Descargar</a></div>`
         : `<div class="g"><img loading="lazy" alt="Foto ${i+1}" src="${url(a.path)}" data-lb="${lbItems.findIndex(x => x.path === a.path)}"><a href="#" data-dlp="${esc(a.path)}" data-dln="${esc(a.nombre || '')}">Descargar</a></div>`).join('')}</div>`;
+    rpDetalleEditar(r);
+    const histP = (r.cambios || []).filter(c => c.tipo === 'partidas');
+    if (histP.length) $('#rpBody').insertAdjacentHTML('afterbegin', `<p class="chg">${histP.map(c => `Partidas corregidas por ${esc(c.por)} el ${fmt(String(c.cuando).slice(0, 10))}${c.motivo ? ' (' + esc(c.motivo) + ')' : ''}.`).join('<br>')}</p>`);
     const hist = (r.cambios || []).filter(c => c.tipo === 'fecha');
     if (hist.length) $('#rpBody').insertAdjacentHTML('afterbegin', `<p class="chg">${hist.map(c => `Fecha corregida por ${esc(c.por)}: de ${fmt(c.de)} a ${fmt(c.a)}${c.motivo ? ' (' + esc(c.motivo) + ')' : ''}.`).join('<br>')}</p>`);
     const histB = (r.cambios || []).filter(c => c.tipo === 'puesto');
@@ -4835,6 +4896,7 @@ const vPct = (n, d) => ((+n || 0) * 100).toLocaleString('es-VE', { minimumFracti
 const vR2 = n => Math.round((+n || 0) * 100) / 100;
 const valBaseTxt = n => baseName(n).replace(/^B\.P\.F\s*/i, '');
 let valPuesto = +LS.get('valPuesto', 8) || 8, valVols = [], valLista = [], va = null, vaTimer = null, vaRepCache = new Map();
+let vaRP = null, vaRPKey = '';   // v4.42: lo reportado por partida {cod: {cant, n, sinCant, reps}}
 
 /* ---- Lectura del Excel de volumetría ---- */
 const vNormTxt = s => String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
@@ -4986,7 +5048,7 @@ function pintarValEd(){
   $('#vaEnviar').hidden = !ed; $('#vaReabrir').hidden = !(canValuar() && (va.estado === 'enviada' || (va.estado === 'validada' && me.es_master)));
   $('#vaBorrar').hidden = !(canValuar() && va.estado === 'borrador'); $('#vaRevisar').hidden = !(validaValuaciones() && va.estado === 'enviada');
   $('#vaSaved').textContent = '';
-  pintarVaTot(); pintarVaPartidas();
+  pintarVaTot(); pintarVaPartidas(); vaCargarRP();
 }
 function pintarVaTot(){
   { const R = vrfResumen(); $('#vaRevInfo').textContent = R.con ? `Fotos revisadas: ${R.ok} de ${R.con} partidas${R.sin ? ` · ${R.sin} con avance sin fotos` : ''}` : 'Ninguna partida tiene fotos todavía.'; }
@@ -5011,6 +5073,7 @@ function pintarVaPartidas(){
         <div class="row2"><label class="f"><span>Precio unitario (€)</span><input class="in vai" data-k="pu" inputmode="decimal" value="${r.pu == null ? '' : r.pu}" ${ed ? '' : 'disabled'}></label>
           <label class="f"><span>Ejecutado anterior (${esc(p.und)})</span><input class="in vai" data-k="ant" inputmode="decimal" value="${r.ant || ''}" ${ed ? '' : 'disabled'}></label></div>
         <label class="f"><span>Cantidad física ejecutada a la fecha (${esc(p.und)}, de ${vQty(p.cant)})</span><input class="in vai" data-k="fis" inputmode="decimal" value="${r.fis || ''}" ${ed ? '' : 'disabled'}></label>
+        ${vaRepHint(p, r, ed)}
         <label class="chk"><input type="checkbox" class="vai" data-k="sinMat" ${r.it.sinMat ? 'checked' : ''} ${ed ? '' : 'disabled'}> Partida sin materiales (no suma el ${vPct(va.datos.peso, 0)} de procura)</label>
         <div class="vacalc">Materiales ${vPct(r.w * (va.datos.comprado == null ? 1 : va.datos.comprado))} + físico ${vPct((1 - r.w) * r.pf)} = <b>${vPct(r.pt)}</b> · acumulado ${vQty(r.acum)} · a relacionar <b>${vQty(r.per)} ${esc(p.und)}</b>${r.pu != null ? ' · ' + vEur(r.mper) : ''}</div>
         <label class="f"><span>Soporte / observación de la partida</span><textarea class="in vai" data-k="ev" maxlength="600" placeholder="Qué se ejecutó y cuándo, según los reportes" ${ed ? '' : 'disabled'}>${esc(r.it.ev || '')}</textarea></label>
@@ -5027,7 +5090,7 @@ async function valThumbs(){
 function vaItem(cod){ return va.datos.items[cod] = va.datos.items[cod] || { pu: null, ant: 0, fis: 0, ev: '', fotos: [] }; }
 $('#vaPartidas').addEventListener('input', e => { const x = e.target.closest('.vai'); if (!x || !valEditable()) return;
   const cod = x.closest('[data-cod]').dataset.cod, it = vaItem(cod), k = x.dataset.k;
-  if (k === 'ev') it.ev = x.value; else if (k === 'sinMat') it.sinMat = x.checked; else { const n = vNum(x.value); it[k] = k === 'pu' ? n : (n || 0); }
+  if (k === 'ev') { it.ev = x.value; it.evAuto = false; } else if (k === 'sinMat') it.sinMat = x.checked; else { const n = vNum(x.value); it[k] = k === 'pu' ? n : (n || 0); if (k === 'fis') it.fisAuto = false; }
   vaProgramar(); pintarVaTot();
   if (k !== 'ev') { const det = x.closest('details'), r = valCalc(va).rows.find(y => y.p.cod === cod);
     det.querySelector('.vacalc').innerHTML = `Materiales ${vPct(r.w * (va.datos.comprado == null ? 1 : va.datos.comprado))} + físico ${vPct((1 - r.w) * r.pf)} = <b>${vPct(r.pt)}</b> · acumulado ${vQty(r.acum)} · a relacionar <b>${vQty(r.per)} ${esc(r.p.und)}</b>${r.pu != null ? ' · ' + vEur(r.mper) : ''}`;
@@ -5037,6 +5100,7 @@ $('#vaPartidas').addEventListener('toggle', e => { const li = e.target.closest('
 $('#vaPartidas').addEventListener('click', e => {
   const q = e.target.closest('.vaquitar'); if (q && valEditable()) { const cod = q.closest('[data-cod]').dataset.cod; vaItem(cod).fotos.splice(+q.dataset.qk, 1); vaItem(cod).fotosOk = false; va._abierta = cod; vaProgramar(); pintarVaPartidas(); return; }
   const b = e.target.closest('.vaelegir'); if (b && valEditable()) { abrirVaFotos(b.closest('[data-cod]').dataset.cod); }
+  const u = e.target.closest('[data-vausar]'); if (u && valEditable() && vaRP) { const cod = u.dataset.vausar, it = vaItem(cod), x = vaRP[cod]; if (x && +x.cant > 0) { it.fis = vR2(+x.cant); it.fisAuto = true; vaAutoEv(cod, it, x, true); va._abierta = cod; vaProgramar(); pintarVaTot(); pintarVaPartidas(); toast('Cantidad tomada de los reportes'); } }
 });
 $('#vaBuscar').addEventListener('input', e => { vaFiltro = e.target.value; pintarVaPartidas(); });
 $('#vaSolo').addEventListener('change', () => pintarVaPartidas());
@@ -5090,12 +5154,13 @@ async function pintarVaFotos(){
   const todo = $('#vfTodo').checked, d1 = todo ? '2026-07-01' : (va.desde || '2026-07-01'), d2 = todo ? today() : (va.hasta || today());
   $('#vfList').innerHTML = '<p class="hint">Cargando reportes…</p>';
   try {
-    const L = (await valReportes(va.puesto, d1, d2)).filter(r => (r.archivos || []).some(a => a.tipo === 'foto')).sort((a, b) => a.fecha < b.fecha ? -1 : 1);
+    const esDe = r => (r.partidas || []).some(x => x.cod === vaFotosCod);
+    const L = (await valReportes(va.puesto, d1, d2)).filter(r => (r.archivos || []).some(a => a.tipo === 'foto')).sort((a, b) => (esDe(b) - esDe(a)) || (a.fecha < b.fecha ? -1 : 1));
     const SUB = (va.datos.fotosSubidas || []).slice().reverse();
     const subHtml = SUB.length ? `<div class="vfrep"><div class="vfh"><b>Fotos cargadas desde el teléfono</b> · ${SUB.length}</div><p class="hint" style="margin:2px 0 6px">Sirven para cualquier partida de esta valuación.</p>
       <div class="vfgrid">${SUB.map(f => `<button type="button" class="vfimg" data-p="${esc(f.path)}" data-s="1" aria-pressed="${vaFotosSel.some(x => x.path === f.path)}"><img alt="" data-vfimg="${esc(f.path)}"></button>`).join('')}</div></div>` : '';
     if (!L.length) { $('#vfList').innerHTML = subHtml + '<div class="empty">No hay reportes con fotos de esta base en el período.</div>'; if (SUB.length) { const im2 = $$('#vfList img[data-vfimg]'), u2 = await signed(im2.map(i => i.dataset.vfimg)); im2.forEach(i => i.src = u2(i.dataset.vfimg)); } $('#vfCount').textContent = vaFotosSel.length + ' de 3'; return; }
-    $('#vfList').innerHTML = subHtml + L.map(r => `<div class="vfrep"><div class="vfh"><b>${fmt(r.fecha)}</b> · ${esc(r.autor_nombre || '')}</div><p class="hint" style="margin:2px 0 6px">${esc((r.frente ? r.frente.trim() + ': ' : '') + (r.descripcion || ''))}</p>
+    $('#vfList').innerHTML = subHtml + L.map(r => `<div class="vfrep${esDe(r) ? ' rpde' : ''}"><div class="vfh"><b>${fmt(r.fecha)}</b> · ${esc(r.autor_nombre || '')}${esDe(r) ? ' · <span class="tag ok">Reporte de esta partida</span>' : ''}</div><p class="hint" style="margin:2px 0 6px">${esc((r.frente ? r.frente.trim() + ': ' : '') + (r.descripcion || ''))}</p>
       <div class="vfgrid">${r.archivos.map((a, i) => a.tipo === 'foto' ? `<button type="button" class="vfimg" data-p="${esc(a.path)}" data-r="${r.id}" aria-pressed="${vaFotosSel.some(f => f.path === a.path)}"><img alt="" data-vfimg="${esc(a.path)}"></button>` : '').join('')}</div></div>`).join('');
     const imgs = $$('#vfList img[data-vfimg]'), u = await signed(imgs.map(i => i.dataset.vfimg)); imgs.forEach(i => i.src = u(i.dataset.vfimg));
     vaRepActual = L;
@@ -5600,6 +5665,220 @@ async function vrfExportar(tipo){
 }
 $('#vaRevFotos').onclick = () => abrirRevFotos();
 
+/* ---- v4.42: cantidades, soporte y fotos desde los reportes con partidas ---- */
+function vaRepHint(p, r, ed){
+  const x = vaRP && vaRP[p.cod]; if (!x) return '';
+  const c = +x.cant || 0, dif = c > 0 && Math.abs(c - r.fis) > 0.005 && !(r.fis >= r.cant && c >= r.cant);
+  return `<div class="vaRep">📋 Reportado hasta el ${fmt(va.hasta || today())}: <b>${c > 0 ? vQty(c) + ' ' + esc(p.und) : 'sin cantidades'}</b> en ${x.n} reporte${x.n === 1 ? '' : 's'}${x.sinCant ? ` (${x.sinCant} sin cantidad)` : ''}${r.it.fisAuto && c > 0 ? ' · <span class="tag ok">tomado de los reportes</span>' : ''}${ed && dif ? `<button type="button" class="btn" data-vausar="${esc(p.cod)}">Usar ${vQty(c)}</button>` : ''}</div>`;
+}
+function vaAutoEv(cod, it, x, force){
+  if (!(force || !it.ev || it.evAuto)) return;
+  const reps = (x.reps || []), fechas = [...new Set(reps.map(z => fmt(z.fecha)))];
+  const conC = reps.filter(z => z.cant != null);
+  it.ev = (conC.length ? `Según ${conC.length} reporte${conC.length === 1 ? '' : 's'} con cantidad: ` + conC.map(z => `${vQty(+z.cant)} el ${fmt(z.fecha)}${z.nota ? ' (' + z.nota + ')' : ''}`).join('; ') + '.'
+          : `Trabajos reportados el ${fechas.join(', ')}.`).slice(0, 600);
+  it.evAuto = true;
+}
+async function vaCargarRP(){
+  if (!va) return; const k = va.id + '|' + va.puesto + '|' + (va.hasta || '');
+  const bar = $('#vaRepBar');
+  try {
+    if (vaRPKey !== k) { vaRP = await rpc('rq_valuacion_reportes', { p_puesto: va.puesto, p_hasta: va.hasta || null }) || {}; vaRPKey = k; }
+  } catch (e) { bar.hidden = false; bar.textContent = 'No se pudo leer lo reportado por partida: ' + e.message; return; }
+  if (!va || vaRPKey !== va.id + '|' + va.puesto + '|' + (va.hasta || '')) return;
+  const cods = Object.keys(vaRP || {}), conC = cods.filter(c => +vaRP[c].cant > 0);
+  let n = 0, nf = 0;
+  if (valEditable()) {
+    const P = new Map((va.datos.partidas || []).map(p => [p.cod, p]));
+    cods.forEach(cod => { if (!P.has(cod)) return; const it = vaItem(cod), x = vaRP[cod], c = +x.cant || 0;
+      if (c > 0 && (!(+it.fis > 0) || it.fisAuto) && vR2(c) !== +it.fis) { it.fis = vR2(c); it.fisAuto = true; n++; }
+      if (it.fisAuto || !it.ev) vaAutoEv(cod, it, x, false);
+      if (!(it.fotos || []).length) { const fs = [];
+        [...(x.reps || [])].sort((a, b) => ((b.cant != null) - (a.cant != null)) || (a.fecha < b.fecha ? 1 : -1)).forEach(z => (z.fotos || []).forEach(path => { if (fs.length < 3 && !fs.some(f => f.path === path)) fs.push({ path, rep: z.id, fecha: z.fecha, autor: z.autor || '', frente: (z.frente || '').trim(), desc: z.desc || '' }); }));
+        if (fs.length) { it.fotos = fs; it.fotosAuto = true; it.fotosOk = false; nf++; } } });
+    if (n || nf) { vaProgramar(); toast(`Desde los reportes: ${n} cantidad${n === 1 ? '' : 'es'} y fotos en ${nf} partida${nf === 1 ? '' : 's'}`); }
+  }
+  bar.hidden = !cods.length;
+  bar.innerHTML = cods.length ? `📋 <b>${cods.length}</b> partida${cods.length === 1 ? '' : 's'} con reportes asociados hasta el ${fmt(va.hasta || today())}, <b>${conC.length}</b> con cantidades reportadas.${valEditable() ? ' Las partidas sin cantidad cargada a mano toman lo reportado solas; donde ya escribiste una cantidad, te muestro lo reportado para comparar.' : ''}` : '';
+  pintarVaTot(); pintarVaPartidas();
+}
+$('#vaHasta').addEventListener('change', () => { vaRPKey = ''; setTimeout(vaCargarRP, 1200); });
+
+/* ---------- Partidas de la volumetría en los reportes (v4.42.0) ----------
+   Al reportar una base se eligen las partidas trabajadas en el día con la cantidad ejecutada (en la unidad
+   de la partida). Las valuaciones suman esas cantidades solas y toman los reportes y fotos como soporte. */
+var rpOk = false;
+const RPVOL = new Map();
+const rpNorm = s => String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
+const rpNum = s => { let t = String(s == null ? '' : s).trim().replace(/\s/g, ''); if (!t) return null;
+  if (t.includes(',') && t.includes('.')) t = t.replace(/\./g, '').replace(',', '.'); else t = t.replace(',', '.');
+  const n = Number(t); return isFinite(n) ? n : NaN; };
+const rpQ = n => n == null || isNaN(n) ? '—' : Number(n).toLocaleString('es-VE', { maximumFractionDigits: 2 });
+const rpPctTxt = (a, b) => b > 0 ? Math.round(a / b * 1000) / 10 + '%' : '—';
+const RP_STOP = new Set('PARA CON SIN INCLUYE INCLUIDO EXCLUYE DESDE HASTA TIPO AREA AREAS ESTA ESTE ESTOS TODOS TODAS SOBRE ENTRE DONDE SEGUN MISMO OTRO OTRA OTROS CADA HOY DIA PUESTO BASE TRABAJO TRABAJOS REALIZO REALIZARON CONTINUA CONTINUACION CULMINO SIGUE AVANCE NUEVO NUEVA PERSONAL'.split(' '));
+const rpToks = s => new Set(rpNorm(s).replace(/[^A-Z0-9 ]/g, ' ').split(' ').filter(w => w.length >= 4 && !RP_STOP.has(w)).map(w => w.slice(0, 6)));
+Object.assign(ERRS, { faltan_partidas: 'Elige al menos una partida trabajada hoy, o marca que hoy no se trabajó en partidas de la volumetría.',
+  partida_invalida: 'Una de las partidas no está en la volumetría de esta base. Vuelve a elegirla.', cantidad_invalida: 'Escribe la cantidad ejecutada (mayor que cero) de cada partida.',
+  partida_repetida: 'Elegiste la misma partida dos veces.', max_partidas: 'Máximo 60 partidas por reporte.' });
+
+async function rpVolumetria(puesto, force){
+  puesto = +puesto; if (!(puesto >= 1 && puesto <= 13)) return null;
+  const c = RPVOL.get(puesto); if (c && !force && Date.now() - c.t < 120000) return c;
+  const v = await rpc('rq_reporte_partidas', { p_puesto: puesto });
+  const d = Object.assign({ t: Date.now() }, v || { hay: false, partidas: [] });
+  d.map = new Map((d.partidas || []).map(p => [p.cod, p])); RPVOL.set(puesto, d); return d;
+}
+// Partidas sugeridas según el frente y la descripción del día
+function rpSugeridas(vol, texto, excluir){
+  const T = rpToks(texto); if (!T.size || !vol) return [];
+  const codTxt = rpNorm(texto).match(/(?:PARTIDA|ITEM|PART\.?)\s*N?[°ºO]?\s*([0-9]+(?:\.[0-9]+)*)/g) || [];
+  const cods = new Set(codTxt.map(x => x.replace(/.*?([0-9][0-9.]*)$/, '$1')));
+  return (vol.partidas || []).filter(p => !excluir.has(p.cod)).map(p => { const P = rpToks(p.desc); let s = 0; P.forEach(w => { if (T.has(w)) s++; });
+      if (cods.has(p.cod)) s += 5; return { p, s: s / Math.sqrt(Math.max(3, P.size)) * (s >= 2 || cods.has(p.cod) ? 1 : 0.5) }; })
+    .filter(x => x.s > 0.55).sort((a, b) => b.s - a.s).slice(0, 6).map(x => x.p);
+}
+
+/* ---- Editor de filas (formulario del reporte y corrección) ---- */
+function rpFilasHtml(list, vol, opt){
+  opt = opt || {};
+  if (!list.length) return `<p class="hint rpvacio">${opt.vacio || 'Todavía no agregas partidas.'}</p>`;
+  return list.map((x, i) => { const p = vol && vol.map.get(x.cod) || { cod: x.cod, desc: x.desc || '', und: x.und || '', cant: 0, rep: 0 };
+    const q = rpNum(x.cant), antes = Math.max(0, (+p.rep || 0) - (opt.restar && opt.restar[x.cod] || 0)), conHoy = antes + (q > 0 ? q : 0), cc = +p.cant || 0;
+    return `<div class="rpfila" data-i="${i}"><div class="rpcab"><b>${esc(p.cod)}</b><span>${esc(p.desc)}</span><button type="button" class="rpquitar" data-rprm="${i}" aria-label="Quitar partida ${esc(p.cod)}">×</button></div>
+      <div class="rpq"><label class="f"><span>${opt.lblCant || 'Ejecutado hoy'}</span><span class="rpin"><input class="in${opt.bad === i ? ' bad' : ''}" inputmode="decimal" data-rpq="${i}" value="${esc(x.cant == null ? '' : x.cant)}" placeholder="0" aria-label="Cantidad ejecutada de la partida ${esc(p.cod)} en ${esc(p.und)}"><em>${esc(p.und)}</em></span></label>
+        <div class="rpacum"><span>Contratado <b>${rpQ(cc)} ${esc(p.und)}</b></span><span>Reportado antes <b>${rpQ(antes)}</b> (${rpPctTxt(antes, cc)})</span><span class="${cc > 0 && conHoy > cc ? 'rpexc' : ''}">Con este reporte <b>${rpQ(conHoy)}</b> (${rpPctTxt(conHoy, cc)})${cc > 0 && conHoy > cc ? ' · supera lo contratado' : ''}</span></div></div>
+      <input class="in rpnota" data-rpn="${i}" maxlength="300" value="${esc(x.nota || '')}" placeholder="Dónde o qué parte (opcional). Ej. dormitorio de tropa, pared norte"></div>`; }).join('');
+}
+function rpBindFilas(box, getList, getVol, onChange, opt){
+  box.addEventListener('input', e => { const t = e.target, L = getList();
+    if (t.dataset.rpq !== undefined) { t.value = t.value.replace(/[^\d.,]/g, ''); L[+t.dataset.rpq].cant = t.value; t.classList.remove('bad');
+      const f = t.closest('.rpfila'), tmp = document.createElement('div'); tmp.innerHTML = rpFilasHtml([L[+t.dataset.rpq]], getVol(), opt && opt()); f.querySelector('.rpacum').replaceWith(tmp.querySelector('.rpacum')); }
+    if (t.dataset.rpn !== undefined) L[+t.dataset.rpn].nota = t.value;
+    onChange(false); });
+  box.addEventListener('click', e => { const b = e.target.closest('[data-rprm]'); if (!b) return; getList().splice(+b.dataset.rprm, 1); onChange(true); });
+}
+
+/* ---- Selector de partidas ---- */
+let rpPickCtx = null;
+function rpAbrirSelector(ctx){
+  rpPickCtx = ctx; $('#rpkBuscar').value = ''; $('#rpkTit').textContent = 'Partidas · ' + baseName(ctx.puesto).replace(/^B\.P\.F\s*/i, '');
+  if (!$('#rpkDlg').open) $('#rpkDlg').showModal(); rpPintarSelector(); setTimeout(() => $('#rpkBuscar').focus({ preventScroll: true }), 50);
+}
+function rpPintarSelector(){
+  const c = rpPickCtx; if (!c) return; const vol = c.vol, sel = new Set(c.list.map(x => x.cod)), q = rpNorm($('#rpkBuscar').value);
+  const item = p => { const cc = +p.cant || 0, r = +p.rep || 0;
+    return `<button type="button" class="rpitem" data-cod="${esc(p.cod)}" aria-pressed="${sel.has(p.cod)}"><b>${esc(p.cod)}</b><span class="rpd">${esc(p.desc)}</span>
+      <span class="rpm">${rpQ(cc)} ${esc(p.und)}${r > 0 ? ` · reportado ${rpQ(r)} (${rpPctTxt(r, cc)})` : p.n ? ` · en ${p.n} reporte${p.n === 1 ? '' : 's'}` : ''}</span></button>`; };
+  let h = '';
+  if (!q) { const sug = rpSugeridas(vol, c.texto ? c.texto() : '', new Set());
+    if (sug.length) h += `<div class="rpgrp">Sugeridas según lo que escribiste</div>` + sug.map(item).join('');
+    const rec = (vol.partidas || []).filter(p => p.ult).sort((a, b) => (b.ult > a.ult ? 1 : -1)).slice(0, 6).filter(p => !sug.includes(p));
+    if (rec.length) h += `<div class="rpgrp">Reportadas hace poco en esta base</div>` + rec.map(item).join('');
+    h += `<div class="rpgrp">Todas las partidas (${(vol.partidas || []).length})</div>`; }
+  const caps = vol.capitulos || {}, varios = Object.keys(caps).length > 1; let cap = null, n = 0;
+  (vol.partidas || []).forEach(p => { if (q && !rpNorm(p.cod + ' ' + p.desc).includes(q) && !(q.split(' ').every(w => rpNorm(p.cod + ' ' + p.desc).includes(w)))) return;
+    if (varios && p.cap !== cap) { cap = p.cap; h += `<div class="rpcap">${esc(cap)}. ${esc(caps[cap] || '')}</div>`; }
+    h += item(p); n++; });
+  if (q && !n) h += '<p class="empty">Ninguna partida coincide. Prueba con otra palabra (ej. "pintura", "friso", "techo") o con el número.</p>';
+  $('#rpkList').innerHTML = h; $('#rpkN').textContent = c.list.length ? `${c.list.length} elegida${c.list.length === 1 ? '' : 's'}` : 'Toca las partidas trabajadas';
+}
+$('#rpkBuscar').addEventListener('input', () => rpPintarSelector());
+$('#rpkList').addEventListener('click', e => { const b = e.target.closest('.rpitem'); if (!b || !rpPickCtx) return; const c = rpPickCtx, i = c.list.findIndex(x => x.cod === b.dataset.cod);
+  if (i >= 0) c.list.splice(i, 1); else { if (c.list.length >= 60) return toast('Máximo 60 partidas'); const p = c.vol.map.get(b.dataset.cod); c.list.push({ cod: p.cod, cant: '', nota: '' }); }
+  $$(`#rpkList .rpitem[data-cod="${CSS.escape(b.dataset.cod)}"]`).forEach(x => x.setAttribute('aria-pressed', String(i < 0)));
+  $('#rpkN').textContent = c.list.length ? `${c.list.length} elegida${c.list.length === 1 ? '' : 's'}` : 'Toca las partidas trabajadas'; c.onChange(); });
+$('#rpkOk').onclick = () => { $('#rpkDlg').close(); if (rpPickCtx && rpPickCtx.onDone) rpPickCtx.onDone(); rpPickCtx = null; };
+$('#rpkDlg').addEventListener('close', () => { if (rpPickCtx && rpPickCtx.onDone) rpPickCtx.onDone(); rpPickCtx = null; });
+
+/* ---- Formulario del reporte ---- */
+let rpBad = null;
+async function rpCargarForm(force){
+  if (!rpOk) return;
+  const blk = $('#r-partBlock'); const gen = esGerente() && rep.general;
+  if (gen || !rep.puesto) { blk.hidden = true; return; }
+  blk.hidden = false; const p = +rep.puesto;
+  if (!RPVOL.has(p) || force) { $('#r-parts').innerHTML = '<p class="hint">Cargando las partidas de la base…</p>'; }
+  try { await rpVolumetria(p, force); } catch (e) { $('#r-parts').innerHTML = `<p class="err">No se pudieron cargar las partidas: ${esc(e.message)}. Revisa la conexión y vuelve a abrir el reporte.</p>`; return; }
+  if (+rep.puesto === p) rpPintarForm();
+}
+function rpPintarForm(){
+  const vol = RPVOL.get(+rep.puesto); if (!vol) return;
+  rep.partidas = rep.partidas || [];
+  if (!vol.hay) { $('#r-partHint').textContent = 'Esta base todavía no tiene volumetría cargada en la app: el reporte se envía sin partidas.'; $('#r-parts').innerHTML = ''; $('#r-partAdd').hidden = true; $('#r-sinPartWrap').hidden = true; $('#r-partN').textContent = ''; return; }
+  $('#r-partHint').innerHTML = 'Elige las partidas de la volumetría que se trabajaron hoy y escribe la cantidad <b>ejecutada hoy</b> en la unidad de cada partida. Con esto la valuación se arma sola.';
+  $('#r-partAdd').hidden = false; $('#r-sinPartWrap').hidden = false;
+  $('#r-parts').innerHTML = rpFilasHtml(rep.partidas, vol, { bad: rpBad, vacio: 'Todavía no agregas partidas. Toca «Agregar partida».' });
+  $('#r-partN').textContent = rep.partidas.length ? rep.partidas.length + ' partida' + (rep.partidas.length === 1 ? '' : 's') : '';
+  $('#r-partN').className = 'st' + (rep.partidas.length ? ' ok' : '');
+  $('#r-sinPart').checked = !!rep.sinPart && !rep.partidas.length; $('#r-sinPart').disabled = rep.partidas.length > 0;
+  rpPintarSug();
+}
+function rpPintarSug(){
+  const vol = RPVOL.get(+rep.puesto); if (!vol || !vol.hay) { $('#r-partSug').innerHTML = ''; return; }
+  const sug = rpSugeridas(vol, (rep.frente || '') + ' ' + (rep.descripcion || ''), new Set((rep.partidas || []).map(x => x.cod))).slice(0, 3);
+  $('#r-partSug').innerHTML = sug.length ? `<span class="hint">¿Trabajaron en…?</span>` + sug.map(p => `<button type="button" class="rpchip" data-rpsug="${esc(p.cod)}"><b>${esc(p.cod)}</b> ${esc(p.desc.length > 70 ? p.desc.slice(0, 68) + '…' : p.desc)}</button>`).join('') : '';
+}
+rpBindFilas($('#r-parts'), () => rep.partidas, () => RPVOL.get(+rep.puesto), full => { $('#r-err').hidden = true; saveRep(); if (full) rpPintarForm(); });
+$('#r-partAdd').onclick = async () => { if (!rep.puesto) { $('#r-puesto').classList.add('bad'); return toast('Elige primero el puesto fronterizo'); }
+  let vol; try { vol = await rpVolumetria(+rep.puesto); } catch (e) { return toast(e.message); }
+  rep.partidas = rep.partidas || [];
+  rpAbrirSelector({ puesto: +rep.puesto, vol, list: rep.partidas, texto: () => (rep.frente || '') + ' ' + (rep.descripcion || ''), onChange: () => { rep.sinPart = false; saveRep(); },
+    onDone: () => { rpBad = null; rpPintarForm(); const i = rep.partidas.findIndex(x => !(rpNum(x.cant) > 0)); if (i >= 0) { const inp = $(`#r-parts [data-rpq="${i}"]`); if (inp) setTimeout(() => inp.focus(), 60); } } }); };
+$('#r-partSug').addEventListener('click', e => { const b = e.target.closest('[data-rpsug]'); if (!b) return; rep.partidas = rep.partidas || [];
+  if (!rep.partidas.some(x => x.cod === b.dataset.rpsug)) rep.partidas.push({ cod: b.dataset.rpsug, cant: '', nota: '' }); rep.sinPart = false; saveRep(); rpPintarForm();
+  const inp = $(`#r-parts [data-rpq="${rep.partidas.length - 1}"]`); if (inp) inp.focus(); });
+$('#r-sinPart').addEventListener('change', e => { rep.sinPart = e.target.checked; $('#r-err').hidden = true; saveRep(); });
+['r-frente', 'r-desc'].forEach(id => $('#' + id).addEventListener('input', () => { clearTimeout(rpPintarSug.t); rpPintarSug.t = setTimeout(rpPintarSug, 400); }));
+// Validación antes de subir; devuelve false si falta algo (y muestra el error)
+function rpValida(err){
+  const vol = RPVOL.get(+rep.puesto); if (!vol || !vol.hay) return true;
+  rep.partidas = rep.partidas || [];
+  if (!rep.partidas.length && !rep.sinPart) { $('#r-partBlock').scrollIntoView({ behavior: 'smooth', block: 'center' }); err(ERRS.faltan_partidas); return false; }
+  const i = rep.partidas.findIndex(x => !(rpNum(x.cant) > 0));
+  if (i >= 0) { const p = vol.map.get(rep.partidas[i].cod) || {}; rpBad = i; rpPintarForm(); err(`Escribe la cantidad ejecutada hoy de la partida ${rep.partidas[i].cod} (en ${p.und || 'su unidad'}).`); return false; }
+  rpBad = null; return true;
+}
+const rpPayload = () => ({ partidas: (rep.partidas || []).map(x => ({ cod: x.cod, cant: rpNum(x.cant), nota: (x.nota || '').trim() || null })), sin_partida: !!rep.sinPart && !(rep.partidas || []).length });
+
+/* ---- Detalle del reporte: partidas y corrección ---- */
+function rpDetalleHtml(r){
+  const L = r.partidas || [];
+  if (!L.length) return r.sin_partida ? '<div class="sec">Partidas de la volumetría</div><p class="hint" style="margin:0 0 10px">Actividad sin partida de la volumetría.</p>' : '';
+  return `<div class="sec">Partidas de la volumetría (${L.length})</div><table class="ftab rptab">${L.map(x => `<tr><td><b>${esc(x.cod)}</b> ${esc(x.desc || '')}${x.nota ? `<small>${esc(x.nota)}</small>` : ''}</td><td class="p">${x.cant != null ? rpQ(+x.cant) + ' ' + esc(x.und || '') : '<span class="hint" style="margin:0">sin cantidad</span>'}</td></tr>`).join('')}</table>`;
+}
+function rpPuedeEditar(r){ return r.puesto != null && me && (me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol) || (r.autor_id === me.id && r.fecha >= addDays(today(), -3))); }
+function rpDetalleEditar(r){
+  if (!rpPuedeEditar(r)) return;
+  const ger = me.es_master || ['gerente_operaciones','gerente_general'].includes(me.rol);
+  const st = { list: (r.partidas || []).map(x => ({ cod: x.cod, cant: x.cant == null ? '' : String(+x.cant).replace('.', ','), nota: x.nota || '' })), sinPart: !!r.sin_partida }, restar = {};
+  (r.partidas || []).forEach(x => { if (x.cant != null) restar[x.cod] = +x.cant; });
+  $('#rpBody').insertAdjacentHTML('beforeend', `<details class="fixfecha" id="rpeBox"><summary>Corregir las partidas del reporte</summary>
+    <p class="hint" style="margin:8px 0">${ger ? 'Ajusta las partidas y cantidades de este reporte. Se le avisa a quien lo registró.' : 'Puedes corregirlas hasta 3 días después de la fecha del reporte.'}</p>
+    <div id="rpeFilas"></div><button type="button" class="btn block100" id="rpeAdd" style="margin:8px 0">+ Agregar partida</button>
+    <label class="chk"><input type="checkbox" id="rpeSin"> No se trabajó en partidas de la volumetría</label>
+    ${r.autor_id !== me.id ? '<label class="f" style="margin-top:8px"><span>Motivo (opcional)</span><input class="in" id="rpeMot" maxlength="300" placeholder="Ej. la partida correcta es la de friso"></label>' : ''}
+    <p class="err" id="rpeErr" hidden></p><button class="btn dark block100" id="rpeBtn">Guardar partidas</button></details>`);
+  let vol = null;
+  const pintar = () => { $('#rpeFilas').innerHTML = rpFilasHtml(st.list, vol, { restar, lblCant: 'Cantidad ejecutada', vacio: 'Sin partidas.' }); $('#rpeSin').checked = st.sinPart && !st.list.length; $('#rpeSin').disabled = st.list.length > 0; };
+  $('#rpeBox').addEventListener('toggle', async e => { if (!e.target.open || vol) return; $('#rpeFilas').innerHTML = '<p class="hint">Cargando partidas…</p>';
+    try { vol = await rpVolumetria(r.puesto, true); pintar(); } catch (er) { $('#rpeFilas').innerHTML = `<p class="err">${esc(er.message)}</p>`; } });
+  rpBindFilas($('#rpeFilas'), () => st.list, () => vol, full => { $('#rpeErr').hidden = true; if (full) pintar(); }, () => ({ restar, lblCant: 'Cantidad ejecutada' }));
+  $('#rpeSin').onchange = e => { st.sinPart = e.target.checked; };
+  $('#rpeAdd').onclick = () => { if (!vol) return; rpAbrirSelector({ puesto: r.puesto, vol, list: st.list, texto: () => (r.frente || '') + ' ' + (r.descripcion || ''), onChange: () => { st.sinPart = false; }, onDone: pintar }); };
+  $('#rpeBtn').onclick = async () => {
+    const bad = st.list.findIndex(x => !(rpNum(x.cant) > 0) && !(ger && (x.cant === '' || x.cant == null)));
+    if (bad >= 0) { $('#rpeErr').textContent = `Revisa la cantidad de la partida ${st.list[bad].cod}.`; $('#rpeErr').hidden = false; return; }
+    if (!ger && st.list.some(x => !(rpNum(x.cant) > 0))) { $('#rpeErr').textContent = ERRS.cantidad_invalida; $('#rpeErr').hidden = false; return; }
+    const b = $('#rpeBtn'); b.disabled = true;
+    try { const nr = await rpc('rq_reporte_partidas_editar', { p_id: r.id, p_partidas: st.list.map(x => ({ cod: x.cod, cant: rpNum(x.cant), nota: (x.nota || '').trim() || null })), p_sin_partida: st.sinPart, p_motivo: $('#rpeMot') ? $('#rpeMot').value.trim() || null : null });
+      RPVOL.delete(r.puesto); toast('Partidas guardadas'); openReport(nr.id, nr); }
+    catch (e) { $('#rpeErr').textContent = e.message; $('#rpeErr').hidden = false; } finally { b.disabled = false; } };
+}
+const rpCardHtml = r => { const L = r.partidas || []; if (!L.length) return r.sin_partida ? '<div class="tags rptags"><span class="tag">Sin partida</span></div>' : '';
+  return `<div class="tags rptags">${L.slice(0, 4).map(x => `<span class="tag rpt" title="${esc(x.desc || '')}">P. ${esc(x.cod)}${x.cant != null ? ' · ' + rpQ(+x.cant) + ' ' + esc(x.und || '') : ''}</span>`).join('')}${L.length > 4 ? `<span class="tag">+${L.length - 4}</span>` : ''}</div>`; };
+rpOk = true;
+if (typeof rep !== 'undefined' && rep && rep.puesto && $('#p-rnuevo').classList.contains('on')) rpCargarForm();
+
 /* ---------- Procura de requisiciones (v4.29.0) ----------
    Después del recibido de Compras: cuadro comparativo de cotizaciones, proveedor ganador, aviso a Gerencia General
    para el pago, despacho del proveedor y confirmación de llegada a la obra por quien pidió la requisición. */
@@ -6076,8 +6355,14 @@ $('#prXlsx').onclick = async () => {
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.41.1';
+const APP_VERSION = '4.42.0';
 const NOVEDADES = [
+  { v: '4.42.0', fecha: '2026-11-08', titulo: 'Partidas de la volumetría en los reportes', items: [
+    { r: ['contratista','gerente_operaciones','gerente_general','master'], t: 'Al registrar un reporte de una base, ahora eliges las partidas de la volumetría que se trabajaron ese día y escribes la cantidad ejecutada hoy de cada una (en su unidad: m2, m3, ml, pto, und…). La app te sugiere partidas según lo que escribiste y te muestra cuánto va reportado de lo contratado. Si ese día no se trabajó en partidas (inspección, logística, limpieza general), marca la casilla correspondiente.' },
+    { r: ['contratista','gerente_operaciones','gerente_general','master'], t: 'Si te equivocaste de partida o de cantidad, abre el reporte y toca "Corregir las partidas del reporte" (el autor tiene 3 días; las gerencias, siempre).' },
+    { r: ['gerente_operaciones','gerente_general','costos','master'], t: 'Las valuaciones toman solas lo reportado: cada partida muestra la cantidad reportada hasta la fecha final, los reportes de soporte y sus fotos. Las partidas sin cantidad escrita a mano se llenan con lo reportado; donde ya hay una cantidad, aparece el botón "Usar" para tomar la de los reportes. Al elegir fotos, los reportes de esa partida salen primero.' },
+    { r: ['gerente_operaciones','gerente_general','costos','master'], t: 'Los reportes anteriores quedaron asociados a sus partidas según la Valuación N° 1 (sin cantidad, porque no la traían).' }
+  ] },
   { v: '4.41.1', fecha: '2026-11-04', titulo: 'Nueva portada de las valuaciones', items: [
     { r: ['gerente_operaciones','gerente_general','costos','master'], t: 'La portada del PDF de las valuaciones ahora tiene el formato institucional (como la Consignación de Documentos): logo de Rafmor, número de valuación, proyecto, la base con su coordenada, contrato, período, año y el membrete del Despacho de la Presidencia – Fondo Negro Primero.' }
   ] },
