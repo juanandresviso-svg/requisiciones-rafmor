@@ -747,6 +747,7 @@ label.f>span.rpin{display:flex;align-items:center;gap:6px;margin:0;font-size:inh
 .rpnueva .rpcab .tag{flex:none}
 .valnp{border:1px dashed #F2A900;border-radius:12px;padding:10px 12px;margin:0 0 12px;background:color-mix(in srgb,#F2A900 8%,var(--surface))}
 .valnp li{cursor:pointer;margin:6px 0}
+.block>h2 #r-partTit{font:inherit;color:inherit}
 </style>
 </head>
 <body>
@@ -1124,15 +1125,18 @@ label.f>span.rpin{display:flex;align-items:center;gap:6px;margin:0;font-size:inh
       <label class="f" style="margin-bottom:0"><span>Observaciones o incidencias</span><textarea class="in" id="r-obs" placeholder="Retrasos, faltantes, seguridad, visitas…"></textarea></label>
     </div>
     <div class="block" id="r-partBlock" hidden>
-      <h2>Partidas trabajadas hoy <span class="st" id="r-partN"></span></h2>
+      <h2><span id="r-partTit">Partidas trabajadas hoy</span> <span class="st" id="r-partN"></span></h2>
       <p class="hint" id="r-partHint" style="margin-top:-6px"></p>
+      <div id="r-partLite" hidden><button type="button" class="btn block100" id="r-partOpc">+ Agregar partidas hoy (opcional)</button></div>
+      <div id="r-partFull">
       <div class="rpsug" id="r-partSug"></div>
       <div id="r-parts"></div>
       <button type="button" class="btn dark block100" id="r-partAdd" style="margin-top:10px">+ Agregar partida</button>
       <div id="r-nuevas"></div>
       <button type="button" class="btn block100" id="r-nuevaAdd" style="margin-top:8px">+ Partida nueva (no está en la volumetría)</button>
       <datalist id="dl-rpunds"><option>M2</option><option>M3</option><option>ML</option><option>M</option><option>UND</option><option>PTO</option><option>PZA</option><option>KG</option><option>SG</option><option>GLB</option><option>LTS</option><option>HR</option></datalist>
-      <label class="chk" id="r-sinPartWrap" style="margin-top:12px"><input type="checkbox" id="r-sinPart"><span>Hoy no se trabajó en partidas de la volumetría (inspección, logística, limpieza general…)</span></label>
+      <label class="chk" id="r-sinPartWrap" style="margin-top:12px"><input type="checkbox" id="r-sinPart"><span id="r-sinPartTxt">Hoy no se trabajó en partidas de la volumetría (inspección, logística, limpieza general…)</span></label>
+      </div>
     </div>
     <div class="block" id="r-fasesBlock">
       <h2>Avance por fase de ejecución <span class="st ok" id="r-avg">—</span></h2>
@@ -5735,7 +5739,7 @@ const rpQ = n => n == null || isNaN(n) ? '—' : Number(n).toLocaleString('es-VE
 const rpPctTxt = (a, b) => b > 0 ? Math.round(a / b * 1000) / 10 + '%' : '—';
 const RP_STOP = new Set('PARA CON SIN INCLUYE INCLUIDO EXCLUYE DESDE HASTA TIPO AREA AREAS ESTA ESTE ESTOS TODOS TODAS SOBRE ENTRE DONDE SEGUN MISMO OTRO OTRA OTROS CADA HOY DIA PUESTO BASE TRABAJO TRABAJOS REALIZO REALIZARON CONTINUA CONTINUACION CULMINO SIGUE AVANCE NUEVO NUEVA PERSONAL'.split(' '));
 const rpToks = s => new Set(rpNorm(s).replace(/[^A-Z0-9 ]/g, ' ').split(' ').filter(w => w.length >= 4 && !RP_STOP.has(w)).map(w => w.slice(0, 6)));
-Object.assign(ERRS, { faltan_partidas: 'Elige al menos una partida trabajada hoy, o marca que hoy no se trabajó en partidas de la volumetría.',
+Object.assign(ERRS, { faltan_partidas: 'Es viernes: agrega el avance semanal de partidas (las trabajadas esta semana con su cantidad), o marca que esta semana no se trabajó en partidas.',
   partida_invalida: 'Una de las partidas no está en la volumetría de esta base. Vuelve a elegirla.', cantidad_invalida: 'Escribe la cantidad ejecutada (mayor que cero) de cada partida.',
   partida_repetida: 'Elegiste la misma partida dos veces.', max_partidas: 'Máximo 60 partidas por reporte.',
   max_nuevas: 'Máximo 10 partidas nuevas por reporte.', nueva_sin_descripcion: 'Describe la partida nueva (qué se hizo, con materiales y medidas).', nueva_sin_unidad: 'Indica la unidad de la partida nueva (m2, m3, ml, und…).',
@@ -5812,6 +5816,10 @@ $('#rpkOk').onclick = () => { $('#rpkDlg').close(); if (rpPickCtx && rpPickCtx.o
 $('#rpkDlg').addEventListener('close', () => { if (rpPickCtx && rpPickCtx.onDone) rpPickCtx.onDone(); rpPickCtx = null; });
 
 /* ---- Formulario del reporte ---- */
+// v4.44: de lunes a jueves el reporte es sencillo (partidas opcionales); los viernes el avance semanal de partidas es obligatorio.
+const rpEsViernes = () => { const d = rep && rep.fecha || today(); const [y, m, dd] = d.split('-').map(Number); return new Date(y, m - 1, dd).getDay() === 5; };
+const rpSemanalHecho = vol => { const d = rep && rep.fecha || today(); return vol && vol.semanal && vol.semanal[d] ? vol.semanal[d] : null; };
+const rpModo = vol => rpEsViernes() && !rpSemanalHecho(vol) ? 'viernes' : (rep.partOpc || (rep.partidas || []).length || (rep.nuevas || []).length) ? 'opcional' : 'sencillo';
 let rpBad = null, rpBadN = null;
 async function rpCargarForm(force){
   if (!rpOk) return;
@@ -5826,9 +5834,16 @@ function rpPintarForm(){
   const vol = RPVOL.get(+rep.puesto); if (!vol) return;
   rep.partidas = rep.partidas || [];
   if (!vol.hay) { $('#r-partHint').textContent = 'Esta base todavía no tiene volumetría cargada en la app: el reporte se envía sin partidas.'; $('#r-parts').innerHTML = ''; $('#r-nuevas').innerHTML = ''; $('#r-partAdd').hidden = true; $('#r-nuevaAdd').hidden = true; $('#r-sinPartWrap').hidden = true; $('#r-partN').textContent = ''; return; }
-  $('#r-partHint').innerHTML = 'Elige las partidas de la volumetría que se trabajaron hoy y escribe la cantidad <b>ejecutada hoy</b> en la unidad de cada partida. Con esto la valuación se arma sola.';
-  $('#r-partAdd').hidden = false; $('#r-nuevaAdd').hidden = false; $('#r-sinPartWrap').hidden = false;
-  $('#r-parts').innerHTML = rpFilasHtml(rep.partidas, vol, { bad: rpBad, vacio: 'Todavía no agregas partidas. Toca «Agregar partida».' });
+  const modo = rpModo(vol), vie = modo === 'viernes', hecho = rpSemanalHecho(vol);
+  $('#r-partLite').hidden = modo !== 'sencillo'; $('#r-partFull').hidden = modo === 'sencillo';
+  $('#r-partTit').textContent = vie ? 'Avance semanal de partidas' : 'Partidas de la volumetría';
+  if (modo === 'sencillo') { $('#r-partHint').innerHTML = hecho && rpEsViernes() ? `El avance semanal de partidas de esta base ya lo registró ${esc(hecho)} hoy. Este reporte puede ir sencillo.` : 'De lunes a jueves el reporte es sencillo: descripción, fases y fotos. <b>Los viernes</b> es obligatorio el avance semanal de las partidas.'; $('#r-partN').textContent = ''; rep.sinPart = false; return; }
+  $('#r-partHint').innerHTML = vie ? '<b>Es viernes:</b> elige las partidas de la volumetría trabajadas <b>esta semana</b> y escribe la cantidad ejecutada <b>de lunes a viernes</b> en la unidad de cada partida. Es obligatorio y con esto se arma la valuación.'
+    : 'Opcional de lunes a jueves. Si las agregas, escribe la cantidad <b>ejecutada hoy</b>; el viernes reporta solo lo que falte de la semana para no repetir.';
+  $('#r-sinPartTxt').textContent = vie ? 'Esta semana no se trabajó en partidas de la volumetría (inspección, logística, limpieza general…)' : 'Hoy no se trabajó en partidas de la volumetría (inspección, logística, limpieza general…)';
+  $('#r-sinPartWrap').hidden = !vie;
+  $('#r-partAdd').hidden = false; $('#r-nuevaAdd').hidden = false;
+  $('#r-parts').innerHTML = rpFilasHtml(rep.partidas, vol, { bad: rpBad, lblCant: vie ? 'Ejecutado esta semana' : 'Ejecutado hoy', vacio: vie ? 'Todavía no agregas partidas. Toca «Agregar partida».' : 'Sin partidas. Toca «Agregar partida» si quieres registrarlas hoy.' });
   $('#r-partN').textContent = rep.partidas.length ? rep.partidas.length + ' partida' + (rep.partidas.length === 1 ? '' : 's') : '';
   $('#r-partN').className = 'st' + (rep.partidas.length ? ' ok' : '');
   const hayAlgo = rep.partidas.length > 0 || (rep.nuevas || []).length > 0;
@@ -5840,7 +5855,7 @@ function rpPintarNuevas(){
   $('#r-nuevas').innerHTML = rep.nuevas.map((x, i) => `<div class="rpfila rpnueva" data-i="${i}"><div class="rpcab"><b>Nueva</b><span>Partida que no está en la volumetría · queda pendiente hasta que la Gerencia la apruebe</span><button type="button" class="rpquitar" data-rnrm="${i}" aria-label="Quitar partida nueva">×</button></div>
     <label class="f" style="margin:8px 0 0"><span>Descripción de la partida</span><textarea class="in${rpBadN === i && !(x.desc || '').trim() ? ' bad' : ''}" rows="2" data-rnd="${i}" maxlength="400" placeholder="Ej. Construcción de rampa de concreto de 1,20 m de ancho con baranda metálica">${esc(x.desc || '')}</textarea></label>
     <div class="row2" style="margin-top:8px"><label class="f" style="margin:0"><span>Unidad</span><input class="in" list="dl-rpunds" data-rnu="${i}" value="${esc(x.und || '')}" maxlength="15" placeholder="M2, ML, UND…"></label>
-      <label class="f" style="margin:0"><span>Ejecutado hoy</span><input class="in${rpBadN === i ? ' bad' : ''}" inputmode="decimal" data-rnq="${i}" value="${esc(x.cant == null ? '' : x.cant)}" placeholder="0"></label></div>
+      <label class="f" style="margin:0"><span>${rpEsViernes() ? 'Ejecutado esta semana' : 'Ejecutado hoy'}</span><input class="in${rpBadN === i ? ' bad' : ''}" inputmode="decimal" data-rnq="${i}" value="${esc(x.cant == null ? '' : x.cant)}" placeholder="0"></label></div>
     <input class="in rpnota" data-rnn="${i}" maxlength="300" value="${esc(x.nota || '')}" placeholder="Por qué hizo falta o quién lo pidió (opcional)"></div>`).join('');
 }
 function rpPintarSug(){
@@ -5848,7 +5863,9 @@ function rpPintarSug(){
   const sug = rpSugeridas(vol, (rep.frente || '') + ' ' + (rep.descripcion || ''), new Set((rep.partidas || []).map(x => x.cod))).slice(0, 3);
   $('#r-partSug').innerHTML = sug.length ? `<span class="hint">¿Trabajaron en…?</span>` + sug.map(p => `<button type="button" class="rpchip" data-rpsug="${esc(p.cod)}"><b>${esc(p.cod)}</b> ${esc(p.desc.length > 70 ? p.desc.slice(0, 68) + '…' : p.desc)}</button>`).join('') : '';
 }
-rpBindFilas($('#r-parts'), () => rep.partidas, () => RPVOL.get(+rep.puesto), full => { $('#r-err').hidden = true; saveRep(); if (full) rpPintarForm(); });
+rpBindFilas($('#r-parts'), () => rep.partidas, () => RPVOL.get(+rep.puesto), full => { $('#r-err').hidden = true; saveRep(); if (full) rpPintarForm(); }, () => ({ lblCant: rpEsViernes() ? 'Ejecutado esta semana' : 'Ejecutado hoy' }));
+$('#r-partOpc').onclick = () => { rep.partOpc = true; saveRep(); rpPintarForm(); };
+$('#r-fecha').addEventListener('change', () => { if (rpOk && rep.puesto) rpPintarForm(); });
 $('#r-partAdd').onclick = async () => { if (!rep.puesto) { $('#r-puesto').classList.add('bad'); return toast('Elige primero el puesto fronterizo'); }
   let vol; try { vol = await rpVolumetria(+rep.puesto); } catch (e) { return toast(e.message); }
   rep.partidas = rep.partidas || [];
@@ -5877,9 +5894,10 @@ function rpValida(err){
   const bn = rep.nuevas.findIndex(x => (x.desc || '').trim().length < 8 || !(x.und || '').trim() || !(rpNum(x.cant) > 0));
   if (bn >= 0) { const x = rep.nuevas[bn]; rpBadN = bn; rpPintarNuevas(); err((x.desc || '').trim().length < 8 ? ERRS.nueva_sin_descripcion : !(x.und || '').trim() ? ERRS.nueva_sin_unidad : 'Escribe la cantidad ejecutada hoy de la partida nueva.'); return false; }
   rpBadN = null;
-  if (!rep.partidas.length && !rep.nuevas.length && !rep.sinPart) { $('#r-partBlock').scrollIntoView({ behavior: 'smooth', block: 'center' }); err(ERRS.faltan_partidas); return false; }
+  if (rpModo(vol) !== 'viernes') rep.sinPart = false;
+  if (rpModo(vol) === 'viernes' && !rep.partidas.length && !rep.nuevas.length && !rep.sinPart) { $('#r-partBlock').scrollIntoView({ behavior: 'smooth', block: 'center' }); err(ERRS.faltan_partidas); return false; }
   const i = rep.partidas.findIndex(x => !(rpNum(x.cant) > 0));
-  if (i >= 0) { const p = vol.map.get(rep.partidas[i].cod) || {}; rpBad = i; rpPintarForm(); err(`Escribe la cantidad ejecutada hoy de la partida ${rep.partidas[i].cod} (en ${p.und || 'su unidad'}).`); return false; }
+  if (i >= 0) { const p = vol.map.get(rep.partidas[i].cod) || {}; rpBad = i; rpPintarForm(); err(`Escribe la cantidad ejecutada ${rpEsViernes() ? 'esta semana' : 'hoy'} de la partida ${rep.partidas[i].cod} (en ${p.und || 'su unidad'}).`); return false; }
   rpBad = null; return true;
 }
 const rpPayload = () => ({ partidas: (rep.partidas || []).map(x => ({ cod: x.cod, cant: rpNum(x.cant), nota: (x.nota || '').trim() || null })),
@@ -6434,8 +6452,12 @@ $('#prXlsx').onclick = async () => {
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.43.0';
+const APP_VERSION = '4.44.0';
 const NOVEDADES = [
+  { v: '4.44.0', fecha: '2026-11-12', titulo: 'Reporte sencillo de lunes a jueves; partidas los viernes', items: [
+    { r: ['contratista','gerente_operaciones','gerente_general','master'], t: 'De lunes a jueves el reporte vuelve a ser sencillo: descripción, fases y fotos. Si quieres, puedes agregar partidas con "+ Agregar partidas hoy (opcional)".' },
+    { r: ['contratista','gerente_operaciones','gerente_general','master'], t: 'Los viernes el reporte de cada base pide el avance semanal de partidas: las partidas trabajadas en la semana con la cantidad ejecutada de lunes a viernes. Basta con un reporte con partidas por base cada viernes; si ya lo hizo otra persona, el tuyo puede ir sencillo. Si un viernes no puedes, puedes registrarlo hasta 3 días después con la fecha del viernes.' }
+  ] },
   { v: '4.43.0', fecha: '2026-11-08', titulo: 'Partidas nuevas desde el reporte', items: [
     { r: ['contratista','gerente_operaciones','gerente_general','master'], t: 'Si en la obra se ejecuta algo que no está en la volumetría, en el reporte toca "+ Partida nueva (no está en la volumetría)": describe la partida, su unidad y lo ejecutado hoy. Al enviar el reporte se avisa a la Gerencia (también por notificación al teléfono).' },
     { r: ['gerente_operaciones','gerente_general','master'], t: 'La alerta abre el reporte: ahí apruebas la partida (código, descripción, unidad y cantidad contratada) y entra a la volumetría de la base en el capítulo "Partidas no previstas", o la rechazas con un motivo. Se le avisa a quien la reportó.' },
