@@ -2469,7 +2469,8 @@ function parseSolicitud(T){
     const hEsp = hDesc && P.find(t => /^ESPECIFICACION(ES)?\b/.test(N(t)) && Math.abs(t.y - hDesc.y) <= 4 && t.x > hDesc.x);
     const hItem = hDesc && P.find(t => /^(ITEM|RENG|N|NO|N[°º]|NRO\.?|PARTIDA)$/.test(N(t)) && Math.abs(t.y - hDesc.y) <= 4 && t.x < hDesc.x);
     const enH = t => hDesc && Math.abs(t.y - hDesc.y) <= 4;
-    const hUnd = P.find(t => enH(t) && /^(UND|UNIDAD|UNID)\b\.?/.test(N(t))), hCant = P.find(t => enH(t) && /^CANT(IDAD|\.)?\b/.test(N(t)));
+    const hUnd = P.find(t => enH(t) && /^(UND|UNIDAD|UNID)\b\.?/.test(N(t))), hCant = P.find(t => enH(t) && /^CANT(IDAD|\.)?\b/.test(N(t)))
+      || (hDesc && P.find(t => Math.abs(t.y - hDesc.y) <= 9 && /^CANT(IDAD|\.)?\b/.test(N(t))));   // v4.45: encabezado en dos líneas (Romveca)
     // Presupuesto de obra (v4.26.0): columnas P.U. y TOTAL después de la cantidad.
     const hPU = P.find(t => enH(t) && /^(P\.?\s?U\.?|PRECIO)\b/.test(N(t))), hTot = P.find(t => enH(t) && /^TOTAL\b/.test(N(t)) && (!hCant || t.x > hCant.x));
     if (!hItem || !hDesc || !hUnd || !hCant || Math.abs(hItem.y - hDesc.y) > 4) continue;
@@ -2478,6 +2479,12 @@ function parseSolicitud(T){
     const f = P.find(t => /^FECHA\b/.test(N(t))); if (f && !out.fecha) { const fd = derecha(f); const m = (N(f) + ' ' + (fd ? N(fd) : '')).match(/(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/); if (m) out.fecha = `${m[3].length === 2 ? '20' + m[3] : m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`; }
     const so = P.find(t => /^SOL(ICITUD)?\.?\s*(N[°º]?\s*)?\d+$/.test(N(t))); if (so && !out.sol) out.sol = (N(so).match(/(\d+)$/) || [])[1] || '';
     if (P.some(t => /^LISTA (GENERAL )?DE MATERIALES$/.test(N(t)))) out.lista = true;
+    // v4.45: formato "Requisición de materiales" de contratistas (Romveca: Contrato · N° de obra · Fecha solicitud · N° 2296-001)
+    if (P.some(t => /^REQUISICION DE MATERIALES$/.test(N(t)))) out.requisicion = true;
+    const ct = P.find(t => /^CONTRATO:?$/.test(N(t)) && t.y > hItem.y + 3);
+    if (ct) { const v = P.filter(o => o !== ct && Math.abs(o.y - ct.y) < 4 && o.x > ct.x).sort((a, b) => a.x - b.x).map(o => o.s.trim()).join(' ').trim(); if (v && !out.titulos.includes(v)) out.titulos.push(v); }
+    const nro = P.find(t => /^N[°º]\s*\d[\w-]*$/.test(N(t)) && t.y > hItem.y + 3); if (nro && !out.sol) out.sol = nro.s.replace(/^N[°º]\s*/i, '').trim();
+    const nob = P.find(t => /^N[°º] DE OBRA:?$/.test(N(t))); if (nob && !out.obra) { const d = derecha(nob); if (d) out.obra = d.s.trim(); }
     const mo = P.find(t => /^M\.?\s?O\.?[-\s]/.test(N(t))); if (mo && !out.sol) { const md = derecha(mo); out.sol = (mo.s + (md && /^\d+$/.test(md.s.trim()) ? md.s.trim() : '')).replace(/\s+/g, ' ').replace(/\s*-\s*/g, '-').trim(); }
     const pr = P.find(t => /^PROYECTO\b/.test(N(t)) && t.y > hItem.y + 3); if (pr && !out.proyecto) { const resto = pr.s.replace(/^proyecto\s*:?\s*/i, '').trim(); const pd = derecha(pr); out.proyecto = resto || (pd ? pd.s.trim() : '');
       // el título del proyecto puede seguir en la línea de abajo ("…, Estado Zulia," / "Venezuela.")
@@ -2489,8 +2496,12 @@ function parseSolicitud(T){
     const esCap = t => /^CAP[IÍ]TULO\b/.test(N(t)), esPie = t => /^(SOLICITADO|ELABORADO|REVISADO|APROBADO) POR\b/.test(N(t));
     const caps = P.filter(t => t.y < yH - 3 && esCap(t)).map(t => ({ y: t.y, s: t.s.trim() })).sort((a, b) => b.y - a.y);
     out.capitulos += caps.length;
-    P.filter(esPie).forEach(t => { const v = t.s.replace(/^[^:]*:\s*/, '').trim(); if (/^SOLICITADO/.test(N(t)) && v && !out.solicitante) out.solicitante = v; });
-    const body = P.filter(t => t.y < yH - 3 && !/^(SOLICITUD|LISTA( GENERAL)?) DE MATERIALES$/.test(N(t)) && !esCap(t) && !esPie(t));
+    P.filter(esPie).forEach(t => { if (!/^SOLICITADO/.test(N(t)) || out.solicitante) return;
+      const v = t.s.includes(':') ? t.s.replace(/^[^:]*:\s*/, '').trim() : '';
+      const abajo2 = P.filter(o => o.y < t.y - 2 && o.y > t.y - 18 && Math.abs(o.x - t.x) < 60 && !/_{3,}/.test(o.s) && !esPie(o)).sort((a, b) => b.y - a.y)[0];
+      out.solicitante = v || (abajo2 ? abajo2.s.trim() : ''); });
+    const body = P.filter(t => t.y < yH - 3 && !/^(SOLICITUD|LISTA( GENERAL)?|REQUISICION) DE MATERIALES$/.test(N(t)) && !esCap(t) && !esPie(t)
+      && !(yH - t.y < 10 && /^(REQUERIDA|SOLICITADA|PEDIDA|NETA|DE COMPRA|DE MEDIDA|UNITARIO)$/.test(N(t))));
     const obs = body.find(t => /^OBSERVACION/.test(N(t)));
     const yObs = obs ? obs.y : -1e9;
     // fin de la tabla: "TOTAL PRESUPUESTO", "SUBTOTAL"… a la izquierda de la descripción
@@ -2543,6 +2554,7 @@ function parseSolicitud(T){
       (esCant ? best.cant : esUnd ? best.und : best.desc).push(t);
     });
     filas.forEach(fl => {
+      if (!fl.desc.length && !fl.und.length && !fl.cant.length) return;   // v4.45: renglones numerados vacíos del formato
       const ord = L => L.sort((a, b) => b.y - a.y || a.x - b.x).map(t => t.s.trim()).join(' ').replace(/\s+/g, ' ').trim();
       const und = ord(fl.und), cant = ord(fl.cant);
       // Columna "Especificaciones" (formato Item · Material · Especificaciones · Unidad de compra · Cantidad neta): va después del material.
@@ -2554,6 +2566,9 @@ function parseSolicitud(T){
       out.items.push({ ...(pu != null && !isNaN(pu) ? { pu } : {}), ...(tot != null && !isNaN(tot) ? { tot } : {}), n: fl.n, desc: ord(fl.desc) + (fl.esp ? ', ' + fl.esp : ''), und: UND_MAP[_norm(und).replace(/[.\s]/g, '')] || und.toLowerCase(), undOrig: und, cant: parseNum(cant), cap: capS });
     });
     if (caps.length) capPrev = caps[caps.length - 1].s; else if (out.items.length) capPrev = out.items[out.items.length - 1].cap || capPrev;
+    const nota = P.find(t => /^NOTA:?$/.test(N(t)) && t.y < yH);
+    if (nota && !obs) { const v = P.filter(o => o !== nota && o.y <= nota.y + 3 && o.y > nota.y - 40 && o.x > nota.x && !/_{3,}/.test(o.s) && !esPie(o) && !/:$/.test(o.s.trim()))
+      .sort((a, b) => b.y - a.y || a.x - b.x).map(o => o.s.trim()).join(' ').trim(); if (v) out.notas = [out.notas, v].filter(Boolean).join(' '); }
     if (obs) out.notas = [out.notas, P.filter(t => t.y <= obs.y + 1 && t.y > 30 && !/^SOLICITUD DE MATERIALES$/.test(N(t))).sort((a, b) => b.y - a.y || a.x - b.x).map(t => t.s.trim()).join(' ')].filter(Boolean).join(' ').trim();
   }
   out.items.sort((a, b) => a.n - b.n);
@@ -2738,7 +2753,7 @@ $('#wzListo').onclick = () => {
     ? [`Lista de materiales${s.sol ? ' ' + s.sol : ''}${s.fase ? ', ' + s.fase.toLowerCase().replace(/^fase/, 'fase') : ''}${s.fecha ? ' (' + fmt(s.fecha) + ')' : ''}${s.solicitante ? ', solicitada por ' + s.solicitante : ''}.`,
        s.proyecto ? 'Proyecto: ' + s.proyecto.replace(/[.\s]+$/, '') + '.' : '',
        s.unidos ? `${s.renglones} renglones agrupados en ${wz.items.length} materiales (cantidades sumadas por capítulo).` : '', s.notas]
-    : [s.sol ? `Solicitud de materiales N° ${s.sol} del contratista${s.fecha ? ' (' + fmt(s.fecha) + ')' : ''}.` : 'Solicitud de materiales del contratista.', s.titulos.join(' '),
+    : [(s.requisicion ? 'Requisición de materiales' : 'Solicitud de materiales') + (s.sol ? ` N° ${s.sol}` : '') + ' del contratista' + (s.fecha ? ' (' + fmt(s.fecha) + ')' : '') + (s.solicitante ? ', solicitada por ' + s.solicitante : '') + '.', s.titulos.join(' '),
        s.unidos ? `${s.renglones} renglones agrupados en ${wz.items.length} materiales.` : '', s.notas]).filter(Boolean).join(' ').slice(0, 1500);
   if (!draft.firma && wzSig) draft.firma = wzSig;
   saveDraft(); fillForm(); $('#wzDlg').close();
@@ -6452,8 +6467,11 @@ $('#prXlsx').onclick = async () => {
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.44.0';
+const APP_VERSION = '4.45.0';
 const NOVEDADES = [
+  { v: '4.45.0', fecha: '2026-11-17', titulo: 'Nuevo formato de requisición', items: [
+    { r: ['contratista','costos','gerente_general','gerente_operaciones','logistica','compras','master'], t: 'En Nueva → Cargar PDF o foto, la app ahora lee también el formato "Requisición de materiales" de los contratistas (Obra · Item · Descripción · Und · Cantidad requerida, p. ej. Romveca): toma la base del campo Contrato, el número, la fecha y quién la solicita, y descarta los renglones vacíos. Solo te pregunta el tipo de gasto, el área y tu firma.' }
+  ] },
   { v: '4.44.0', fecha: '2026-11-12', titulo: 'Reporte sencillo de lunes a jueves; partidas los viernes', items: [
     { r: ['contratista','gerente_operaciones','gerente_general','master'], t: 'De lunes a jueves el reporte vuelve a ser sencillo: descripción, fases y fotos. Si quieres, puedes agregar partidas con "+ Agregar partidas hoy (opcional)".' },
     { r: ['contratista','gerente_operaciones','gerente_general','master'], t: 'Los viernes el reporte de cada base pide el avance semanal de partidas: las partidas trabajadas en la semana con la cantidad ejecutada de lunes a viernes. Basta con un reporte con partidas por base cada viernes; si ya lo hizo otra persona, el tuyo puede ir sencillo. Si un viernes no puedes, puedes registrarlo hasta 3 días después con la fecha del viernes.' }
