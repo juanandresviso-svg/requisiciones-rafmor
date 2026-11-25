@@ -2451,7 +2451,7 @@ $('#pdfFile').addEventListener('change', async e => {
 const _norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
 const UND_MAP = { UND:'und', UNID:'und', UNIDAD:'und', UNIDADES:'und', ROLLO:'rollo', ROLLOS:'rollo', KG:'kg', KGS:'kg', CUNETE:'cuñete', CUNETES:'cuñete', PARES:'par', PAR:'par',
   M2:'m²', 'M²':'m²', M:'m', ML:'m', M3:'m³', 'M³':'m³', SACOS:'sco', SACO:'sco', SCO:'sco', GALON:'gal', GALONES:'gal', GAL:'gal', VIAJE:'viaje', VIAJES:'viaje', PLIEGO:'pliego', PLIEGOS:'pliego',
-  GLN:'gal', GLNS:'gal', L:'l', LT:'l', LTS:'l', LITROS:'l', JGO:'jgo', JUEGO:'jgo', PZA:'pza', PZAS:'pza', PIEZA:'pza', PIEZAS:'pza', BLTO:'sco', BULTO:'sco', BULTOS:'sco', CAJA:'caja', CAJAS:'caja', TUBO:'tubo', BOLSA:'bolsa', BOLSAS:'bolsa', LAMINA:'lámina', LAMINAS:'lámina' };
+  GLN:'gal', GLNS:'gal', L:'l', LT:'l', LTS:'l', LITROS:'l', JGO:'jgo', JUEGO:'jgo', PZA:'pza', PZAS:'pza', PIEZA:'pza', PIEZAS:'pza', BLTO:'sco', BULTO:'sco', BULTOS:'sco', CAJA:'caja', CAJAS:'caja', CUN:'cuñete', PAQ:'paq', PAQUETE:'paq', PAQUETES:'paq', TUBO:'tubo', BOLSA:'bolsa', BOLSAS:'bolsa', LAMINA:'lámina', LAMINAS:'lámina' };
 const parseNum = s => { const t = String(s || '').trim(); if (!t) return ''; const n = t.includes(',') ? parseFloat(t.replace(/\./g, '').replace(',', '.')) : parseFloat(t);
   return isNaN(n) ? t : String(Math.round(n * 1000) / 1000); };
 function parseSolicitud(T){
@@ -2469,7 +2469,7 @@ function parseSolicitud(T){
     const hEsp = hDesc && P.find(t => /^ESPECIFICACION(ES)?\b/.test(N(t)) && Math.abs(t.y - hDesc.y) <= 4 && t.x > hDesc.x);
     const hItem = hDesc && P.find(t => /^(ITEM|RENG|N|NO|N[°º]|NRO\.?|PARTIDA)$/.test(N(t)) && Math.abs(t.y - hDesc.y) <= 4 && t.x < hDesc.x);
     const enH = t => hDesc && Math.abs(t.y - hDesc.y) <= 4;
-    const hUnd = P.find(t => enH(t) && /^(UND|UNIDAD|UNID)\b\.?/.test(N(t))), hCant = P.find(t => enH(t) && /^CANT(IDAD|\.)?\b/.test(N(t)))
+    const hUnd = P.find(t => enH(t) && /^(UND|UNIDAD|UNID)\b\.?/.test(N(t))) || (hDesc && P.find(t => Math.abs(t.y - hDesc.y) <= 9 && t.x > hDesc.x && /^(UND|UNIDAD|UNID)\b\.?/.test(N(t)))), hCant = P.find(t => enH(t) && /^CANT(IDAD|\.)?\b/.test(N(t)))
       || (hDesc && P.find(t => Math.abs(t.y - hDesc.y) <= 9 && /^CANT(IDAD|\.)?\b/.test(N(t))));   // v4.45: encabezado en dos líneas (Romveca)
     // Presupuesto de obra (v4.26.0): columnas P.U. y TOTAL después de la cantidad.
     const hPU = P.find(t => enH(t) && /^(P\.?\s?U\.?|PRECIO)\b/.test(N(t))), hTot = P.find(t => enH(t) && /^TOTAL\b/.test(N(t)) && (!hCant || t.x > hCant.x));
@@ -2484,6 +2484,8 @@ function parseSolicitud(T){
     const ct = P.find(t => /^CONTRATO:?$/.test(N(t)) && t.y > hItem.y + 3);
     if (ct) { const v = P.filter(o => o !== ct && Math.abs(o.y - ct.y) < 4 && o.x > ct.x).sort((a, b) => a.x - b.x).map(o => o.s.trim()).join(' ').trim(); if (v && !out.titulos.includes(v)) out.titulos.push(v); }
     const nro = P.find(t => /^N[°º]\s*\d[\w-]*$/.test(N(t)) && t.y > hItem.y + 3); if (nro && !out.sol) out.sol = nro.s.replace(/^N[°º]\s*/i, '').trim();
+    const bpf = P.find(t => /^(BASE DE PROTECCION FRONTERIZA|B\.?P\.?F\.?|PUESTO FRONTERIZO)\b/.test(N(t)) && t.y > hItem.y + 3);   // v4.46: título con la base
+    if (bpf && !out.titulos.includes(bpf.s.trim())) out.titulos.push(bpf.s.trim());
     const nob = P.find(t => /^N[°º] DE OBRA:?$/.test(N(t))); if (nob && !out.obra) { const d = derecha(nob); if (d) out.obra = d.s.trim(); }
     const mo = P.find(t => /^M\.?\s?O\.?[-\s]/.test(N(t))); if (mo && !out.sol) { const md = derecha(mo); out.sol = (mo.s + (md && /^\d+$/.test(md.s.trim()) ? md.s.trim() : '')).replace(/\s+/g, ' ').replace(/\s*-\s*/g, '-').trim(); }
     const pr = P.find(t => /^PROYECTO\b/.test(N(t)) && t.y > hItem.y + 3); if (pr && !out.proyecto) { const resto = pr.s.replace(/^proyecto\s*:?\s*/i, '').trim(); const pd = derecha(pr); out.proyecto = resto || (pd ? pd.s.trim() : '');
@@ -2501,7 +2503,7 @@ function parseSolicitud(T){
       const abajo2 = P.filter(o => o.y < t.y - 2 && o.y > t.y - 18 && Math.abs(o.x - t.x) < 60 && !/_{3,}/.test(o.s) && !esPie(o)).sort((a, b) => b.y - a.y)[0];
       out.solicitante = v || (abajo2 ? abajo2.s.trim() : ''); });
     const body = P.filter(t => t.y < yH - 3 && !/^(SOLICITUD|LISTA( GENERAL)?|REQUISICION) DE MATERIALES$/.test(N(t)) && !esCap(t) && !esPie(t)
-      && !(yH - t.y < 10 && /^(REQUERIDA|SOLICITADA|PEDIDA|NETA|DE COMPRA|DE MEDIDA|UNITARIO)$/.test(N(t))));
+      && !(yH - t.y < 10 && /^(REQUERIDA|SOLICITADA|PEDIDA|NETA|COMPRA|DE COMPRA|MEDIDA|DE MEDIDA|UNITARIO)$/.test(N(t))));
     const obs = body.find(t => /^OBSERVACION/.test(N(t)));
     const yObs = obs ? obs.y : -1e9;
     // fin de la tabla: "TOTAL PRESUPUESTO", "SUBTOTAL"… a la izquierda de la descripción
@@ -6467,8 +6469,11 @@ $('#prXlsx').onclick = async () => {
 
 /* ---------- Novedades por rol y aviso de versión nueva ---------- */
 // Cada actualización agrega una entrada. r: roles a los que se muestra ('*' = todos, 'master' = usuario maestro).
-const APP_VERSION = '4.45.0';
+const APP_VERSION = '4.46.0';
 const NOVEDADES = [
+  { v: '4.46.0', fecha: '2026-11-25', titulo: 'Más listas de materiales', items: [
+    { r: ['contratista','costos','gerente_general','gerente_operaciones','logistica','compras','master'], t: 'Nueva → Cargar PDF o foto ahora lee también las listas "Item · Material · Especificaciones · Unidad de compra · Cantidad neta" (como la de Cerro El Indio): une material y especificación en la descripción, toma la base del título y entiende unidades como cuñ, paq, gln y m3.' }
+  ] },
   { v: '4.45.0', fecha: '2026-11-17', titulo: 'Nuevo formato de requisición', items: [
     { r: ['contratista','costos','gerente_general','gerente_operaciones','logistica','compras','master'], t: 'En Nueva → Cargar PDF o foto, la app ahora lee también el formato "Requisición de materiales" de los contratistas (Obra · Item · Descripción · Und · Cantidad requerida, p. ej. Romveca): toma la base del campo Contrato, el número, la fecha y quién la solicita, y descarta los renglones vacíos. Solo te pregunta el tipo de gasto, el área y tu firma.' }
   ] },
